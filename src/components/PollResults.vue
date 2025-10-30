@@ -27,7 +27,7 @@
           <span class="text-accent font-bold">{{ percentages[i] }}%</span>
         </div>
       </div>
-      <div class="flex flex-wrap gap-3 mt-2">
+      <div class="flex flex-wrap gap-3 mt-2 justify-center text-center">
         <router-link class="w-full sm:w-auto" :to="`/poll/${id}`">Back to Vote</router-link>
         <router-link class="w-full sm:w-auto" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
         <router-link v-if="present" class="w-full sm:w-auto" :to="`/results/${id}`">Exit Presentation</router-link>
