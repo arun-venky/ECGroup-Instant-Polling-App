@@ -58,7 +58,7 @@ import QrcodeVue from 'qrcode.vue'
 
 const route = useRoute()
 const router = useRouter()
-const id = route.params.id
+const id = computed(() => route.params.id)
 const present = computed(() => route.query.present === 'true')
 const poll = ref(null)
 const canvasEl = ref(null)
@@ -78,7 +78,8 @@ function encodePoll(p) {
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const voteUrl = computed(() => {
   const data = encodePoll(poll.value)
-  return data ? `${BASE}?poll=${id}&data=${data}#${`/poll/${id}`}` : `${BASE}?poll=${id}#${`/poll/${id}`}`
+  const pid = id.value
+  return data ? `${BASE}?poll=${pid}&data=${data}#${`/poll/${pid}`}` : `${BASE}?poll=${pid}#${`/poll/${pid}`}`
 })
 
 async function copyLink() {
@@ -109,7 +110,7 @@ function draw() {
 }
 
 onMounted(async () => {
-  poll.value = getPoll(id)
+  poll.value = getPoll(id.value)
   if (poll.value) {
     // If presentation mode, animate in from zero
     if (present.value) {
@@ -155,7 +156,7 @@ watch(present, (isOn) => {
     setBackgroundMusic('/assets/sounds/reveal.mp3', 0.8)
     playBackgroundMusic(0.15)
     // Re-animate bars when entering presentation
-    const latest = getPoll(id)
+    const latest = getPoll(id.value)
     if (latest) {
       const from = displayedVotes.value.length ? [...displayedVotes.value] : Array.from({ length: latest.votes.length }, () => 0)
       animateVotes(from, latest.votes, 1000)
@@ -181,7 +182,7 @@ function stopPolling() {
 }
 
 function refreshFromStorage() {
-  const latest = getPoll(id)
+  const latest = getPoll(id.value)
   if (!latest) return
   const prev = poll.value
   poll.value = latest

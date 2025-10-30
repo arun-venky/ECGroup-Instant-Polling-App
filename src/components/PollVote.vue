@@ -54,7 +54,7 @@ import QrcodeVue from 'qrcode.vue'
 
 const route = useRoute()
 const router = useRouter()
-const id = route.params.id
+Fixeconst id = computed(() => route.params.id)
 const poll = ref(null)
 const alreadyVoted = ref(false)
 
@@ -70,7 +70,8 @@ function encodePoll(p) {
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const shareUrl = computed(() => {
   const data = encodePoll(poll.value)
-  return data ? `${BASE}?poll=${id}&data=${data}#${`/poll/${id}`}` : `${BASE}?poll=${id}#${`/poll/${id}`}`
+  const pid = id.value
+  return data ? `${BASE}?poll=${pid}&data=${data}#${`/poll/${pid}`}` : `${BASE}?poll=${pid}#${`/poll/${pid}`}`
 })
 
 async function copyLink() {
@@ -78,8 +79,8 @@ async function copyLink() {
 }
 
 onMounted(() => {
-  poll.value = getPoll(id)
-  alreadyVoted.value = hasVoted(id)
+  poll.value = getPoll(id.value)
+  alreadyVoted.value = hasVoted(id.value)
 })
 
 watch(() => route.params.id, () => {
@@ -89,12 +90,12 @@ watch(() => route.params.id, () => {
 
 function onIndex(index) {
   if (alreadyVoted.value) return
-  votePoll(id, index)
-  markVoted(id)
+  votePoll(id.value, index)
+  markVoted(id.value)
   alreadyVoted.value = true
   playVoteSound()
   confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
-  router.push(`/results/${id}`)
+  router.push(`/results/${id.value}`)
 }
 
 function go(step) {
