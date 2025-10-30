@@ -1,8 +1,14 @@
 <template>
   <div class="max-w-6xl mx-auto card">
-    <div class="flex items-center justify-between mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-6 px-6 border-b border-gray-200">
+    <div class="flex items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-6 px-6 border-b border-gray-200">
       <h2 class="text-2xl">All Polls</h2>
-      <button class="btn w-auto" @click="clearAll">Clear All</button>
+      <div class="flex items-center gap-2">
+        <select v-model="activeSet" class="px-3 py-2 border border-gray-300 rounded-md">
+          <option value="">All Sets</option>
+          <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
+        </select>
+        <button class="btn w-auto" @click="clearAll">Clear All</button>
+      </div>
     </div>
     <div v-if="!polls.length" class="text-neutral">No polls created yet.</div>
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -29,19 +35,27 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls } from '../utils/storage.js'
+import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets } from '../utils/storage.js'
 import QrcodeVue from 'qrcode.vue'
 
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 
 const polls = ref([])
+const sets = ref([])
+const activeSet = ref('')
 
 function load() {
   const ids = listPollIdsSorted()
-  polls.value = ids.map(id => getPoll(id)).filter(Boolean)
+  let all = ids.map(id => getPoll(id)).filter(Boolean)
+  sets.value = listPollSets()
+  if (activeSet.value) {
+    all = all.filter(p => (p.setId || '') === activeSet.value)
+  }
+  polls.value = all
 }
 
 onMounted(load)
+watch(activeSet, load)
 
 function encodePoll(p) {
   if (!p) return ''

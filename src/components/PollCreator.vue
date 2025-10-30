@@ -50,7 +50,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { createPoll } from '../utils/storage.js'
+import { createPoll, createPollSet } from '../utils/storage.js'
 import PollShare from './PollShare.vue'
 import { useRouter } from 'vue-router'
 import { aiQuiz } from '../utils/ai_quiz.js'
@@ -94,8 +94,9 @@ function create() {
 function importAIQuiz() {
   // Bulk create one poll per question
   const ids = []
+  const set = createPollSet('AI Quiz')
   aiQuiz.forEach(({ q, options }) => {
-    const p = createPoll({ question: q, type: 'multiple', options })
+    const p = createPoll({ question: q, type: 'multiple', options, setId: set.id })
     ids.push(p.id)
   })
   alert(`Imported ${ids.length} questions. Opening the first poll…`)

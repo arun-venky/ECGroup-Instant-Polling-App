@@ -24,8 +24,8 @@ const props = defineProps({ id: { type: String, required: true } })
 function encodePoll(p) {
   if (!p) return ''
   try {
-    const { id, question, type, options } = p
-    const json = JSON.stringify({ id, question, type, options })
+    const { id, question, type, options, setId } = p
+    const json = JSON.stringify({ id, question, type, options, setId })
     return window.btoa(unescape(encodeURIComponent(json)))
   } catch { return '' }
 }

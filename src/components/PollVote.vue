@@ -45,7 +45,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPoll, votePoll, hasVoted, markVoted, getAdjacentPollId } from '../utils/storage.js'
+import { getPoll, votePoll, hasVoted, markVoted, getAdjacentPollIdSameSet } from '../utils/storage.js'
 import { playVoteSound } from '../utils/sound.js'
 import confetti from 'canvas-confetti'
 import StarRating from './StarRating.vue'
@@ -61,8 +61,8 @@ const alreadyVoted = ref(false)
 function encodePoll(p) {
   if (!p) return ''
   try {
-    const { id, question, type, options } = p
-    const json = JSON.stringify({ id, question, type, options })
+    const { id, question, type, options, setId } = p
+    const json = JSON.stringify({ id, question, type, options, setId })
     return window.btoa(unescape(encodeURIComponent(json)))
   } catch { return '' }
 }
@@ -100,7 +100,7 @@ function onIndex(index) {
 
 function go(step) {
   const currentId = id.value
-  const targetId = getAdjacentPollId(currentId, step)
+  const targetId = getAdjacentPollIdSameSet(currentId, step)
   if (targetId) router.push(`/poll/${targetId}`)
 }
 </script>

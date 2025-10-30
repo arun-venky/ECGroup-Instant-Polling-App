@@ -50,7 +50,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPoll, getAdjacentPollId } from '../utils/storage.js'
+import { getPoll, getAdjacentPollIdSameSet } from '../utils/storage.js'
 import { renderChart } from '../utils/charts.js'
 import { playRevealSound, setBackgroundMusic, playBackgroundMusic, stopBackgroundMusic } from '../utils/sound.js'
 import ConfettiReveal from './ConfettiReveal.vue'
@@ -69,8 +69,8 @@ const colors = ['#00C4CC', '#2F80ED', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444'
 function encodePoll(p) {
   if (!p) return ''
   try {
-    const { id, question, type, options } = p
-    const json = JSON.stringify({ id, question, type, options })
+    const { id, question, type, options, setId } = p
+    const json = JSON.stringify({ id, question, type, options, setId })
     return window.btoa(unescape(encodeURIComponent(json)))
   } catch { return '' }
 }
@@ -223,7 +223,7 @@ function animateVotes(from, to, duration = 800) {
 
 function go(step) {
   const currentId = id.value
-  const targetId = getAdjacentPollId(currentId, step)
+  const targetId = getAdjacentPollIdSameSet(currentId, step)
   if (!targetId) return
   if (present.value) {
     router.push(`/results/${targetId}?present=true`)
