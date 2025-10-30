@@ -1,15 +1,16 @@
 <template>
   <div class="max-w-6xl mx-auto card">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl">All Polls</h2>
-      <button class="btn" @click="clearAll">Clear All</button>
-    </div>
-    <div v-if="!polls.length" class="text-neutral">No polls created yet.</div>
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="polls-scroll max-h-[70vh] overflow-y-auto pr-2">
+      <div class="flex items-center justify-between mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 border-b border-gray-200">
+        <h2 class="text-2xl">All Polls</h2>
+        <button class="btn w-auto" @click="clearAll">Clear All</button>
+      </div>
+      <div v-if="!polls.length" class="text-neutral">No polls created yet.</div>
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div v-for="p in polls" :key="p.id" class="card">
         <div class="flex items-start gap-3">
           <div class="shrink-0">
-            <qrcode-vue :value="buildUrl(p)" :size="120" level="H" />
+            <qrcode-vue :value="buildUrl(p)" :size="96" level="H" />
           </div>
           <div class="flex-1 min-w-0">
             <div class="font-bold text-lg break-words">{{ p.question }}</div>

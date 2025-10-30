@@ -45,4 +45,19 @@ h1, h2, h3 {
   @apply w-full py-3 my-2 rounded-lg bg-secondary hover:bg-primary text-white text-2xl active:scale-95 transition-all duration-200;
 }
 
+/* Custom scrollbars for polls list */
+.polls-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #00C4CC transparent; /* thumb, track */
+}
+.polls-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.polls-scroll::-webkit-scrollbar-thumb {
+  background-color: #00C4CC;
+  border-radius: 9999px;
+}
+.polls-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
 
