@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  @apply bg-background text-neutral font-sans min-h-screen;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.card {
+  @apply bg-white text-dark rounded-xl shadow-lg p-6 border border-gray-200;
+}
+
+button {
+  @apply px-4 py-2 rounded-lg bg-primary text-dark font-bold transition-all duration-300 w-full;
+}
+button:hover {
+  @apply bg-accent scale-105;
+}
+
+input, textarea, select {
+  @apply bg-white text-dark rounded-md px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full shadow-sm;
+}
+
+.chart-container {
+  @apply bg-white rounded-xl p-6 shadow-md mt-6 border border-gray-200;
+}
+
+h1, h2, h3 {
+  @apply font-bold text-primary text-center;
+}
+
+/* Touch-friendly voting buttons */
+.option-button {
+  @apply w-full py-3 my-2 rounded-lg bg-secondary hover:bg-primary text-white text-2xl active:scale-95 transition-all duration-200;
+}
+
+
