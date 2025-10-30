@@ -35,8 +35,8 @@
 
       <div class="flex flex-wrap gap-3 mt-2 justify-center text-center">
         <router-link class="btn w-full sm:w-auto" :to="`/results/${id}`">View Results</router-link>
-        <button class="w-full sm:w-auto" @click="go(-1)">Previous Poll</button>
-        <button class="w-full sm:w-auto" @click="go(1)">Next Poll</button>
+        <button class="w-full sm:w-auto" @click="go(-1)">Previous</button>
+        <button class="w-full sm:w-auto" @click="go(1)">Next</button>
       </div>
     </div>
   </div>
@@ -67,7 +67,7 @@ function encodePoll(p) {
   } catch { return '' }
 }
 
-const BASE = `${window.location.origin}${window.location.pathname}`
+const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const shareUrl = computed(() => {
   const data = encodePoll(poll.value)
   return data ? `${BASE}?poll=${id}&data=${data}#${`/poll/${id}`}` : `${BASE}?poll=${id}#${`/poll/${id}`}`

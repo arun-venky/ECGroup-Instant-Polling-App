@@ -30,7 +30,7 @@ function encodePoll(p) {
   } catch { return '' }
 }
 
-const BASE = `${window.location.origin}${window.location.pathname}`
+const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const shareUrl = computed(() => {
   const poll = getPoll(props.id)
   const data = encodePoll(poll)

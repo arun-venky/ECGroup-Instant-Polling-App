@@ -31,8 +31,8 @@
         <router-link class="btn w-full sm:w-auto" :to="`/poll/${id}`">Back to Vote</router-link>
         <router-link class="btn w-full sm:w-auto" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
         <router-link v-if="present" class="btn w-full sm:w-auto" :to="`/results/${id}`">Exit Presentation</router-link>
-        <button class="w-full sm:w-auto" @click="go(-1)">Previous Poll</button>
-        <button class="w-full sm:w-auto" @click="go(1)">Next Poll</button>
+        <button class="w-full sm:w-auto" @click="go(-1)">Previous</button>
+        <button class="w-full sm:w-auto" @click="go(1)">Next</button>
       </div>
       <ConfettiReveal />
     </div>
@@ -75,7 +75,7 @@ function encodePoll(p) {
   } catch { return '' }
 }
 
-const BASE = `${window.location.origin}${window.location.pathname}`
+const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const voteUrl = computed(() => {
   const data = encodePoll(poll.value)
   return data ? `${BASE}?poll=${id}&data=${data}#${`/poll/${id}`}` : `${BASE}?poll=${id}#${`/poll/${id}`}`
