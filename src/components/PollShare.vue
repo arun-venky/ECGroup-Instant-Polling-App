@@ -29,7 +29,7 @@ function encodePoll(p) {
   } catch { return '' }
 }
 
-const BASE = 'https://7jw0dzp3-5173.inc1.devtunnels.ms/index.html'
+const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const shareUrl = computed(() => {
   const poll = getPoll(props.id)
   const data = encodePoll(poll)

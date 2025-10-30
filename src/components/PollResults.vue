@@ -71,7 +71,7 @@ function encodePoll(p) {
   } catch { return '' }
 }
 
-const BASE = 'https://7jw0dzp3-5173.inc1.devtunnels.ms/index.html'
+const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const voteUrl = computed(() => {
   const data = encodePoll(poll.value)
   return data ? `${BASE}?poll=${id}&data=${data}#${`/poll/${id}`}` : `${BASE}?poll=${id}#${`/poll/${id}`}`
