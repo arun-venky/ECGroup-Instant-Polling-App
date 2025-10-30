@@ -224,7 +224,12 @@ function animateVotes(from, to, duration = 800) {
 function go(step) {
   const currentId = id.value
   const targetId = getAdjacentPollId(currentId, step)
-  if (targetId) router.push(`/poll/${targetId}`)
+  if (!targetId) return
+  if (present.value) {
+    router.push(`/results/${targetId}?present=true`)
+  } else {
+    router.push(`/results/${targetId}`)
+  }
 }
 
 function onKeyDown(e) {
