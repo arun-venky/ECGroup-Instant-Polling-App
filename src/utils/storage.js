@@ -92,6 +92,13 @@ export function getAdjacentPollIdSameSet(id, step = 1) {
   return ids[idx + step] || null
 }
 
+export function listPollIdsBySetSorted(setId) {
+  const pollsMap = loadPolls()
+  const items = Object.values(pollsMap).filter(p => (p.setId || '') === (setId || ''))
+  items.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+  return items.map(p => p.id)
+}
+
 export function deletePoll(id) {
   const polls = loadPolls()
   if (polls[id]) {
