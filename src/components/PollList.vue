@@ -1,6 +1,9 @@
 <template>
   <div class="max-w-6xl mx-auto card">
-    <h2 class="text-2xl mb-4">All Polls</h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl">All Polls</h2>
+      <button class="btn" @click="clearAll">Clear All</button>
+    </div>
     <div v-if="!polls.length" class="text-neutral">No polls created yet.</div>
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div v-for="p in polls" :key="p.id" class="card">
@@ -15,6 +18,7 @@
               <router-link class="btn" :to="`/poll/${p.id}`">Open</router-link>
               <router-link class="btn" :to="`/results/${p.id}`">Results</router-link>
               <button class="btn" @click="copy(buildUrl(p))">Copy Link</button>
+              <button class="btn" @click="remove(p.id)">Delete</button>
             </div>
           </div>
         </div>
@@ -26,7 +30,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPoll, listPollIdsSorted } from '../utils/storage.js'
+import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls } from '../utils/storage.js'
 import QrcodeVue from 'qrcode.vue'
 
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
@@ -64,6 +68,18 @@ function formatDate(ts) {
     const d = new Date(ts)
     return d.toLocaleString()
   } catch { return '' }
+}
+
+function remove(id) {
+  if (!confirm('Delete this poll?')) return
+  deletePoll(id)
+  load()
+}
+
+function clearAll() {
+  if (!confirm('Delete ALL polls? This cannot be undone.')) return
+  clearAllPolls()
+  load()
 }
 </script>
 

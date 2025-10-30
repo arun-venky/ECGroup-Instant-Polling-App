@@ -66,4 +66,16 @@ export function getAdjacentPollId(id, step = 1) {
   return target || null
 }
 
+export function deletePoll(id) {
+  const polls = loadPolls()
+  if (polls[id]) {
+    delete polls[id]
+    savePolls(polls)
+  }
+}
+
+export function clearAllPolls() {
+  savePolls({})
+}
+
 
