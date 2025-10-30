@@ -62,10 +62,10 @@ onMounted(load)
 watch(activeSet, load)
 
 onMounted(() => {
-  const preset = route.query.set
-  if (typeof preset === 'string' && preset) {
-    activeSet.value = preset
-  }
+  const fromQuery = route.query.set
+  const fromParam = route.params.setId
+  const preset = (typeof fromParam === 'string' && fromParam) ? fromParam : (typeof fromQuery === 'string' && fromQuery ? fromQuery : '')
+  if (preset) activeSet.value = preset
 })
 
 function startActive() {

@@ -13,8 +13,8 @@
             <div class="text-xs text-neutral">{{ formatDate(s.createdAt) }}</div>
           </div>
           <div class="flex items-center gap-2">
-            <button class="btn w-auto" @click="startSet(s.id)">Start</button>
-            <router-link class="btn w-auto" :to="`/polls?set=${s.id}`">View Polls</router-link>
+            <router-link class="btn w-auto" :to="`/sets/${s.id}/start`">Start</router-link>
+            <router-link class="btn w-auto" :to="`/sets/${s.id}/polls`">View Polls</router-link>
           </div>
         </div>
       </div>
@@ -24,21 +24,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { listPollSets, listPollIdsBySetSorted } from '../utils/storage.js'
-import { useRouter } from 'vue-router'
+import { listPollSets } from '../utils/storage.js'
 
 const sets = ref([])
-const router = useRouter()
 
 function load() {
   sets.value = listPollSets()
 }
 onMounted(load)
 
-function startSet(setId) {
-  const ids = listPollIdsBySetSorted(setId)
-  if (ids.length) router.push(`/poll/${ids[0]}`)
-}
+// Starts are handled by the /sets/:setId/start route
 
 function formatDate(ts) {
   if (!ts) return ''
