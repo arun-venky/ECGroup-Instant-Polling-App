@@ -70,10 +70,11 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { createPoll, createPollSet, listPollSets } from '../utils/storage.js'
 import PollShare from './PollShare.vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { aiQuiz } from '../utils/ai_quiz.js'
 
 const router = useRouter()
+const route = useRoute()
 const question = ref('')
 const type = ref('multiple')
 const options = ref(['Option A', 'Option B'])
@@ -87,6 +88,12 @@ function loadSets() {
   sets.value = listPollSets()
 }
 onMounted(loadSets)
+onMounted(() => {
+  const fromParam = route.params.setId
+  if (typeof fromParam === 'string' && fromParam) {
+    selectedSetId.value = fromParam
+  }
+})
 
 const showOptions = computed(() => type.value === 'multiple' || type.value === 'emoji')
 

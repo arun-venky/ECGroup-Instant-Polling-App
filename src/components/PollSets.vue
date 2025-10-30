@@ -2,7 +2,7 @@
   <div class="max-w-4xl mx-auto card">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-2xl">Poll Sets</h2>
-      <router-link class="btn w-auto" to="/create">Create</router-link>
+      <router-link class="btn w-auto" to="/sets/create">New Set</router-link>
     </div>
     <div v-if="!sets.length" class="text-neutral">No sets yet. Create polls and assign them to a set.</div>
     <div v-else class="flex flex-col gap-3">

@@ -5,10 +5,12 @@ import PollVote from '../components/PollVote.vue'
 import PollResults from '../components/PollResults.vue'
 import PollList from '../components/PollList.vue'
 import PollSets from '../components/PollSets.vue'
+import PollSetCreate from '../components/PollSetCreate.vue'
 
 const routes = [
   { path: '/', redirect: '/sets' }, 
   { path: '/sets', component: PollSets },
+  { path: '/sets/create', component: PollSetCreate },
   // List polls inside a set
   { path: '/sets/:setId/polls/create', component: PollCreator },
   { path: '/sets/:setId/start', async beforeEnter(to) {
