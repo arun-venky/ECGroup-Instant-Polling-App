@@ -7,6 +7,7 @@
           <option value="">All Sets</option>
           <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
+        <router-link v-if="activeSet" class="btn w-auto" :to="`/sets/${activeSet}/polls/create`">Add Poll</router-link>
         <button class="btn w-auto" :disabled="!activeSet" @click="startActive">Start</button>
         <button class="btn w-auto" @click="clearAll">Clear All</button>
       </div>
@@ -73,7 +74,7 @@ onMounted(() => {
 function startActive() {
   if (!activeSet.value) return
   const ids = listPollIdsBySetSorted(activeSet.value)
-  if (ids.length) router.push(`/poll/${ids[0]}`)
+  if (ids.length) router.push(`/sets/${activeSet.value}/polls/${ids[0]}`)
 }
 
 function encodePoll(p) {
