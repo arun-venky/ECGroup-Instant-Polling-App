@@ -9,13 +9,13 @@ import PollSets from '../components/PollSets.vue'
 const routes = [
   { path: '/', redirect: '/sets' }, 
   { path: '/sets', component: PollSets },
-  { path: '/sets/:setId/polls', redirect: to => ({ path: '/polls', query: { set: to.params.setId } }) },
+  // List polls inside a set
   { path: '/sets/:setId/polls/create', component: PollCreator },
   { path: '/sets/:setId/start', async beforeEnter(to) {
       const mod = await import('../utils/storage.js')
       const ids = mod.listPollIdsBySetSorted(to.params.setId)
       if (ids && ids.length) {
-        return { path: `/poll/${ids[0]}` }
+        return { path: `/sets/${to.params.setId}/polls/${ids[0]}` }
       }
       return { path: '/sets' }
     }

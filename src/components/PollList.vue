@@ -22,15 +22,17 @@
             <div class="font-bold text-lg break-words">{{ p.question }}</div>
             <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
             <div class="flex flex-wrap gap-2 mt-3">
-              <router-link class="btn" :to="`/poll/${p.id}`">Open</router-link>
-              <router-link class="btn" :to="`/results/${p.id}`">Results</router-link>
+              <router-link class="btn" :to="activeSet ? `/sets/${activeSet}/polls/${p.id}` : `/poll/${p.id}`">Open</router-link>
+              <router-link class="btn" :to="activeSet ? `/sets/${activeSet}/results/${p.id}` : `/results/${p.id}`">Results</router-link>
               <button class="btn" @click="copy(buildUrl(p))">Copy Link</button>
               <button class="btn" @click="remove(p.id)">Delete</button>
             </div>
           </div>
         </div>
+      </div>
     </div>
   </div>
+  
   
 </template>
 
