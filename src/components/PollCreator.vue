@@ -37,6 +37,9 @@
       <button class="mt-4" @click="create">Create Poll</button>
       <div class="text-center text-sm opacity-80">or</div>
       <button class="mt-0" @click="importAIQuiz">Import AI Quiz (20 questions)</button>
+      <div class="text-center mt-2">
+        <router-link class="btn inline-block" to="/polls">Manage Polls</router-link>
+      </div>
     </div>
   </div>
 

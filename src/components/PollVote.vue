@@ -99,7 +99,7 @@ function onIndex(index) {
 }
 
 function go(step) {
-  const currentId = route.params.id
+  const currentId = id.value
   const targetId = getAdjacentPollId(currentId, step)
   if (targetId) router.push(`/poll/${targetId}`)
 }
