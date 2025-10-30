@@ -20,7 +20,8 @@ try {
         localStorage.setItem(KEY, JSON.stringify(existing))
       }
       if (poll && poll.id && (!location.hash || !location.hash.includes(`/poll/`))) {
-        location.hash = `#/poll/${poll.id}`
+        const setId = poll.setId
+        location.hash = setId ? `#/sets/${setId}/polls/${poll.id}` : `#/poll/${poll.id}`
       }
     } catch {}
   }

@@ -25,6 +25,9 @@ const routes = [
   { path: '/sets/:setId/polls', component: PollList },
   { path: '/sets/:setId/polls/:id', component: PollVote, props: true },
   { path: '/sets/:setId/results/:id', component: PollResults, props: route => ({ id: route.params.id, present: route.query.present === 'true' }) },
+  // Backward-compatible legacy routes (hash links and old QRs)
+  { path: '/poll/:id', component: PollVote, props: true },
+  { path: '/results/:id', component: PollResults, props: route => ({ id: route.params.id, present: route.query.present === 'true' }) },
 ]
 
 const router = createRouter({

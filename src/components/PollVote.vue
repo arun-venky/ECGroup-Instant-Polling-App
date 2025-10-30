@@ -71,7 +71,9 @@ const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const shareUrl = computed(() => {
   const data = encodePoll(poll.value)
   const pid = id.value
-  return data ? `${BASE}?poll=${pid}&data=${data}#${`/poll/${pid}`}` : `${BASE}?poll=${pid}#${`/poll/${pid}`}`
+  const setId = poll.value?.setId
+  const path = setId ? `/sets/${setId}/polls/${pid}` : `/poll/${pid}`
+  return data ? `${BASE}?poll=${pid}&data=${data}#${path}` : `${BASE}?poll=${pid}#${path}`
 })
 
 async function copyLink() {
@@ -95,13 +97,18 @@ function onIndex(index) {
   alreadyVoted.value = true
   playVoteSound()
   confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
-  router.push(`/results/${id.value}`)
+  const setId = poll.value?.setId
+  if (setId) router.push(`/sets/${setId}/results/${id.value}`)
+  else router.push(`/results/${id.value}`)
 }
 
 function go(step) {
   const currentId = id.value
   const targetId = getAdjacentPollIdSameSet(currentId, step)
-  if (targetId) router.push(`/poll/${targetId}`)
+  if (!targetId) return
+  const setId = poll.value?.setId
+  if (setId) router.push(`/sets/${setId}/polls/${targetId}`)
+  else router.push(`/poll/${targetId}`)
 }
 </script>
 

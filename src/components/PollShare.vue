@@ -34,7 +34,9 @@ const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const shareUrl = computed(() => {
   const poll = getPoll(props.id)
   const data = encodePoll(poll)
-  return data ? `${BASE}?poll=${props.id}&data=${data}#${`/poll/${props.id}`}` : `${BASE}?poll=${props.id}#${`/poll/${props.id}`}`
+  const setId = poll?.setId
+  const path = setId ? `/sets/${setId}/polls/${props.id}` : `/poll/${props.id}`
+  return data ? `${BASE}?poll=${props.id}&data=${data}#${path}` : `${BASE}?poll=${props.id}#${path}`
 })
 
 async function copyLink() {

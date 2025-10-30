@@ -79,7 +79,9 @@ const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const voteUrl = computed(() => {
   const data = encodePoll(poll.value)
   const pid = id.value
-  return data ? `${BASE}?poll=${pid}&data=${data}#${`/poll/${pid}`}` : `${BASE}?poll=${pid}#${`/poll/${pid}`}`
+  const setId = poll.value?.setId
+  const path = setId ? `/sets/${setId}/polls/${pid}` : `/poll/${pid}`
+  return data ? `${BASE}?poll=${pid}&data=${data}#${path}` : `${BASE}?poll=${pid}#${path}`
 })
 
 async function copyLink() {
@@ -225,10 +227,13 @@ function go(step) {
   const currentId = id.value
   const targetId = getAdjacentPollIdSameSet(currentId, step)
   if (!targetId) return
+  const setId = poll.value?.setId
   if (present.value) {
-    router.push(`/results/${targetId}?present=true`)
+    if (setId) router.push(`/sets/${setId}/results/${targetId}?present=true`)
+    else router.push(`/results/${targetId}?present=true`)
   } else {
-    router.push(`/results/${targetId}`)
+    if (setId) router.push(`/sets/${setId}/results/${targetId}`)
+    else router.push(`/results/${targetId}`)
   }
 }
 
