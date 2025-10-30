@@ -7,7 +7,7 @@
           <option value="">All Sets</option>
           <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <router-link v-if="activeSet" class="btn w-auto" :to="`/sets/${activeSet}/polls/create`">Add Poll</router-link>
+        <button v-if="activeSet" class="btn w-auto" @click="openCreate()">Add Poll</button>
         <button class="btn w-auto" :disabled="!activeSet" @click="startActive">Start</button>
         <button class="btn w-auto" @click="clearAll">Clear All</button>
       </div>
@@ -32,6 +32,51 @@
         </div>
       </div>
     </div>
+    
+    <!-- Create Poll Modal -->
+    <div v-if="showCreate" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl border border-gray-200">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 class="text-xl font-bold">Create Poll</h3>
+          <button class="w-auto" @click="closeCreate">✕</button>
+        </div>
+        <div class="p-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="sm:col-span-2">
+              <label class="block mb-1">Question</label>
+              <input v-model="form.question" placeholder="What's your question?" />
+            </div>
+            <div>
+              <label class="block mb-1">Poll Type</label>
+              <select v-model="form.type">
+                <option value="multiple">Multiple Choice</option>
+                <option value="star">Star Rating</option>
+                <option value="like">Like / Dislike</option>
+                <option value="emoji">Emoji Reactions</option>
+              </select>
+            </div>
+            <div v-if="form.type==='star'">
+              <label class="block mb-1">Stars</label>
+              <input type="number" min="3" max="10" v-model.number="form.stars" />
+            </div>
+          </div>
+          <div v-if="showOptions" class="mt-3">
+            <label class="block mb-1">Options</label>
+            <div class="flex flex-col gap-2">
+              <div v-for="(opt, i) in form.options" :key="i" class="flex gap-2">
+                <input v-model="form.options[i]" placeholder="Option" />
+                <button class="w-auto" @click="removeOption(i)">Remove</button>
+              </div>
+              <button class="w-auto" @click="addOption">Add Option</button>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t border-gray-200 flex justify-end gap-2">
+          <button class="w-auto" @click="closeCreate">Cancel</button>
+          <button class="w-auto" @click="createFromModal" :disabled="!canCreate">Create</button>
+        </div>
+      </div>
+    </div>
   </div>
   
   
@@ -40,7 +85,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, listPollIdsBySetSorted } from '../utils/storage.js'
+import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, listPollIdsBySetSorted, createPoll } from '../utils/storage.js'
 import QrcodeVue from 'qrcode.vue'
 
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
@@ -50,6 +95,9 @@ const sets = ref([])
 const activeSet = ref('')
 const route = useRoute()
 const router = useRouter()
+
+const showCreate = ref(false)
+const form = ref({ question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5 })
 
 function load() {
   const ids = listPollIdsSorted()
@@ -113,6 +161,37 @@ function clearAll() {
   if (!confirm('Delete ALL polls? This cannot be undone.')) return
   clearAllPolls()
   load()
+}
+
+const showOptions = computed(() => form.value.type === 'multiple' || form.value.type === 'emoji')
+
+function addOption() {
+  form.value.options.push('New option')
+}
+function removeOption(index) {
+  form.value.options.splice(index, 1)
+}
+
+function openCreate() {
+  showCreate.value = true
+}
+function closeCreate() {
+  showCreate.value = false
+}
+
+const canCreate = computed(() => !!form.value.question.trim())
+
+function createFromModal() {
+  if (!canCreate.value) return
+  let finalOptions = form.value.options
+  if (form.value.type === 'like') finalOptions = ['Like', 'Dislike']
+  if (form.value.type === 'emoji') finalOptions = ['😀', '😍', '🤔', '😮']
+  if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
+  const poll = createPoll({ question: form.value.question.trim(), type: form.value.type, options: finalOptions, setId: activeSet.value || null })
+  showCreate.value = false
+  form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5 }
+  load()
+  router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
 }
 </script>
 
