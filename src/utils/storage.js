@@ -13,9 +13,18 @@ export function savePolls(polls) {
   localStorage.setItem(POLLS_KEY, JSON.stringify(polls))
 }
 
+function generateId() {
+  // RFC4122 v4-like fallback
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
+
 export function createPoll({ question, type, options }) {
   const polls = loadPolls()
-  const id = crypto.randomUUID()
+  const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
   const votes = new Array(options.length).fill(0)
   polls[id] = { id, question, type, options, votes, createdAt: Date.now() }
   savePolls(polls)
