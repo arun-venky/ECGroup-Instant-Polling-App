@@ -31,6 +31,8 @@
         <router-link class="w-full sm:w-auto" :to="`/poll/${id}`">Back to Vote</router-link>
         <router-link class="w-full sm:w-auto" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
         <router-link v-if="present" class="w-full sm:w-auto" :to="`/results/${id}`">Exit Presentation</router-link>
+        <button class="w-full sm:w-auto" @click="go(-1)">Previous Poll</button>
+        <button class="w-full sm:w-auto" @click="go(1)">Next Poll</button>
       </div>
       <ConfettiReveal />
     </div>
@@ -47,14 +49,15 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
-import { getPoll } from '../utils/storage.js'
+import { useRoute, useRouter } from 'vue-router'
+import { getPoll, getAdjacentPollId } from '../utils/storage.js'
 import { renderChart } from '../utils/charts.js'
 import { playRevealSound, setBackgroundMusic, playBackgroundMusic, stopBackgroundMusic } from '../utils/sound.js'
 import ConfettiReveal from './ConfettiReveal.vue'
 import QrcodeVue from 'qrcode.vue'
 
 const route = useRoute()
+const router = useRouter()
 const id = route.params.id
 const present = computed(() => route.query.present === 'true')
 const poll = ref(null)
@@ -66,12 +69,13 @@ const colors = ['#00C4CC', '#2F80ED', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444'
 function encodePoll(p) {
   if (!p) return ''
   try {
-    const json = JSON.stringify(p)
+    const { id, question, type, options } = p
+    const json = JSON.stringify({ id, question, type, options })
     return window.btoa(unescape(encodeURIComponent(json)))
   } catch { return '' }
 }
 
-const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
+const BASE = `${window.location.origin}${window.location.pathname}`
 const voteUrl = computed(() => {
   const data = encodePoll(poll.value)
   return data ? `${BASE}?poll=${id}&data=${data}#${`/poll/${id}`}` : `${BASE}?poll=${id}#${`/poll/${id}`}`
@@ -129,12 +133,14 @@ onMounted(async () => {
   }
   window.addEventListener('resize', draw)
   window.addEventListener('storage', onStorage)
+  window.addEventListener('keydown', onKeyDown)
   startPolling()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', draw)
   window.removeEventListener('storage', onStorage)
+  window.removeEventListener('keydown', onKeyDown)
   stopPolling()
   if (chartInstance) chartInstance.destroy()
   if (present.value) stopBackgroundMusic()
@@ -212,5 +218,22 @@ function animateVotes(from, to, duration = 800) {
     }
   }
   requestAnimationFrame(frame)
+}
+
+function go(step) {
+  const currentId = route.params.id
+  const targetId = getAdjacentPollId(currentId, step)
+  if (targetId) router.push(`/poll/${targetId}`)
+}
+
+function onKeyDown(e) {
+  if (!present.value) return
+  if (e.key === 'ArrowRight') {
+    e.preventDefault()
+    go(1)
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault()
+    go(-1)
+  }
 }
 </script>

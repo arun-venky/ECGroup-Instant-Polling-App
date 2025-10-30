@@ -24,12 +24,13 @@ const props = defineProps({ id: { type: String, required: true } })
 function encodePoll(p) {
   if (!p) return ''
   try {
-    const json = JSON.stringify(p)
+    const { id, question, type, options } = p
+    const json = JSON.stringify({ id, question, type, options })
     return window.btoa(unescape(encodeURIComponent(json)))
   } catch { return '' }
 }
 
-const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
+const BASE = `${window.location.origin}${window.location.pathname}`
 const shareUrl = computed(() => {
   const poll = getPoll(props.id)
   const data = encodePoll(poll)

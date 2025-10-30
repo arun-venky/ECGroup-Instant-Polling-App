@@ -33,8 +33,10 @@
         </button>
       </div>
 
-      <div class="flex gap-3 mt-2">
+      <div class="flex flex-wrap gap-3 mt-2">
         <router-link class="w-full sm:w-auto" :to="`/results/${id}`">View Results</router-link>
+        <button class="w-full sm:w-auto" @click="go(-1)">Previous Poll</button>
+        <button class="w-full sm:w-auto" @click="go(1)">Next Poll</button>
       </div>
     </div>
   </div>
@@ -43,7 +45,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPoll, votePoll, hasVoted, markVoted } from '../utils/storage.js'
+import { getPoll, votePoll, hasVoted, markVoted, getAdjacentPollId } from '../utils/storage.js'
 import { playVoteSound } from '../utils/sound.js'
 import confetti from 'canvas-confetti'
 import StarRating from './StarRating.vue'
@@ -59,12 +61,13 @@ const alreadyVoted = ref(false)
 function encodePoll(p) {
   if (!p) return ''
   try {
-    const json = JSON.stringify(p)
+    const { id, question, type, options } = p
+    const json = JSON.stringify({ id, question, type, options })
     return window.btoa(unescape(encodeURIComponent(json)))
   } catch { return '' }
 }
 
-const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
+const BASE = `${window.location.origin}${window.location.pathname}`
 const shareUrl = computed(() => {
   const data = encodePoll(poll.value)
   return data ? `${BASE}?poll=${id}&data=${data}#${`/poll/${id}`}` : `${BASE}?poll=${id}#${`/poll/${id}`}`
@@ -92,6 +95,12 @@ function onIndex(index) {
   playVoteSound()
   confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
   router.push(`/results/${id}`)
+}
+
+function go(step) {
+  const currentId = route.params.id
+  const targetId = getAdjacentPollId(currentId, step)
+  if (targetId) router.push(`/poll/${targetId}`)
 }
 </script>
 
