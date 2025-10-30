@@ -54,7 +54,7 @@ import QrcodeVue from 'qrcode.vue'
 
 const route = useRoute()
 const router = useRouter()
-Fixeconst id = computed(() => route.params.id)
+const id = computed(() => route.params.id)
 const poll = ref(null)
 const alreadyVoted = ref(false)
 
