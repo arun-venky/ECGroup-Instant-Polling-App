@@ -34,7 +34,7 @@
       </div>
 
       <div class="flex flex-wrap gap-3 mt-2 justify-center text-center">
-        <router-link class="w-full sm:w-auto" :to="`/results/${id}`">View Results</router-link>
+        <router-link class="btn w-full sm:w-auto" :to="`/results/${id}`">View Results</router-link>
         <button class="w-full sm:w-auto" @click="go(-1)">Previous Poll</button>
         <button class="w-full sm:w-auto" @click="go(1)">Next Poll</button>
       </div>

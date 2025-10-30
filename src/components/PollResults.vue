@@ -28,9 +28,9 @@
         </div>
       </div>
       <div class="flex flex-wrap gap-3 mt-2 justify-center text-center">
-        <router-link class="w-full sm:w-auto" :to="`/poll/${id}`">Back to Vote</router-link>
-        <router-link class="w-full sm:w-auto" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
-        <router-link v-if="present" class="w-full sm:w-auto" :to="`/results/${id}`">Exit Presentation</router-link>
+        <router-link class="btn w-full sm:w-auto" :to="`/poll/${id}`">Back to Vote</router-link>
+        <router-link class="btn w-full sm:w-auto" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
+        <router-link v-if="present" class="btn w-full sm:w-auto" :to="`/results/${id}`">Exit Presentation</router-link>
         <button class="w-full sm:w-auto" @click="go(-1)">Previous Poll</button>
         <button class="w-full sm:w-auto" @click="go(1)">Next Poll</button>
       </div>

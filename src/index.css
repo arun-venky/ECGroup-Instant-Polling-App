@@ -20,6 +20,14 @@ button:hover {
   @apply bg-accent scale-105;
 }
 
+/* Shared button style for links and non-button elements */
+.btn {
+  @apply px-4 py-2 rounded-lg bg-primary text-dark font-bold transition-all duration-300;
+}
+.btn:hover {
+  @apply bg-accent scale-105;
+}
+
 input, textarea, select {
   @apply bg-white text-dark rounded-md px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full shadow-sm;
 }
