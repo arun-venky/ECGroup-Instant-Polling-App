@@ -7,10 +7,10 @@ import PollList from '../components/PollList.vue'
 import PollSets from '../components/PollSets.vue'
 
 const routes = [
-  { path: '/', redirect: '/create' },
-  { path: '/create', component: PollCreator },
+  { path: '/', redirect: '/sets' }, 
   { path: '/sets', component: PollSets },
   { path: '/sets/:setId/polls', redirect: to => ({ path: '/polls', query: { set: to.params.setId } }) },
+  { path: '/sets/:setId/polls/create', component: PollCreator },
   { path: '/sets/:setId/start', async beforeEnter(to) {
       const mod = await import('../utils/storage.js')
       const ids = mod.listPollIdsBySetSorted(to.params.setId)
@@ -20,9 +20,9 @@ const routes = [
       return { path: '/sets' }
     }
   },
-  { path: '/polls', component: PollList },
-  { path: '/poll/:id', component: PollVote, props: true },
-  { path: '/results/:id', component: PollResults, props: route => ({ id: route.params.id, present: route.query.present === 'true' }) },
+  { path: '/sets/:setId/polls', component: PollList },
+  { path: '/sets/:setId/polls/:id', component: PollVote, props: true },
+  { path: '/sets/:setId/results/:id', component: PollResults, props: route => ({ id: route.params.id, present: route.query.present === 'true' }) },
 ]
 
 const router = createRouter({
