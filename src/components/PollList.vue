@@ -23,8 +23,8 @@
             <div class="font-bold text-lg break-words">{{ p.question }}</div>
             <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
             <div class="flex flex-wrap gap-2 mt-3">
-              <router-link class="btn" :to="activeSet ? `/sets/${activeSet}/polls/${p.id}` : `/poll/${p.id}`">Open</router-link>
-              <router-link class="btn" :to="activeSet ? `/sets/${activeSet}/results/${p.id}` : `/results/${p.id}`">Results</router-link>
+              <router-link class="btn" :to="linkToPoll(p)">Open</router-link>
+              <router-link class="btn" :to="linkToResults(p)">Results</router-link>
               <button class="btn" @click="copy(buildUrl(p))">Copy Link</button>
               <button class="btn" @click="remove(p.id)">Delete</button>
             </div>
@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, listPollIdsBySetSorted, createPoll } from '../utils/storage.js'
 import QrcodeVue from 'qrcode.vue'
@@ -117,6 +117,13 @@ onMounted(() => {
   const fromParam = route.params.setId
   const preset = (typeof fromParam === 'string' && fromParam) ? fromParam : (typeof fromQuery === 'string' && fromQuery ? fromQuery : '')
   if (preset) activeSet.value = preset
+})
+
+watch(() => route.fullPath, () => {
+  const fromQuery = route.query.set
+  const fromParam = route.params.setId
+  const preset = (typeof fromParam === 'string' && fromParam) ? fromParam : (typeof fromQuery === 'string' && fromQuery ? fromQuery : '')
+  if (preset !== activeSet.value) activeSet.value = preset
 })
 
 function startActive() {
@@ -161,6 +168,15 @@ function clearAll() {
   if (!confirm('Delete ALL polls? This cannot be undone.')) return
   clearAllPolls()
   load()
+}
+
+function linkToPoll(p) {
+  const setId = p.setId || activeSet.value
+  return setId ? `/sets/${setId}/polls/${p.id}` : `/poll/${p.id}`
+}
+function linkToResults(p) {
+  const setId = p.setId || activeSet.value
+  return setId ? `/sets/${setId}/results/${p.id}` : `/results/${p.id}`
 }
 
 const showOptions = computed(() => form.value.type === 'multiple' || form.value.type === 'emoji')
