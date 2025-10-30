@@ -7,6 +7,7 @@
           <option value="">All Sets</option>
           <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
+        <button class="btn w-auto" :disabled="!activeSet" @click="startActive">Start</button>
         <button class="btn w-auto" @click="clearAll">Clear All</button>
       </div>
     </div>
@@ -34,8 +35,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets } from '../utils/storage.js'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, listPollIdsBySetSorted } from '../utils/storage.js'
 import QrcodeVue from 'qrcode.vue'
 
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
@@ -43,6 +45,8 @@ const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const polls = ref([])
 const sets = ref([])
 const activeSet = ref('')
+const route = useRoute()
+const router = useRouter()
 
 function load() {
   const ids = listPollIdsSorted()
@@ -56,6 +60,19 @@ function load() {
 
 onMounted(load)
 watch(activeSet, load)
+
+onMounted(() => {
+  const preset = route.query.set
+  if (typeof preset === 'string' && preset) {
+    activeSet.value = preset
+  }
+})
+
+function startActive() {
+  if (!activeSet.value) return
+  const ids = listPollIdsBySetSorted(activeSet.value)
+  if (ids.length) router.push(`/poll/${ids[0]}`)
+}
 
 function encodePoll(p) {
   if (!p) return ''

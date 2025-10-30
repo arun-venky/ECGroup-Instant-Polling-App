@@ -14,7 +14,7 @@
           </div>
           <div class="flex items-center gap-2">
             <button class="btn w-auto" @click="startSet(s.id)">Start</button>
-            <router-link class="btn w-auto" :to="`/polls`" @click.native="filterSet(s.id)">View Polls</router-link>
+            <router-link class="btn w-auto" :to="`/polls?set=${s.id}`">View Polls</router-link>
           </div>
         </div>
       </div>
