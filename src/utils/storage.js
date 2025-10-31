@@ -45,7 +45,7 @@ function invalidateCache() {
 
 export async function createPoll({ question, type, options, setId = null, answer = null }) {
   try {
-    const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
+  const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
     // Votes are now stored in the votes collection, not in the poll document
     const pollData = {
       id,
@@ -139,7 +139,7 @@ async function aggregateVotes(pollId, pollType, options) {
       return { textResponses, votes: null }
     } else {
       // For other poll types, aggregate by optionIndex
-      const votes = new Array(options.length).fill(0)
+  const votes = new Array(options.length).fill(0)
       snapshot.forEach((doc) => {
         const data = doc.data()
         if (typeof data.optionIndex === 'number' && data.optionIndex >= 0 && data.optionIndex < votes.length) {
@@ -160,6 +160,12 @@ async function aggregateVotes(pollId, pollType, options) {
 
 export async function votePoll(id, index) {
   try {
+    // Check if already voted
+    const alreadyVoted = await hasVoted(id)
+    if (alreadyVoted) {
+      throw new Error('You have already voted on this poll from this device')
+    }
+    
     // Verify poll exists
     const pollRef = doc(db, COLLECTIONS.POLLS, id)
     const pollSnap = await getDoc(pollRef)
@@ -167,13 +173,17 @@ export async function votePoll(id, index) {
       throw new Error('Poll does not exist')
     }
     
+    // Get device information
+    const deviceInfo = getDeviceInfo()
+    
     // Create a vote document in the votes collection
     const voteId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
     const voteRef = doc(db, COLLECTIONS.VOTES, voteId)
     const voteData = {
       pollId: id,
       optionIndex: index,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      ...deviceInfo
     }
     
     await setDoc(voteRef, voteData)
@@ -192,6 +202,12 @@ export async function votePollText(id, textResponse) {
       throw new Error('Text response cannot be empty')
     }
     
+    // Check if already voted
+    const alreadyVoted = await hasVoted(id)
+    if (alreadyVoted) {
+      throw new Error('You have already voted on this poll from this device')
+    }
+    
     // Verify poll exists
     const pollRef = doc(db, COLLECTIONS.POLLS, id)
     const pollSnap = await getDoc(pollRef)
@@ -199,13 +215,17 @@ export async function votePollText(id, textResponse) {
       throw new Error('Poll does not exist')
     }
     
+    // Get device information
+    const deviceInfo = getDeviceInfo()
+    
     // Create a vote document in the votes collection with text response
     const voteId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
     const voteRef = doc(db, COLLECTIONS.VOTES, voteId)
     const voteData = {
       pollId: id,
       textResponse: textResponse.trim(),
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      ...deviceInfo
     }
     
     await setDoc(voteRef, voteData)
@@ -218,13 +238,84 @@ export async function votePollText(id, textResponse) {
   }
 }
 
-export function hasVoted(id) {
-  // Check localStorage for local vote tracking
-  // This prevents duplicate votes from the same device
+// Generate or retrieve device identifier
+function getDeviceId() {
+  // Try to get from localStorage first (persistent across sessions)
+  let deviceId = localStorage.getItem('device_id')
+  if (deviceId) {
+    return deviceId
+  }
+  
+  // Generate a device fingerprint based on available browser features
+  try {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    ctx.textBaseline = 'top'
+    ctx.font = '14px Arial'
+    ctx.fillText('Device fingerprint', 2, 2)
+    
+    const fingerprint = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + 'x' + screen.height,
+      new Date().getTimezoneOffset(),
+      canvas.toDataURL().slice(-50), // Canvas fingerprint
+      navigator.hardwareConcurrency || '',
+      navigator.deviceMemory || ''
+    ].join('|')
+    
+    // Create a hash-like ID from fingerprint
+    let hash = 0
+    for (let i = 0; i < fingerprint.length; i++) {
+      const char = fingerprint.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // Convert to 32-bit integer
+    }
+    
+    deviceId = 'device_' + Math.abs(hash).toString(36)
+    localStorage.setItem('device_id', deviceId)
+    return deviceId
+  } catch (error) {
+    // Fallback: use a random ID (less reliable but works)
+    deviceId = 'device_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
+    localStorage.setItem('device_id', deviceId)
+    return deviceId
+  }
+}
+
+// Get device information for vote tracking
+function getDeviceInfo() {
+  return {
+    deviceId: getDeviceId(),
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    platform: navigator.platform,
+    screenResolution: `${screen.width}x${screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || new Date().getTimezoneOffset().toString()
+  }
+}
+
+export async function hasVoted(id) {
+  try {
+    const deviceId = getDeviceId()
+    const votesRef = collection(db, COLLECTIONS.VOTES)
+    const q = query(
+      votesRef,
+      where('pollId', '==', id),
+      where('deviceId', '==', deviceId)
+    )
+    const snapshot = await getDocs(q)
+    return !snapshot.empty
+  } catch (error) {
+    // If query fails (e.g., index not created), fallback to localStorage
+    console.warn('Error checking vote status, using localStorage fallback:', error)
   return !!localStorage.getItem(`voted_${id}`)
+  }
 }
 
 export function markVoted(id) {
+  // No longer needed - votes are tracked in Firestore with device info
+  // Keep for backward compatibility but make it a no-op
   localStorage.setItem(`voted_${id}`, 'true')
 }
 
@@ -243,10 +334,10 @@ export async function listPollIdsSorted() {
 export async function getAdjacentPollId(id, step = 1) {
   try {
     const ids = await listPollIdsSorted()
-    const idx = ids.indexOf(id)
-    if (idx === -1) return null
-    const target = ids[idx + step]
-    return target || null
+  const idx = ids.indexOf(id)
+  if (idx === -1) return null
+  const target = ids[idx + step]
+  return target || null
   } catch (error) {
     console.error('Error getting adjacent poll:', error)
     return null
@@ -304,7 +395,7 @@ export async function getAdjacentPollIdSameSet(id, step = 1) {
     
     const polls = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }))
     const ids = polls.map(p => p.id)
-    const idx = ids.indexOf(id)
+  const idx = ids.indexOf(id)
     if (idx === -1) {
       console.warn('Current poll not found in same set list:', id, 'Available IDs:', ids)
       return null
@@ -425,7 +516,7 @@ export async function clearAllPolls() {
 
 export async function createPollSet(name) {
   try {
-    const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
+  const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
     const setData = {
       id,
       name,
