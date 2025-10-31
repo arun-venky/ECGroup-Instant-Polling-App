@@ -13,19 +13,37 @@ const routes = [
   { path: '/sets/create', component: PollSetCreate },
   // List polls inside a set
   { path: '/sets/:setId/polls/create', component: PollCreator },
-  { path: '/sets/:setId/start', async beforeEnter(to, from, next) {
+  { 
+    path: '/sets/:setId/start', 
+    async beforeEnter(to, from, next) {
       try {
         const mod = await import('../utils/storage.js')
-        const ids = await mod.listPollIdsBySetSorted(to.params.setId)
-        if (ids && ids.length > 0) {
-          next(`/sets/${to.params.setId}/polls/${ids[0]}`)
+        const setId = to.params.setId
+        console.log('BeforeEnter: Starting poll set', setId)
+        
+        if (!setId) {
+          console.warn('No setId provided')
+          next({ path: '/sets', replace: true })
+          return
+        }
+        
+        const ids = await mod.listPollIdsBySetSorted(setId)
+        console.log('BeforeEnter: Poll IDs for set', setId, ':', ids)
+        
+        if (ids && Array.isArray(ids) && ids.length > 0) {
+          const targetPath = `/sets/${setId}/polls/${ids[0]}`
+          console.log('BeforeEnter: Redirecting to', targetPath)
+          next({ path: targetPath, replace: true })
         } else {
-          console.warn('No polls found for set:', to.params.setId)
-          next('/sets')
+          console.warn('No polls found for set:', setId)
+          // Show a message and redirect to sets page
+          next({ path: '/sets', replace: true })
         }
       } catch (error) {
         console.error('Error starting poll set:', error)
-        next('/sets')
+        console.error('Error details:', error.message, error.stack)
+        // Redirect to sets page on error
+        next({ path: '/sets', replace: true })
       }
     }
   },

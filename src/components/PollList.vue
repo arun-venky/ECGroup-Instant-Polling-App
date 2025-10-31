@@ -1,6 +1,6 @@
 <template>
-  <div class="max-w-6xl mx-auto card">
-    <div class="flex items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-6 px-6 border-b border-gray-200">
+  <div class="max-w-6xl mx-auto card flex flex-col" style="max-height: calc(100vh - 100px);">
+    <div class="flex items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-6 px-6 border-b border-gray-200 flex-shrink-0">
       <h2 class="text-2xl">All Polls</h2>
       <div class="flex items-center gap-2">
         <select v-model="activeSet" class="px-3 py-2 border border-gray-300 rounded-md">
@@ -12,32 +12,35 @@
         <button class="btn w-auto" @click="clearAll">Clear All</button>
       </div>
     </div>
-    <div v-if="!polls.length" class="text-neutral">No polls created yet.</div>
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div v-for="p in polls" :key="p.id" class="card">
-        <div class="flex items-start gap-3">
-          <div class="shrink-0">
-            <Qrcode :value="buildUrl(p)" :size="96" level="H" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="font-bold text-lg break-words">{{ p.question }}</div>
-            <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
-            <div class="flex flex-wrap gap-2 mt-3">
-              <router-link class="btn" :to="linkToPoll(p)">Open</router-link>
-              <router-link class="btn" :to="linkToResults(p)">Results</router-link>
-              <button class="btn" @click="copy(buildUrl(p))">Copy Link</button>
-              <button class="btn" @click="remove(p.id)">Delete</button>
+    <div class="flex-1 overflow-y-auto pr-2 -mr-2">
+      <div v-if="!polls.length" class="text-neutral">No polls created yet.</div>
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-for="p in polls" :key="p.id" class="card">
+          <div class="flex items-start gap-3">
+            <div class="shrink-0">
+              <Qrcode :value="buildUrl(p)" :size="96" level="H" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-lg break-words">{{ p.question }}</div>
+              <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
+              <div class="flex flex-wrap gap-2 mt-3">
+                <router-link class="btn" :to="linkToPoll(p)">Open</router-link>
+                <router-link class="btn" :to="linkToResults(p)">Results</router-link>
+                <button class="btn" @click="copy(buildUrl(p))">Copy Link</button>
+                <button class="btn" @click="edit(p)">Edit</button>
+                <button class="btn" @click="remove(p.id)">Delete</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- Create Poll Modal -->
-    <div v-if="showCreate" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+    <!-- Create/Edit Poll Modal -->
+    <div v-if="showCreate || showEdit" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
       <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl border border-gray-200">
         <div class="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 class="text-xl font-bold">Create Poll</h3>
+          <h3 class="text-xl font-bold">{{ editingPoll ? 'Edit Poll' : 'Create Poll' }}</h3>
           <button class="btn p-2 min-w-[2.5rem]" @click="closeCreate">✕</button>
         </div>
         <div class="p-4">
@@ -102,7 +105,7 @@
         </div>
         <div class="p-4 border-t border-gray-200 flex justify-end gap-2 items-center">
           <button class="btn" @click="closeCreate">Cancel</button>
-          <button class="btn" @click="createFromModal" :disabled="!canCreate">Create</button>
+          <button class="btn" @click="savePoll" :disabled="!canCreate">{{ editingPoll ? 'Save' : 'Create' }}</button>
         </div>
       </div>
     </div>
@@ -114,7 +117,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, listPollIdsBySetSorted, createPoll } from '../utils/storage.js'
+import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, listPollIdsBySetSorted, createPoll, updatePoll } from '../utils/storage.js'
 import { useDialog } from '../composables/useDialog.js'
 import QrcodeVue from 'qrcode.vue'
 
@@ -132,6 +135,8 @@ const route = useRoute()
 const router = useRouter()
 
 const showCreate = ref(false)
+const showEdit = ref(false)
+const editingPoll = ref(null)
 const form = ref({ question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' })
 
 async function load() {
@@ -256,16 +261,57 @@ function removeOption(index) {
 }
 
 function openCreate() {
+  editingPoll.value = null
   showCreate.value = true
+  showEdit.value = false
+  form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
 }
+
+function edit(poll) {
+  editingPoll.value = poll
+  showEdit.value = true
+  showCreate.value = false
+  
+  // Determine answer value for the form
+  let answerValue = ''
+  if (poll.answer !== null && poll.answer !== undefined) {
+    if (poll.type === 'multiple' || poll.type === 'emoji' || poll.type === 'star') {
+      answerValue = String(poll.answer)
+    } else {
+      answerValue = String(poll.answer)
+    }
+  }
+  
+  // Populate form with existing poll data
+  form.value = {
+    question: poll.question || '',
+    type: poll.type || 'multiple',
+    options: poll.type === 'star' 
+      ? poll.options || [] 
+      : (poll.options && poll.options.length > 0 ? [...poll.options] : ['Option A', 'Option B']),
+    stars: poll.type === 'star' ? (poll.options?.length || 5) : 5,
+    answer: answerValue
+  }
+  
+  // Handle like and emoji types
+  if (poll.type === 'like') {
+    form.value.options = ['Like', 'Dislike']
+  }
+  if (poll.type === 'emoji') {
+    form.value.options = poll.options || ['😀', '😍', '🤔', '😮']
+  }
+}
+
 function closeCreate() {
   showCreate.value = false
+  showEdit.value = false
+  editingPoll.value = null
   form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
 }
 
 const canCreate = computed(() => !!form.value.question.trim())
 
-async function createFromModal() {
+async function savePoll() {
   if (!canCreate.value) return
   let finalOptions = form.value.options
   if (form.value.type === 'like') finalOptions = ['Like', 'Dislike']
@@ -287,17 +333,30 @@ async function createFromModal() {
     }
   }
   
-  const poll = await createPoll({ 
-    question: form.value.question.trim(), 
-    type: form.value.type, 
-    options: finalOptions, 
-    setId: activeSet.value || null,
-    answer: normalizedAnswer
-  })
-  showCreate.value = false
-  form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
-  await load()
-  router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
+  if (editingPoll.value) {
+    // Update existing poll
+    await updatePoll(editingPoll.value.id, {
+      question: form.value.question.trim(),
+      type: form.value.type,
+      options: finalOptions,
+      setId: editingPoll.value.setId, // Preserve existing setId
+      answer: normalizedAnswer
+    })
+    closeCreate()
+    await load()
+  } else {
+    // Create new poll
+    const poll = await createPoll({ 
+      question: form.value.question.trim(), 
+      type: form.value.type, 
+      options: finalOptions, 
+      setId: activeSet.value || null,
+      answer: normalizedAnswer
+    })
+    closeCreate()
+    await load()
+    router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
+  }
 }
 </script>
 

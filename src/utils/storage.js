@@ -67,6 +67,35 @@ export async function createPoll({ question, type, options, setId = null, answer
   }
 }
 
+export async function updatePoll(id, { question, type, options, setId = null, answer = null }) {
+  try {
+    const pollRef = doc(db, COLLECTIONS.POLLS, id)
+    const pollSnap = await getDoc(pollRef)
+    if (!pollSnap.exists()) {
+      throw new Error('Poll does not exist')
+    }
+    
+    // Get existing data to preserve createdAt
+    const existingData = pollSnap.data()
+    
+    // Update poll data (preserve createdAt, id)
+    const updateData = {
+      question,
+      type,
+      options,
+      setId: setId !== undefined ? setId : existingData.setId,
+      answer: answer !== undefined ? answer : existingData.answer
+    }
+    
+    await updateDoc(pollRef, updateData)
+    invalidateCache()
+    return { ...existingData, ...updateData, id }
+  } catch (error) {
+    console.error('Error updating poll:', error)
+    throw error
+  }
+}
+
 export async function getPoll(id) {
   try {
     const pollRef = doc(db, COLLECTIONS.POLLS, id)
