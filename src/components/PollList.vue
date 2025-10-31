@@ -290,8 +290,13 @@ async function startActive() {
 function encodePoll(p) {
   if (!p) return ''
   try {
-    const { id, question, type, options } = p
-    const json = JSON.stringify({ id, question, type, options })
+    const { id, question, type, options, setId } = p
+    // For image polls, exclude the large base64 image data from QR encoding
+    // Only include the count and a placeholder to keep QR code size manageable
+    const encodedOptions = type === 'image' && options 
+      ? options.map(() => '[image]') 
+      : options
+    const json = JSON.stringify({ id, question, type, options: encodedOptions, setId })
     return window.btoa(unescape(encodeURIComponent(json)))
   } catch { return '' }
 }
