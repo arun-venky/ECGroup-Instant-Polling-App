@@ -58,7 +58,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPoll, votePoll, votePollText, hasVoted, markVoted, getAdjacentPollIdSameSet } from '../utils/storage.js'
+import { getPoll, votePoll, votePollText, hasVoted, getAdjacentPollIdSameSet } from '../utils/storage.js'
 import { playVoteSound } from '../utils/sound.js'
 import confetti from 'canvas-confetti'
 import StarRating from './StarRating.vue'
@@ -99,36 +99,38 @@ async function copyLink() {
 
 onMounted(async () => {
   poll.value = await getPoll(id.value)
-  alreadyVoted.value = hasVoted(id.value)
+  alreadyVoted.value = await hasVoted(id.value)
 })
 
 watch(() => route.params.id, async () => {
   poll.value = await getPoll(route.params.id)
-  alreadyVoted.value = hasVoted(route.params.id)
+  alreadyVoted.value = await hasVoted(route.params.id)
 })
 
 async function onIndex(index) {
   if (alreadyVoted.value) return
-  await votePoll(id.value, index)
-  markVoted(id.value)
-  alreadyVoted.value = true
-  playVoteSound()
-  confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
-  const setId = poll.value?.setId
-  if (setId) router.push(`/sets/${setId}/results/${id.value}`)
-  else router.push(`/results/${id.value}`)
+  const result = await votePoll(id.value, index)
+  if (result) {
+    alreadyVoted.value = await hasVoted(id.value)
+    playVoteSound()
+    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
+    const setId = poll.value?.setId
+    if (setId) router.push(`/sets/${setId}/results/${id.value}`)
+    else router.push(`/results/${id.value}`)
+  }
 }
 
 async function onTextSubmit() {
   if (alreadyVoted.value || !textResponse.value.trim()) return
-  await votePollText(id.value, textResponse.value)
-  markVoted(id.value)
-  alreadyVoted.value = true
-  playVoteSound()
-  confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
-  const setId = poll.value?.setId
-  if (setId) router.push(`/sets/${setId}/results/${id.value}`)
-  else router.push(`/results/${id.value}`)
+  const result = await votePollText(id.value, textResponse.value)
+  if (result) {
+    alreadyVoted.value = await hasVoted(id.value)
+    playVoteSound()
+    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
+    const setId = poll.value?.setId
+    if (setId) router.push(`/sets/${setId}/results/${id.value}`)
+    else router.push(`/results/${id.value}`)
+  }
 }
 
 async function go(step) {
