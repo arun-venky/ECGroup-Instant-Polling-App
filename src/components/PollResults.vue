@@ -1,16 +1,21 @@
 <template>
-  <div class="max-w-6xl mx-auto card relative px-4 sm:px-6">
-    <h2 class="mb-3 pr-12 sm:pr-16 text-xl sm:text-2xl md:text-3xl break-words">{{ poll?.question || 'Results' }}</h2>
-    <!-- QR tooltip trigger (hover/tap to show) -->
-    <div v-if="poll" class="absolute top-3 right-3 group">
-      <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
-      <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
-        <div class="flex items-center justify-center">
-          <Qrcode :value="voteUrl" :size="120" level="H" class="sm:w-32 sm:h-32" />
+  <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden px-4 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
+    <!-- Sticky Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
+      <h2 class="text-xl sm:text-2xl md:text-3xl break-words pr-12 sm:pr-16 flex-1">{{ poll?.question || 'Results' }}</h2>
+      <!-- QR tooltip trigger (hover/tap to show) -->
+      <div v-if="poll" class="absolute top-3 right-3 sm:relative sm:top-0 sm:right-0 group flex-shrink-0">
+        <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
+        <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
+          <div class="flex items-center justify-center">
+            <Qrcode :value="voteUrl" :size="120" level="H" class="sm:w-32 sm:h-32" />
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Scrollable Content Area -->
+    <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
     <div v-if="loading" class="text-neutral text-center py-12">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
       <div>Loading results...</div>
@@ -20,7 +25,7 @@
       <button class="btn" @click="loadPoll">Retry</button>
     </div>
 
-    <div v-else class="flex flex-col gap-4">
+    <div v-else class="flex flex-col gap-4 pb-4">
       <!-- Text responses display with font size based on percentage -->
       <div v-if="poll.type === 'text'" class="flex flex-col gap-6">
         <div v-if="!consolidatedTextResponses || consolidatedTextResponses.length === 0" class="text-neutral text-center py-12 text-xl">
@@ -48,34 +53,40 @@
           <canvas ref="canvasEl"></canvas>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
-          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
+          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2 p-2 rounded-md transition-colors" :class="{ 'bg-green-100 border-2 border-green-500': item.isCorrect, 'bg-white border border-gray-200': !item.isCorrect }">
             <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-            <span class="flex-1 break-words">{{ item.label }}</span>
+            <span class="flex-1 break-words font-medium" :class="{ 'text-green-700 font-bold': item.isCorrect }">{{ item.label }}</span>
+            <span v-if="item.isCorrect" class="text-green-600 text-xs font-semibold mr-2">✓</span>
             <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+            <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
           </div>
         </div>
       </template>
       <!-- List display for other poll types -->
       <template v-else>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
-          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
+          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2 p-2 rounded-md transition-colors" :class="{ 'bg-green-100 border-2 border-green-500': item.isCorrect, 'bg-white border border-gray-200': !item.isCorrect }">
             <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-            <span class="flex-1 break-words">{{ item.label }}</span>
+            <span class="flex-1 break-words font-medium" :class="{ 'text-green-700 font-bold': item.isCorrect }">{{ item.label }}</span>
+            <span v-if="item.isCorrect" class="text-green-600 text-xs font-semibold mr-2">✓</span>
             <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+            <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
           </div>
         </div>
       </template>
-      <div class="flex flex-wrap gap-2 sm:gap-3 mt-2 justify-center items-center">
-        <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" :to="`/poll/${id}`">Back to Vote</router-link>
-        <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}?present=true`">Presentation</router-link>
-        <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}`">Exit Present</router-link>
-        <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" to="/sets">Home</router-link>
-        <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(-1)">Previous</button>
-        <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
-        <router-link v-if="poll?.setId" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[150px] justify-center py-2" :to="`/sets/${poll.setId}/results`">View All Results</router-link>
-      </div>
-      <ConfettiReveal />
     </div>
+    </div>
+
+    <!-- Sticky Footer -->
+    <div v-if="!loading && !loadError && poll" class="flex flex-wrap gap-2 sm:gap-3 justify-center items-center pt-3 pb-2 sticky bottom-0 bg-white border-t border-gray-200 flex-shrink-0 -mx-4 sm:-mx-6 px-4 sm:px-6">
+      <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" :to="`/poll/${id}`">Back to Vote</router-link>
+      <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}?present=true`">Presentation</router-link>
+      <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" to="/sets">Home</router-link>
+      <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(-1)">Previous</button>
+      <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
+      <router-link v-if="poll?.setId" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[150px] justify-center py-2" :to="`/sets/${poll.setId}/results`">View All Results</router-link>
+    </div>
+    <ConfettiReveal />
     <!-- Fixed QR panel (left-bottom) - minimal overlay to avoid disturbing presentation area -->
     <div v-if="poll" class="fixed left-2 sm:left-3 bottom-2 sm:bottom-3 z-10 hidden sm:flex items-center bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-2 sm:p-3">
       <Qrcode :value="voteUrl" :size="100" level="H" class="sm:w-30 sm:h-30" />
@@ -193,13 +204,33 @@ const percentages = computed(() => {
   return values.map(v => Math.round((v * 100) / t))
 })
 
-// Items to display with labels and percentages
+// Check if an option is the correct answer
+const isCorrectAnswer = (index) => {
+  if (!poll.value || poll.value.answer === null || poll.value.answer === undefined) return false
+  const answer = poll.value.answer
+  const pollType = poll.value.type
+  
+  if (pollType === 'multiple' || pollType === 'emoji' || pollType === 'star') {
+    return parseInt(answer) === index
+  } else if (pollType === 'like') {
+    return answer === poll.value.options[index]
+  }
+  return false
+}
+
+// Items to display with labels, percentages, vote counts, and correct answer indicator
 const displayItems = computed(() => {
   const labels = displayLabels.value
   const percents = percentages.value
+  const values = poll.value?.type === 'emoji' && displayedVotes.value.length 
+    ? displayedVotes.value 
+    : displayValues.value
+  
   return labels.map((label, i) => ({
     label,
-    percentage: percents[i] || 0
+    percentage: percents[i] || 0,
+    votes: values[i] || 0,
+    isCorrect: isCorrectAnswer(i)
   }))
 })
 
@@ -247,15 +278,22 @@ const textResponseItems = computed(() => {
 
 function draw() {
   if (!poll.value || !canvasEl.value || poll.value.type !== 'emoji') return
+  const parent = canvasEl.value.parentElement
+  if (!parent || parent.clientWidth === 0 || parent.clientHeight === 0) {
+    // Retry if container not ready yet
+    setTimeout(() => {
+      if (poll.value && canvasEl.value && poll.value.type === 'emoji') {
+        draw()
+      }
+    }, 100)
+    return
+  }
   if (chartInstance) {
     chartInstance.destroy()
   }
   // Ensure canvas matches container size
-  const parent = canvasEl.value.parentElement
-  if (parent) {
-    canvasEl.value.width = parent.clientWidth
-    canvasEl.value.height = parent.clientHeight
-  }
+  canvasEl.value.width = parent.clientWidth
+  canvasEl.value.height = parent.clientHeight
   const labels = displayLabels.value
   const values = displayedVotes.value.length ? displayedVotes.value : displayValues.value
   chartInstance = renderChart(canvasEl.value, labels, values, 'bar')
@@ -276,12 +314,16 @@ async function loadPoll() {
         if (present.value) {
           const zeros = Array.from({ length: initialValues.length }, () => 0)
           displayedVotes.value = [...zeros]
+          // Wait for DOM to update and ensure canvas is ready
           await nextTick()
+          // Small delay to ensure canvas container has dimensions
+          await new Promise(resolve => setTimeout(resolve, 50))
           draw()
           animateVotes(zeros, initialValues, 1000)
         } else {
           displayedVotes.value = [...initialValues]
           await nextTick()
+          await new Promise(resolve => setTimeout(resolve, 50))
           draw()
         }
       }
@@ -412,6 +454,13 @@ watch(present, async (isOn) => {
     if (latest && latest.type === 'emoji') {
       const currentValues = latest.votes || []
       const from = displayedVotes.value.length ? [...displayedVotes.value] : Array.from({ length: currentValues.length }, () => 0)
+      // Ensure chart is drawn first
+      await nextTick()
+      await new Promise(resolve => setTimeout(resolve, 50))
+      if (!displayedVotes.value.length) {
+        displayedVotes.value = [...from]
+      }
+      draw()
       animateVotes(from, currentValues, 1000)
     }
   } else {

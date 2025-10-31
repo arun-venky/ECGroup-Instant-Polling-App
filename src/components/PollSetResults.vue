@@ -49,20 +49,24 @@
             <canvas :ref="el => setCanvasRef(el, poll.id)"></canvas>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
-            <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex items-center gap-2">
+            <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex items-center gap-2 p-2 rounded-md transition-colors" :class="{ 'bg-green-100 border-2 border-green-500': item.isCorrect, 'bg-white border border-gray-200': !item.isCorrect }">
               <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-              <span class="flex-1 break-words">{{ item.label }}</span>
+              <span class="flex-1 break-words font-medium" :class="{ 'text-green-700 font-bold': item.isCorrect }">{{ item.label }}</span>
+              <span v-if="item.isCorrect" class="text-green-600 text-xs font-semibold mr-2">✓</span>
               <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+              <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
             </div>
           </div>
         </div>
         <!-- List display for other poll types -->
         <div v-else>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
-            <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex items-center gap-2">
+            <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex items-center gap-2 p-2 rounded-md transition-colors" :class="{ 'bg-green-100 border-2 border-green-500': item.isCorrect, 'bg-white border border-gray-200': !item.isCorrect }">
               <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-              <span class="flex-1 break-words">{{ item.label }}</span>
+              <span class="flex-1 break-words font-medium" :class="{ 'text-green-700 font-bold': item.isCorrect }">{{ item.label }}</span>
+              <span v-if="item.isCorrect" class="text-green-600 text-xs font-semibold mr-2">✓</span>
               <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+              <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
             </div>
           </div>
         </div>
@@ -139,13 +143,28 @@ function getTextResponseItems(poll) {
   })
 }
 
+function isCorrectAnswer(poll, index) {
+  if (!poll || poll.answer === null || poll.answer === undefined) return false
+  const answer = poll.answer
+  const pollType = poll.type
+  
+  if (pollType === 'multiple' || pollType === 'emoji' || pollType === 'star') {
+    return parseInt(answer) === index
+  } else if (pollType === 'like') {
+    return answer === poll.options[index]
+  }
+  return false
+}
+
 function getDisplayItems(poll) {
   if (!poll.options || !poll.votes) return []
   
   const total = poll.votes.reduce((sum, v) => sum + (v || 0), 0) || 1
   return poll.options.map((option, i) => ({
     label: option,
-    percentage: Math.round(((poll.votes[i] || 0) * 100) / total)
+    percentage: Math.round(((poll.votes[i] || 0) * 100) / total),
+    votes: poll.votes[i] || 0,
+    isCorrect: isCorrectAnswer(poll, i)
   }))
 }
 
