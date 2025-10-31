@@ -3,6 +3,7 @@
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-2 sm:-mx-6 px-2 sm:px-6 border-b border-gray-200 flex-shrink-0">
       <h2 class="text-xl sm:text-2xl">All Polls</h2>
       <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <router-link v-if="activeSet || route.params.setId" class="btn text-sm flex-1 sm:flex-none min-w-[100px] justify-center" to="/sets">Back to Sets</router-link>
         <select v-model="activeSet" class="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base min-w-[120px]">
           <option value="">All Sets</option>
           <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>

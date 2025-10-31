@@ -43,6 +43,19 @@
           </div>
         </div>
         
+        <!-- Bar chart for emoji type polls -->
+        <div v-else-if="poll.type === 'emoji'">
+          <div class="chart-container h-[40vh] sm:h-[50vh] mb-4">
+            <canvas :ref="el => setCanvasRef(el, poll.id)"></canvas>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
+            <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex items-center gap-2">
+              <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+              <span class="flex-1 break-words">{{ item.label }}</span>
+              <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+            </div>
+          </div>
+        </div>
         <!-- List display for other poll types -->
         <div v-else>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
@@ -56,7 +69,7 @@
       </div>
       
       <div class="flex justify-center gap-3 mt-4">
-        <router-link class="btn text-sm sm:text-base justify-center" :to="`/sets/${setId}`">Back to Sets</router-link>
+        <router-link class="btn text-sm sm:text-base justify-center" to="/sets">Back to Sets</router-link>
         <router-link class="btn text-sm sm:text-base justify-center" :to="`/sets/${setId}/polls`">View Polls</router-link>
       </div>
     </div>
@@ -64,17 +77,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { listPollIdsBySetSorted, getPoll, listPollSets } from '../utils/storage.js'
+import { renderChart } from '../utils/charts.js'
 
 const route = useRoute()
 const setId = computed(() => route.params.setId)
 const polls = ref([])
 const setName = ref('')
 const loading = ref(true)
+const canvasRefs = ref({})
+const chartInstances = ref({})
 
 const colors = ['#00C4CC', '#2F80ED', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444']
+
+function setCanvasRef(el, pollId) {
+  if (el) {
+    canvasRefs.value[pollId] = el
+  }
+}
 
 function consolidateTextResponses(textResponses) {
   if (!textResponses || !textResponses.length) return []
@@ -148,6 +170,10 @@ async function loadResults() {
     }
     
     polls.value = pollsData
+    
+    // Render charts after polls are loaded
+    await nextTick()
+    renderAllCharts()
   } catch (error) {
     console.error('Error loading results:', error)
   } finally {
@@ -155,5 +181,38 @@ async function loadResults() {
   }
 }
 
+function renderAllCharts() {
+  polls.value.forEach(poll => {
+    if (poll.type !== 'emoji') return
+    
+    const canvas = canvasRefs.value[poll.id]
+    if (!canvas) return
+    
+    // Destroy existing chart if it exists
+    if (chartInstances.value[poll.id]) {
+      chartInstances.value[poll.id].destroy()
+    }
+    
+    const labels = poll.options || []
+    const values = poll.votes || []
+    
+    if (labels.length > 0 && values.length > 0) {
+      // Ensure canvas matches container size
+      const parent = canvas.parentElement
+      if (parent) {
+        canvas.width = parent.clientWidth
+        canvas.height = parent.clientHeight
+      }
+      chartInstances.value[poll.id] = renderChart(canvas, labels, values, 'bar')
+    }
+  })
+}
+
 onMounted(loadResults)
 </script>
+
+<style scoped>
+.chart-container {
+  @apply bg-white rounded-xl p-4 sm:p-6 shadow-md border border-gray-200;
+}
+</style>

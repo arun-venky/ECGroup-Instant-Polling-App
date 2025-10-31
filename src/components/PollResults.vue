@@ -42,6 +42,19 @@
         </div>
       </div>
       
+      <!-- Bar chart for emoji type polls -->
+      <template v-else-if="poll.type === 'emoji'">
+        <div class="chart-container h-[50vh] sm:h-[60vh] mb-4">
+          <canvas ref="canvasEl"></canvas>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
+          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
+            <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+            <span class="flex-1 break-words">{{ item.label }}</span>
+            <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+          </div>
+        </div>
+      </template>
       <!-- List display for other poll types -->
       <template v-else>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
@@ -56,6 +69,7 @@
         <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" :to="`/poll/${id}`">Back to Vote</router-link>
         <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}?present=true`">Presentation</router-link>
         <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}`">Exit Present</router-link>
+        <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" to="/sets">Home</router-link>
         <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(-1)">Previous</button>
         <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
         <router-link v-if="poll?.setId" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[150px] justify-center py-2" :to="`/sets/${poll.setId}/results`">View All Results</router-link>
@@ -73,6 +87,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPoll, getAdjacentPollIdSameSet, subscribeToPoll } from '../utils/storage.js'
+import { renderChart } from '../utils/charts.js'
 import { playRevealSound, setBackgroundMusic, playBackgroundMusic, stopBackgroundMusic } from '../utils/sound.js'
 import ConfettiReveal from './ConfettiReveal.vue'
 import QrcodeVue from 'qrcode.vue'
@@ -83,10 +98,12 @@ const id = computed(() => route.params.id)
 const present = computed(() => route.query.present === 'true')
 const poll = ref(null)
 const showQR = ref(false)
+const canvasEl = ref(null)
 const hasNext = ref(false)
 const hasPrevious = ref(false)
 const loading = ref(true)
 const loadError = ref(false)
+let chartInstance = null
 
 const colors = ['#00C4CC', '#2F80ED', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444']
 
@@ -157,14 +174,21 @@ const displayValues = computed(() => {
   return poll.value?.votes || []
 })
 
+// Animated display values to show rising votes (for emoji polls with charts)
+const displayedVotes = ref([])
+
 // Calculate percentages directly from display values
 const total = computed(() => {
-  const values = displayValues.value
+  const values = poll.value?.type === 'emoji' && displayedVotes.value.length 
+    ? displayedVotes.value 
+    : displayValues.value
   return values.length ? values.reduce((a, b) => a + b, 0) : 0
 })
 
 const percentages = computed(() => {
-  const values = displayValues.value
+  const values = poll.value?.type === 'emoji' && displayedVotes.value.length 
+    ? displayedVotes.value 
+    : displayValues.value
   const t = total.value || 1
   return values.map(v => Math.round((v * 100) / t))
 })
@@ -221,6 +245,22 @@ const textResponseItems = computed(() => {
   })
 })
 
+function draw() {
+  if (!poll.value || !canvasEl.value || poll.value.type !== 'emoji') return
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+  // Ensure canvas matches container size
+  const parent = canvasEl.value.parentElement
+  if (parent) {
+    canvasEl.value.width = parent.clientWidth
+    canvasEl.value.height = parent.clientHeight
+  }
+  const labels = displayLabels.value
+  const values = displayedVotes.value.length ? displayedVotes.value : displayValues.value
+  chartInstance = renderChart(canvasEl.value, labels, values, 'bar')
+}
+
 let unsubscribePoll = null
 
 async function loadPoll() {
@@ -230,6 +270,21 @@ async function loadPoll() {
     const loadedPoll = await getPoll(id.value)
     if (loadedPoll) {
       poll.value = loadedPoll
+      // For emoji polls, set up chart animation
+      if (poll.value.type === 'emoji') {
+        const initialValues = displayValues.value
+        if (present.value) {
+          const zeros = Array.from({ length: initialValues.length }, () => 0)
+          displayedVotes.value = [...zeros]
+          await nextTick()
+          draw()
+          animateVotes(zeros, initialValues, 1000)
+        } else {
+          displayedVotes.value = [...initialValues]
+          await nextTick()
+          draw()
+        }
+      }
       // Check if there's a next poll
       await checkHasNext()
       loadError.value = false
@@ -252,7 +307,23 @@ onMounted(async () => {
   if (poll.value) {
     unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
       if (updatedPoll) {
+        const prev = poll.value
         poll.value = updatedPoll
+        
+        // For emoji polls, animate vote changes
+        if (updatedPoll.type === 'emoji') {
+          const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
+          const newVals = updatedPoll.votes || []
+          
+          // Only animate if values actually changed
+          if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
+            // Ensure arrays are same length for animation
+            const maxLen = Math.max(oldVals.length, newVals.length)
+            while (oldVals.length < maxLen) oldVals.push(0)
+            while (newVals.length < maxLen) newVals.push(0)
+            animateVotes(oldVals, newVals, 800)
+          }
+        }
       }
     })
   }
@@ -263,15 +334,18 @@ onMounted(async () => {
     setBackgroundMusic('/assets/sounds/reveal.mp3', 0.8)
     playBackgroundMusic(0.15)
   }
+  window.addEventListener('resize', draw)
   window.addEventListener('keydown', onKeyDown)
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', draw)
   window.removeEventListener('keydown', onKeyDown)
   if (unsubscribePoll) {
     unsubscribePoll()
     unsubscribePoll = null
   }
+  if (chartInstance) chartInstance.destroy()
   if (present.value) stopBackgroundMusic()
 })
 
@@ -302,20 +376,76 @@ watch(() => route.fullPath, async () => {
   if (poll.value) {
     unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
       if (updatedPoll) {
+        const prev = poll.value
         poll.value = updatedPoll
+        
+        // For emoji polls, animate vote changes
+        if (updatedPoll.type === 'emoji') {
+          const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
+          const newVals = updatedPoll.votes || []
+          
+          // Only animate if values actually changed
+          if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
+            // Ensure arrays are same length for animation
+            const maxLen = Math.max(oldVals.length, newVals.length)
+            while (oldVals.length < maxLen) oldVals.push(0)
+            while (newVals.length < maxLen) newVals.push(0)
+            animateVotes(oldVals, newVals, 800)
+          }
+        }
       }
     })
+    
+    if (poll.value?.type === 'emoji') {
+      await nextTick()
+      draw()
+    }
   }
 })
 
-watch(present, (isOn) => {
+watch(present, async (isOn) => {
   if (isOn) {
     setBackgroundMusic('/assets/sounds/reveal.mp3', 0.8)
     playBackgroundMusic(0.15)
+    // Re-animate bars when entering presentation (only for emoji polls)
+    const latest = await getPoll(id.value)
+    if (latest && latest.type === 'emoji') {
+      const currentValues = latest.votes || []
+      const from = displayedVotes.value.length ? [...displayedVotes.value] : Array.from({ length: currentValues.length }, () => 0)
+      animateVotes(from, currentValues, 1000)
+    }
   } else {
     stopBackgroundMusic()
   }
 })
+
+function animateVotes(from, to, duration = 800) {
+  const start = performance.now()
+  const fromArr = [...from]
+  const toArr = [...to]
+  const len = Math.max(fromArr.length, toArr.length)
+  while (fromArr.length < len) fromArr.push(0)
+  while (toArr.length < len) toArr.push(0)
+  function frame(now) {
+    const t = Math.min(1, (now - start) / duration)
+    const ease = t < 0.5 ? 2*t*t : -1 + (4 - 2*t) * t
+    const cur = fromArr.map((v, i) => v + (toArr[i] - v) * ease)
+    displayedVotes.value = cur
+    if (chartInstance) {
+      chartInstance.data.datasets[0].data = cur
+      chartInstance.update('none')
+    }
+    if (t < 1) requestAnimationFrame(frame)
+    else {
+      displayedVotes.value = [...toArr]
+      if (chartInstance) {
+        chartInstance.data.datasets[0].data = toArr
+        chartInstance.update()
+      }
+    }
+  }
+  requestAnimationFrame(frame)
+}
 
 async function go(step) {
   const currentId = id.value
@@ -339,6 +469,9 @@ function onKeyDown(e) {
   } else if (e.key === 'ArrowLeft') {
     e.preventDefault()
     go(-1)
+  } else if (e.key === 'Home' || (e.key === 'h' && !e.ctrlKey && !e.metaKey)) {
+    e.preventDefault()
+    router.push('/sets')
   }
 }
 </script>
