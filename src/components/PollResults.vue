@@ -8,7 +8,7 @@
         <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
         <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
           <div class="flex items-center justify-center">
-            <Qrcode :value="voteUrl" :size="180" level="H" class="sm:w-48 sm:h-48" />
+            <Qrcode :value="voteUrl" :size="540" level="H" class="sm:w-144 sm:h-144" />
           </div>
         </div>
       </div>
@@ -81,7 +81,7 @@
     <ConfettiReveal />
     <!-- Fixed QR panel (left-bottom) - minimal overlay to avoid disturbing presentation area -->
     <div v-if="poll" class="fixed left-2 sm:left-3 bottom-2 sm:bottom-3 z-10 hidden sm:flex items-center bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-2 sm:p-3">
-      <Qrcode :value="voteUrl" :size="150" level="H" class="sm:w-40 sm:h-40" />
+      <Qrcode :value="voteUrl" :size="450" level="H" class="sm:w-120 sm:h-120" />
     </div>
   </div>
 </template>
