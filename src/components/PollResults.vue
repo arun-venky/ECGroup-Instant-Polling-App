@@ -49,16 +49,16 @@
       
       <!-- Bar chart for all non-text poll types -->
       <template v-else>
-        <div class="chart-container h-[50vh] sm:h-[60vh] mb-4">
-          <canvas ref="canvasEl"></canvas>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base mb-4">
           <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
             <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
             <span class="flex-1 break-words">{{ item.label }}</span>
             <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
             <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
           </div>
+        </div>
+        <div class="chart-container w-full" style="min-height: 300px; height: 40vh; max-height: 500px;">
+          <canvas ref="canvasEl"></canvas>
         </div>
       </template>
     </div>
@@ -277,12 +277,20 @@ function draw() {
   if (chartInstance) {
     chartInstance.destroy()
   }
-  // Ensure canvas matches container size
-  canvasEl.value.width = parent.clientWidth
-  canvasEl.value.height = parent.clientHeight
+  // Ensure canvas matches container size for responsive chart
+  const containerWidth = parent.clientWidth
+  const containerHeight = parent.clientHeight || 300 // Fallback height
+  canvasEl.value.width = containerWidth
+  canvasEl.value.height = containerHeight
+  
   const labels = displayLabels.value
   const values = displayedVotes.value.length ? displayedVotes.value : displayValues.value
   chartInstance = renderChart(canvasEl.value, labels, values, 'bar')
+  
+  // Update chart on window resize for responsiveness
+  if (chartInstance) {
+    chartInstance.resize()
+  }
 }
 
 let unsubscribePoll = null
@@ -362,12 +370,18 @@ onMounted(async () => {
     setBackgroundMusic('/assets/sounds/reveal.mp3', 0.8)
     playBackgroundMusic(0.15)
   }
-  window.addEventListener('resize', draw)
+  window.addEventListener('resize', handleResize)
   window.addEventListener('keydown', onKeyDown)
 })
 
+function handleResize() {
+  if (poll.value && poll.value.type !== 'text' && canvasEl.value) {
+    draw()
+  }
+}
+
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', draw)
+  window.removeEventListener('resize', handleResize)
   window.removeEventListener('keydown', onKeyDown)
   if (unsubscribePoll) {
     unsubscribePoll()
