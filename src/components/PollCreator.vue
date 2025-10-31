@@ -52,8 +52,6 @@
       </div>
 
       <button class="mt-4" @click="create">Create Poll</button>
-      <div class="text-center text-sm opacity-80">or</div>
-      <button class="mt-0" @click="importAIQuiz">Import AI Quiz (20 questions)</button>
       <div class="flex justify-center gap-3 mt-2">
         <router-link class="btn inline-block" to="/polls">Manage Polls</router-link>
         <router-link class="btn inline-block" to="/sets">Poll Sets</router-link>
@@ -71,7 +69,6 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { createPoll, createPollSet, listPollSets } from '../utils/storage.js'
 import PollShare from './PollShare.vue'
 import { useRouter, useRoute } from 'vue-router'
-import { aiQuiz } from '../utils/ai_quiz.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -122,24 +119,6 @@ async function create() {
   const poll = await createPoll({ question: question.value.trim(), type: type.value, options: finalOptions, setId: selectedSetId.value || null })
   shareId.value = poll.id
   router.push(`/poll/${poll.id}`)
-}
-
-async function importAIQuiz() {
-  // Bulk create one poll per question
-  const ids = []
-  let setId = selectedSetId.value
-  if (!setId) {
-    const set = await createPollSet(newSetName.value.trim() || 'AI Quiz')
-    setId = set.id
-    await loadSets()
-    selectedSetId.value = setId
-  }
-  for (const { q, options } of aiQuiz) {
-    const p = await createPoll({ question: q, type: 'multiple', options, setId })
-    ids.push(p.id)
-  }
-  alert(`Imported ${ids.length} questions. Opening the first poll…`)
-  router.push(`/poll/${ids[0]}`)
 }
 
 async function createSet() {
