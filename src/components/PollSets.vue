@@ -1,25 +1,27 @@
 <template>
-  <div class="max-w-4xl mx-auto card px-4 sm:px-6">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+  <div class="max-w-4xl mx-auto card flex flex-col overflow-hidden px-4 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
       <h2 class="text-xl sm:text-2xl">Poll Sets</h2>
       <router-link class="btn w-full sm:w-auto" to="/sets/create">New Set</router-link>
     </div>
-    <div v-if="loading" class="text-neutral text-center py-12">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
-      <div>Loading sets...</div>
-    </div>
-    <div v-else-if="!sets.length" class="text-neutral text-sm sm:text-base">No sets yet. Create polls and assign them to a set.</div>
-    <div v-else class="flex flex-col gap-3">
-      <div v-for="s in sets" :key="s.id" class="card p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div class="flex-1 min-w-0">
-            <div class="font-bold text-base sm:text-lg break-words">{{ s.name }}</div>
-            <div class="text-xs text-neutral mt-1">{{ formatDate(s.createdAt) }}</div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/start`">Start</router-link>
-            <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/polls`">View Polls</router-link>
-            <button class="btn bg-red-500 hover:bg-red-600 text-white text-sm flex-1 sm:flex-none min-w-[80px] justify-center" @click="() => deleteSet(s.id, s.name)">Delete</button>
+    <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div v-if="loading" class="text-neutral text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+        <div>Loading sets...</div>
+      </div>
+      <div v-else-if="!sets.length" class="text-neutral text-sm sm:text-base p-4">No sets yet. Create polls and assign them to a set.</div>
+      <div v-else class="flex flex-col gap-3 p-1">
+        <div v-for="s in sets" :key="s.id" class="card p-4 sm:p-6">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-base sm:text-lg break-words">{{ s.name }}</div>
+              <div class="text-xs text-neutral mt-1">{{ formatDate(s.createdAt) }}</div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/start`">Start</router-link>
+              <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/polls`">View Polls</router-link>
+              <button class="btn bg-red-500 hover:bg-red-600 text-white text-sm flex-1 sm:flex-none min-w-[80px] justify-center" @click="() => deleteSet(s.id, s.name)">Delete</button>
+            </div>
           </div>
         </div>
       </div>
