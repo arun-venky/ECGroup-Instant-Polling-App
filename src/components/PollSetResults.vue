@@ -50,7 +50,15 @@
           <div v-else>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
               <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex items-center gap-2 p-2 rounded-md transition-colors" :class="{ 'bg-green-100 border-2 border-green-500': item.isCorrect, 'bg-white border border-gray-200': !item.isCorrect }">
-                <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+                <span v-if="item.labelType !== 'like'" class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+                <span v-else class="inline-block flex-shrink-0">
+                  <svg v-if="item.originalOption === 'Like'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M2 20h2c.55 0 1-.45 1-1v-7c0-.55-.45-1-1-1H2v9zm19.83-7.12c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2 7.5 8.5C7.07 8.93 6.83 9.53 6.83 10.17V15c0 1.1.9 2 2 2h7.33c.52 0 .99-.2 1.34-.56l3.33-3.33c.33-.33.5-.78.5-1.22s-.17-.89-.5-1.22z" />
+                  </svg>
+                  <svg v-else-if="item.originalOption === 'Dislike'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M15 3H6c-.83 0-1.54.5-1.85 1.22l-3.02 7.05c-.09.23-.13.47-.13.73v1.91l.01.01L1 14c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z" />
+                  </svg>
+                </span>
                 <span class="flex-1 break-words font-medium" :class="{ 'text-green-700 font-bold': item.isCorrect }">{{ item.label }}</span>
                 <span v-if="item.isCorrect" class="text-green-600 text-xs font-semibold mr-2">✓</span>
                 <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
@@ -144,18 +152,26 @@ function getDisplayItems(poll) {
   const total = poll.votes.reduce((sum, v) => sum + (v || 0), 0) || 1
   return poll.options.map((option, i) => {
     // For star polls, format label to show actual number of stars
+    // For like polls, keep label as is (will be displayed with icons)
     let formattedLabel = option
+    let labelType = 'text' // 'text', 'star', 'like'
+    
     if (poll.type === 'star') {
       // Extract number from label (e.g., "1 ⭐" -> 1, "5 ⭐" -> 5)
       const match = option.match(/^(\d+)/)
       if (match) {
         const starCount = parseInt(match[1])
         formattedLabel = '⭐'.repeat(starCount)
+        labelType = 'star'
       }
+    } else if (poll.type === 'like') {
+      labelType = 'like'
     }
     
     return {
       label: formattedLabel,
+      labelType,
+      originalOption: option,
       percentage: Math.round(((poll.votes[i] || 0) * 100) / total),
       votes: poll.votes[i] || 0,
       isCorrect: isCorrectAnswer(poll, i)

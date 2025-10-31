@@ -52,6 +52,31 @@
           </button>
         </div>
 
+        <div v-else-if="poll.type==='like'" class="flex flex-row gap-4 justify-center items-center">
+          <button 
+            v-if="poll.options[0] === 'Like'"
+            class="option-button flex flex-col items-center gap-2 px-8 py-6" 
+            :disabled="alreadyVoted" 
+            @click="onIndex(0)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M2 20h2c.55 0 1-.45 1-1v-7c0-.55-.45-1-1-1H2v9zm19.83-7.12c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2 7.5 8.5C7.07 8.93 6.83 9.53 6.83 10.17V15c0 1.1.9 2 2 2h7.33c.52 0 .99-.2 1.34-.56l3.33-3.33c.33-.33.5-.78.5-1.22s-.17-.89-.5-1.22z" />
+            </svg>
+            <span>Like</span>
+          </button>
+          <button 
+            v-if="poll.options[1] === 'Dislike'"
+            class="option-button flex flex-col items-center gap-2 px-8 py-6" 
+            :disabled="alreadyVoted" 
+            @click="onIndex(1)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M15 3H6c-.83 0-1.54.5-1.85 1.22l-3.02 7.05c-.09.23-.13.47-.13.73v1.91l.01.01L1 14c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z" />
+            </svg>
+            <span>Dislike</span>
+          </button>
+        </div>
+
         <div v-else class="flex flex-col gap-3 items-center">
           <button v-for="(opt, i) in poll.options" :key="i" class="option-button" :disabled="alreadyVoted" @click="onIndex(i)">
             {{ opt }}
