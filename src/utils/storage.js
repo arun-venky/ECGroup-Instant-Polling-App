@@ -46,13 +46,15 @@ function invalidateCache() {
 export async function createPoll({ question, type, options, setId = null }) {
   try {
     const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
-    const votes = new Array(options.length).fill(0)
+    const votes = type === 'text' ? [] : new Array(options.length).fill(0)
+    const textResponses = type === 'text' ? [] : null
     const pollData = {
       id,
       question,
       type,
       options,
       votes,
+      textResponses,
       createdAt: Date.now(),
       setId: setId || null
     }
@@ -113,6 +115,39 @@ export async function votePoll(id, index) {
     return await getPoll(id)
   } catch (error) {
     console.error('Error voting on poll:', error)
+    return null
+  }
+}
+
+export async function votePollText(id, textResponse) {
+  try {
+    if (!textResponse || !textResponse.trim()) {
+      throw new Error('Text response cannot be empty')
+    }
+    
+    const pollRef = doc(db, COLLECTIONS.POLLS, id)
+    
+    // Use transaction for atomic update
+    await runTransaction(db, async (transaction) => {
+      const pollSnap = await transaction.get(pollRef)
+      if (!pollSnap.exists()) {
+        throw new Error('Poll does not exist')
+      }
+      
+      const pollData = pollSnap.data()
+      const textResponses = [...(pollData.textResponses || [])]
+      
+      // Add the new text response
+      textResponses.push(textResponse.trim())
+      
+      transaction.update(pollRef, { textResponses })
+    })
+    
+    invalidateCache()
+    // Return updated poll
+    return await getPoll(id)
+  } catch (error) {
+    console.error('Error submitting text response:', error)
     return null
   }
 }

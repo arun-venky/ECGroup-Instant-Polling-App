@@ -27,6 +27,22 @@
         <EmojiReaction :options="poll.options" :disabled="alreadyVoted" @select="onIndex" />
       </div>
 
+      <div v-else-if="poll.type==='text'" class="flex flex-col gap-3">
+        <textarea 
+          v-model="textResponse" 
+          placeholder="Type your answer here..." 
+          class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[100px]"
+          :disabled="alreadyVoted"
+        ></textarea>
+        <button 
+          class="btn" 
+          :disabled="alreadyVoted || !textResponse.trim()" 
+          @click="onTextSubmit"
+        >
+          Submit
+        </button>
+      </div>
+
       <div v-else class="flex flex-col gap-2">
         <button v-for="(opt, i) in poll.options" :key="i" class="option-button" :disabled="alreadyVoted" @click="onIndex(i)">
           {{ opt }}
@@ -34,7 +50,7 @@
       </div>
 
       <div class="flex flex-wrap gap-3 mt-2 justify-center text-center">
-        <router-link class="btn w-full sm:w-auto" :to="`/results/${id}`">View Results</router-link>
+        <router-link v-if="poll.type !== 'text' || alreadyVoted" class="btn w-full sm:w-auto" :to="`/results/${id}`">View Results</router-link>
         <button class="w-full sm:w-auto" @click="go(-1)">Previous</button>
         <button class="w-full sm:w-auto" @click="go(1)">Next</button>
       </div>
@@ -45,7 +61,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPoll, votePoll, hasVoted, markVoted, getAdjacentPollIdSameSet } from '../utils/storage.js'
+import { getPoll, votePoll, votePollText, hasVoted, markVoted, getAdjacentPollIdSameSet } from '../utils/storage.js'
 import { playVoteSound } from '../utils/sound.js'
 import confetti from 'canvas-confetti'
 import StarRating from './StarRating.vue'
@@ -57,6 +73,7 @@ const router = useRouter()
 const id = computed(() => route.params.id)
 const poll = ref(null)
 const alreadyVoted = ref(false)
+const textResponse = ref('')
 
 function encodePoll(p) {
   if (!p) return ''
@@ -93,6 +110,18 @@ watch(() => route.params.id, async () => {
 async function onIndex(index) {
   if (alreadyVoted.value) return
   await votePoll(id.value, index)
+  markVoted(id.value)
+  alreadyVoted.value = true
+  playVoteSound()
+  confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
+  const setId = poll.value?.setId
+  if (setId) router.push(`/sets/${setId}/results/${id.value}`)
+  else router.push(`/results/${id.value}`)
+}
+
+async function onTextSubmit() {
+  if (alreadyVoted.value || !textResponse.value.trim()) return
+  await votePollText(id.value, textResponse.value)
   markVoted(id.value)
   alreadyVoted.value = true
   playVoteSound()

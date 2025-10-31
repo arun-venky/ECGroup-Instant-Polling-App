@@ -53,6 +53,7 @@
                 <option value="star">Star Rating</option>
                 <option value="like">Like / Dislike</option>
                 <option value="emoji">Emoji Reactions</option>
+                <option value="text">Text Response</option>
               </select>
             </div>
             <div v-if="form.type==='star'">
@@ -204,6 +205,7 @@ async function createFromModal() {
   if (form.value.type === 'like') finalOptions = ['Like', 'Dislike']
   if (form.value.type === 'emoji') finalOptions = ['😀', '😍', '🤔', '😮']
   if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
+  if (form.value.type === 'text') finalOptions = [] // Text polls don't need predefined options
   const poll = await createPoll({ question: form.value.question.trim(), type: form.value.type, options: finalOptions, setId: activeSet.value || null })
   showCreate.value = false
   form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5 }

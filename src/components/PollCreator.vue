@@ -15,6 +15,7 @@
             <option value="star">Star Rating</option>
             <option value="like">Like / Dislike</option>
             <option value="emoji">Emoji Reactions</option>
+            <option value="text">Text Response</option>
           </select>
         </div>
         <div v-if="type==='star'">
@@ -115,6 +116,9 @@ async function create() {
   let finalOptions = options.value
   if (type.value === 'star') {
     finalOptions = Array.from({ length: stars.value }, (_, i) => `${i + 1} ⭐`)
+  }
+  if (type.value === 'text') {
+    finalOptions = [] // Text polls don't need predefined options
   }
   const poll = await createPoll({ question: question.value.trim(), type: type.value, options: finalOptions, setId: selectedSetId.value || null })
   shareId.value = poll.id

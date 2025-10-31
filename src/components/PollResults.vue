@@ -17,16 +17,41 @@
     <div v-if="!poll" class="text-neutral">Poll not found.</div>
 
     <div v-else class="flex flex-col gap-4">
-      <div class="chart-container h-[50vh] sm:h-[60vh]">
-        <canvas ref="canvasEl"></canvas>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base">
-        <div v-for="(opt, i) in poll.options" :key="i" class="flex items-center gap-2">
-          <span class="inline-block w-3 h-3 rounded-sm" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-          <span class="flex-1">{{ opt }}</span>
-          <span class="text-accent font-bold">{{ percentages[i] }}%</span>
+      <!-- Text responses display -->
+      <div v-if="poll.type === 'text'" class="flex flex-col gap-4">
+        <div class="text-lg font-semibold">Responses ({{ textResponsesCount }})</div>
+        <div class="max-h-[60vh] overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+          <div v-if="!poll.textResponses || poll.textResponses.length === 0" class="text-neutral text-center py-8">
+            No responses yet
+          </div>
+          <div v-else class="space-y-3">
+            <div 
+              v-for="(response, i) in poll.textResponses" 
+              :key="i" 
+              class="p-3 bg-white rounded-md border border-gray-200 shadow-sm"
+            >
+              <div class="flex items-start gap-2">
+                <span class="text-sm text-neutral font-medium min-w-[2rem]">#{{ i + 1 }}</span>
+                <span class="flex-1 text-base whitespace-pre-wrap break-words">{{ response }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+      
+      <!-- Chart display for other poll types -->
+      <template v-else>
+        <div class="chart-container h-[50vh] sm:h-[60vh]">
+          <canvas ref="canvasEl"></canvas>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base">
+          <div v-for="(opt, i) in poll.options" :key="i" class="flex items-center gap-2">
+            <span class="inline-block w-3 h-3 rounded-sm" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+            <span class="flex-1">{{ opt }}</span>
+            <span class="text-accent font-bold">{{ percentages[i] }}%</span>
+          </div>
+        </div>
+      </template>
       <div class="flex flex-wrap gap-3 mt-2 justify-center text-center">
         <router-link class="btn w-full sm:w-auto" :to="`/poll/${id}`">Back to Vote</router-link>
         <router-link class="btn w-full sm:w-auto" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
@@ -95,9 +120,12 @@ const percentages = computed(() => {
   const t = total.value || 1
   return (displayedVotes.value || []).map(v => Math.round((v * 100) / t))
 })
+const textResponsesCount = computed(() => {
+  return poll.value?.textResponses?.length || 0
+})
 
 function draw() {
-  if (!poll.value || !canvasEl.value) return
+  if (!poll.value || !canvasEl.value || poll.value.type === 'text') return
   if (chartInstance) {
     chartInstance.destroy()
   }
@@ -116,19 +144,24 @@ let unsubscribePoll = null
 onMounted(async () => {
   poll.value = await getPoll(id.value)
   if (poll.value) {
-    // If presentation mode, animate in from zero
-    if (present.value) {
-      const zeros = Array.from({ length: poll.value.votes.length }, () => 0)
-      displayedVotes.value = [...zeros]
-      draw()
-      animateVotes(zeros, poll.value.votes, 1000)
+    // For text polls, no need to initialize votes
+    if (poll.value.type === 'text') {
+      // Text responses are displayed directly
     } else {
-      displayedVotes.value = [...poll.value.votes]
-      draw()
+      // If presentation mode, animate in from zero
+      if (present.value) {
+        const zeros = Array.from({ length: poll.value.votes.length }, () => 0)
+        displayedVotes.value = [...zeros]
+        draw()
+        animateVotes(zeros, poll.value.votes, 1000)
+      } else {
+        displayedVotes.value = [...poll.value.votes]
+        draw()
+      }
     }
   } else {
     displayedVotes.value = []
-    draw()
+    if (canvasEl.value) draw()
   }
   
   // Set up real-time listener for poll updates
@@ -136,6 +169,12 @@ onMounted(async () => {
     if (updatedPoll) {
       const prev = poll.value
       poll.value = updatedPoll
+      // For text polls, just update the poll data (responses will auto-update)
+      if (updatedPoll.type === 'text') {
+        // Text responses are displayed directly from poll.textResponses
+        return
+      }
+      // For other poll types, animate vote changes
       const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
       const newVals = updatedPoll.votes || []
       if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
@@ -185,6 +224,11 @@ watch(() => route.fullPath, async () => {
     if (updatedPoll) {
       const prev = poll.value
       poll.value = updatedPoll
+      // For text polls, just update (responses auto-update)
+      if (updatedPoll.type === 'text') {
+        return
+      }
+      // For other poll types, animate vote changes
       const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
       const newVals = updatedPoll.votes || []
       if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
@@ -193,7 +237,9 @@ watch(() => route.fullPath, async () => {
     }
   })
   
-  draw()
+  if (poll.value?.type !== 'text') {
+    draw()
+  }
 })
 
 watch(present, async (isOn) => {
