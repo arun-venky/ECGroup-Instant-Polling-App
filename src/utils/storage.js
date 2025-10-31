@@ -1,5 +1,5 @@
 import { db, COLLECTIONS } from './firebase.js'
-import { collection, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, onSnapshot, increment, writeBatch, runTransaction } from 'firebase/firestore'
+import { collection, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, onSnapshot, writeBatch, runTransaction } from 'firebase/firestore'
 
 function generateId() {
   // RFC4122 v4-like fallback

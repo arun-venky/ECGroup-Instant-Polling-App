@@ -36,10 +36,12 @@ button:disabled {
 
 /* Override for special button styles */
 .btn.bg-red-500 {
-  @apply bg-red-500 text-white;
+  background-color: #ef4444;
+  color: white;
 }
 .btn.bg-red-500:hover {
-  @apply bg-red-600 scale-105;
+  background-color: #dc2626;
+  transform: scale(1.05);
 }
 
 input, textarea, select {
