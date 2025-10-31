@@ -6,6 +6,7 @@ import PollResults from '../components/PollResults.vue'
 import PollList from '../components/PollList.vue'
 import PollSets from '../components/PollSets.vue'
 import PollSetCreate from '../components/PollSetCreate.vue'
+import PollStartRedirect from '../components/PollStartRedirect.vue'
 
 const routes = [
   { path: '/', redirect: '/sets' }, 
@@ -15,6 +16,7 @@ const routes = [
   { path: '/sets/:setId/polls/create', component: PollCreator },
   { 
     path: '/sets/:setId/start', 
+    component: PollStartRedirect,
     async beforeEnter(to, from, next) {
       try {
         const mod = await import('../utils/storage.js')
@@ -36,7 +38,7 @@ const routes = [
           next({ path: targetPath, replace: true })
         } else {
           console.warn('No polls found for set:', setId)
-          // Show a message and redirect to sets page
+          // Redirect to sets page if no polls found
           next({ path: '/sets', replace: true })
         }
       } catch (error) {
