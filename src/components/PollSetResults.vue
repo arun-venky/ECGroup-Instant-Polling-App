@@ -34,14 +34,19 @@
               <div
                 v-for="(item, i) in getTextResponseItems(poll)"
                 :key="i"
-                class="inline-block transition-all duration-500"
+                class="inline-block transition-all duration-500 px-3 py-2 rounded-md"
+                :class="{ 
+                  'bg-green-100 border-2 border-green-500': item.isCorrect,
+                  'bg-white border border-gray-200': !item.isCorrect
+                }"
                 :style="{
                   fontSize: item.fontSize + 'px',
-                  color: colors[i % colors.length],
+                  color: item.isCorrect ? '#15803d' : colors[i % colors.length],
                   fontWeight: 'bold'
                 }"
               >
                 {{ item.text }} <span class="opacity-75">({{ item.percentage }}%)</span>
+                <span v-if="item.isCorrect" class="text-green-600 text-xs font-semibold ml-2">✓</span>
               </div>
             </div>
           </div>
@@ -122,13 +127,14 @@ function getTextResponseItems(poll) {
   const maxFont = 48
   const minFont = 14
   
-  return consolidated.map(item => {
+  return consolidated.map((item, i) => {
     const percentage = Math.round((item.count * 100) / total)
     const fontSize = Math.max(minFont, Math.min(maxFont, minFont + (percentage / 100) * (maxFont - minFont)))
     return {
       text: item.text,
       percentage,
-      fontSize
+      fontSize,
+      isCorrect: isCorrectAnswer(poll, i)
     }
   })
 }
@@ -142,6 +148,15 @@ function isCorrectAnswer(poll, index) {
     return parseInt(answer) === index
   } else if (pollType === 'like') {
     return answer === poll.options[index]
+  } else if (pollType === 'text') {
+    // For text polls, we need to check against the consolidated text responses
+    // The answer is stored as lowercase, so we compare case-insensitively
+    if (!poll.textResponses || poll.textResponses.length === 0) return false
+    const consolidated = consolidateTextResponses(poll.textResponses)
+    if (index >= consolidated.length) return false
+    const responseText = consolidated[index].text.toLowerCase().trim()
+    const correctAnswer = String(answer).toLowerCase().trim()
+    return responseText === correctAnswer
   }
   return false
 }
