@@ -279,10 +279,24 @@ function linkToPoll(p) {
 const showOptions = computed(() => form.value.type === 'multiple' || form.value.type === 'emoji')
 
 watch(() => form.value.type, (newType, oldType) => {
-  // Only clear answer when type changes during creation (not editing)
+  // Only clear answer and update options when type changes during creation (not editing)
   // When editing, we'll set the answer after setting the type
   if (!editingPoll.value && oldType !== undefined) {
     form.value.answer = ''
+    
+    // Update options based on poll type
+    if (newType === 'emoji') {
+      form.value.options = ['😀', '😍', '🤔', '😮', '😂', '😊', '👍', '❤️', '🔥', '✨', '👏', '🎉']
+    } else if (newType === 'like') {
+      form.value.options = ['Like', 'Dislike']
+    } else if (newType === 'star') {
+      form.value.options = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
+    } else if (newType === 'multiple') {
+      // Only reset to default if switching from a type that had different options
+      if (oldType === 'emoji' || oldType === 'like' || oldType === 'star') {
+        form.value.options = ['Option A', 'Option B']
+      }
+    }
   }
 })
 
@@ -346,7 +360,7 @@ function edit(poll) {
     formData.options = ['Like', 'Dislike']
   }
   if (poll.type === 'emoji') {
-    formData.options = poll.options || ['😀', '😍', '🤔', '😮']
+    formData.options = poll.options || ['😀', '😍', '🤔', '😮', '😂', '😊', '👍', '❤️', '🔥', '✨', '👏', '🎉']
   }
   
   // Set form value all at once to ensure answer is preserved
@@ -368,7 +382,7 @@ async function savePoll() {
   try {
     let finalOptions = form.value.options
     if (form.value.type === 'like') finalOptions = ['Like', 'Dislike']
-    if (form.value.type === 'emoji') finalOptions = ['😀', '😍', '🤔', '😮']
+    if (form.value.type === 'emoji') finalOptions = ['😀', '😍', '🤔', '😮', '😂', '😊', '👍', '❤️', '🔥', '✨', '👏', '🎉']
     if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
     if (form.value.type === 'text') finalOptions = [] // Text polls don't need predefined options
     

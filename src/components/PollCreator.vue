@@ -146,7 +146,7 @@ watch(type, () => {
     answer.value = ''
   }
   if (type.value === 'emoji') {
-    options.value = ['😀', '😍', '🤔', '😮']
+    options.value = ['😀', '😍', '🤔', '😮', '😂', '😊', '👍', '❤️', '🔥', '✨', '👏', '🎉']
     answer.value = ''
   }
   if (type.value === 'text') {
