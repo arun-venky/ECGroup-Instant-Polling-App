@@ -69,7 +69,16 @@ export function renderChart(canvas, labels, values, type) {
             size: isMobile ? 10 : 12
           },
           maxRotation: isMobile ? 45 : 0,
-          minRotation: isMobile ? 45 : 0
+          minRotation: isMobile ? 45 : 0,
+          callback: function(value, index, ticks) {
+            const label = labels[index] || ''
+            // Truncate labels: max 30 chars on desktop, 15 on mobile
+            const maxLength = isMobile ? 15 : 30
+            if (label.length > maxLength) {
+              return label.substring(0, maxLength) + '...'
+            }
+            return label
+          }
         }, 
         grid: { color: 'rgba(24,50,71,0.06)' } 
       },
