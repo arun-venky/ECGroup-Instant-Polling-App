@@ -8,7 +8,7 @@
         <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
         <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
           <div class="flex items-center justify-center">
-            <Qrcode :value="shareUrl" :size="120" level="H" class="sm:w-32 sm:h-32" />
+            <Qrcode :value="shareUrl" :size="180" level="H" class="sm:w-48 sm:h-48" />
           </div>
         </div>
       </div>
@@ -26,7 +26,7 @@
       </div>
 
       <div v-else class="flex flex-col gap-4 pb-4">
-        <div v-if="alreadyVoted" class="text-accent">You've already voted on this device.</div>
+        <div v-if="alreadyVoted" class="text-accent text-center">You've already voted on this device.</div>
 
         <div v-if="poll.type==='star'">
           <StarRating :max="poll.options.length" :disabled="alreadyVoted" @select="onIndex" />

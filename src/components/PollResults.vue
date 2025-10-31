@@ -8,7 +8,7 @@
         <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
         <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
           <div class="flex items-center justify-center">
-            <Qrcode :value="voteUrl" :size="120" level="H" class="sm:w-32 sm:h-32" />
+            <Qrcode :value="voteUrl" :size="180" level="H" class="sm:w-48 sm:h-48" />
           </div>
         </div>
       </div>
@@ -49,16 +49,22 @@
       
       <!-- Bar chart for all non-text poll types -->
       <template v-else>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base mb-4">
-          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
-            <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-            <span class="flex-1 break-words">{{ item.label }}</span>
-            <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
-            <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
+        <!-- Sticky Options List -->
+        <div class="sticky top-0 bg-white z-20 py-2 mb-4 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
+            <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
+              <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+              <span class="flex-1 break-words">{{ item.label }}</span>
+              <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+              <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
+            </div>
           </div>
         </div>
-        <div class="chart-container w-full bg-white rounded-xl p-4 sm:p-6 shadow-md border border-gray-200" style="position: relative; min-height: 300px; height: 400px;">
-          <canvas ref="canvasEl" style="display: block;"></canvas>
+        <!-- Scrollable Chart Container -->
+        <div class="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
+          <div class="chart-container w-full bg-white rounded-xl p-4 sm:p-6 shadow-md border border-gray-200" style="position: relative; min-height: 300px; height: 400px;">
+            <canvas ref="canvasEl" style="display: block;"></canvas>
+          </div>
         </div>
       </template>
     </div>
@@ -75,7 +81,7 @@
     <ConfettiReveal />
     <!-- Fixed QR panel (left-bottom) - minimal overlay to avoid disturbing presentation area -->
     <div v-if="poll" class="fixed left-2 sm:left-3 bottom-2 sm:bottom-3 z-10 hidden sm:flex items-center bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-2 sm:p-3">
-      <Qrcode :value="voteUrl" :size="100" level="H" class="sm:w-30 sm:h-30" />
+      <Qrcode :value="voteUrl" :size="150" level="H" class="sm:w-40 sm:h-40" />
     </div>
   </div>
 </template>
