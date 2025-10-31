@@ -1,26 +1,29 @@
 <template>
-  <div class="max-w-6xl mx-auto">
-    <div class="mb-6">
+  <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden px-4 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
+    <!-- Sticky Header -->
+    <div class="sticky top-0 bg-white z-10 pt-1 pb-3 mb-4 border-b border-gray-200 flex-shrink-0 -mx-4 sm:-mx-6 px-4 sm:px-6">
       <h1 class="text-2xl sm:text-3xl font-bold text-primary mb-2">{{ setName || 'Poll Set Results' }}</h1>
       <p class="text-neutral">Complete results for all polls in this set</p>
     </div>
     
-    <div v-if="loading" class="text-center py-12 text-neutral">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
-      <div class="text-lg">Loading results...</div>
-    </div>
-    
-    <div v-else-if="!polls.length" class="text-center py-12 text-neutral text-lg">
-      No polls found in this set.
-    </div>
-    
-    <div v-else class="flex flex-col gap-6">
-      <div v-for="(poll, index) in polls" :key="poll.id" class="card px-4 sm:px-6">
-        <div class="mb-4">
-          <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-1 break-words">
-            {{ index + 1 }}. {{ poll.question }}
-          </h2>
-        </div>
+    <!-- Scrollable Content Area -->
+    <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div v-if="loading" class="text-center py-12 text-neutral">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+        <div class="text-lg">Loading results...</div>
+      </div>
+      
+      <div v-else-if="!polls.length" class="text-center py-12 text-neutral text-lg">
+        No polls found in this set.
+      </div>
+      
+      <div v-else class="flex flex-col gap-6 pb-4">
+        <div v-for="(poll, index) in polls" :key="poll.id" class="card px-4 sm:px-6">
+          <div class="mb-4">
+            <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-1 break-words">
+              {{ index + 1 }}. {{ poll.question }}
+            </h2>
+          </div>
         
         <!-- Text responses display -->
         <div v-if="poll.type === 'text'" class="flex flex-col gap-6">
@@ -71,11 +74,12 @@
           </div>
         </div>
       </div>
-      
-      <div class="flex justify-center gap-3 mt-4">
-        <router-link class="btn text-sm sm:text-base justify-center" to="/sets">Back to Sets</router-link>
-        <router-link class="btn text-sm sm:text-base justify-center" :to="`/sets/${setId}/polls`">View Polls</router-link>
-      </div>
+    </div>
+
+    <!-- Sticky Footer -->
+    <div v-if="!loading && polls.length" class="flex justify-center gap-3 pt-3 pb-2 sticky bottom-0 bg-white border-t border-gray-200 flex-shrink-0 -mx-4 sm:-mx-6 px-4 sm:px-6">
+      <router-link class="btn text-sm sm:text-base justify-center" to="/sets">Back to Sets</router-link>
+      <router-link class="btn text-sm sm:text-base justify-center" :to="`/sets/${setId}/polls`">View Polls</router-link>
     </div>
   </div>
 </template>

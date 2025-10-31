@@ -57,8 +57,8 @@
             <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
           </div>
         </div>
-        <div class="chart-container w-full" style="min-height: 300px; height: 40vh; max-height: 500px;">
-          <canvas ref="canvasEl"></canvas>
+        <div class="chart-container w-full bg-white rounded-xl p-4 sm:p-6 shadow-md border border-gray-200" style="position: relative; min-height: 300px; height: 400px;">
+          <canvas ref="canvasEl" style="display: block;"></canvas>
         </div>
       </template>
     </div>
@@ -264,8 +264,9 @@ const textResponseItems = computed(() => {
 
 function draw() {
   if (!poll.value || !canvasEl.value || poll.value.type === 'text') return
+  
   const parent = canvasEl.value.parentElement
-  if (!parent || parent.clientWidth === 0 || parent.clientHeight === 0) {
+  if (!parent) {
     // Retry if container not ready yet
     setTimeout(() => {
       if (poll.value && canvasEl.value && poll.value.type !== 'text') {
@@ -274,22 +275,47 @@ function draw() {
     }, 100)
     return
   }
+  
+  // Wait for container to have dimensions
+  const containerWidth = parent.clientWidth
+  const containerHeight = parent.clientHeight || 400
+  
+  if (containerWidth === 0 || containerHeight === 0) {
+    // Retry if container dimensions not ready yet
+    setTimeout(() => {
+      if (poll.value && canvasEl.value && poll.value.type !== 'text') {
+        draw()
+      }
+    }, 200)
+    return
+  }
+  
   if (chartInstance) {
     chartInstance.destroy()
+    chartInstance = null
   }
-  // Ensure canvas matches container size for responsive chart
-  const containerWidth = parent.clientWidth
-  const containerHeight = parent.clientHeight || 300 // Fallback height
-  canvasEl.value.width = containerWidth
-  canvasEl.value.height = containerHeight
   
-  const labels = displayLabels.value
-  const values = displayedVotes.value.length ? displayedVotes.value : displayValues.value
-  chartInstance = renderChart(canvasEl.value, labels, values, 'bar')
-  
-  // Update chart on window resize for responsiveness
-  if (chartInstance) {
-    chartInstance.resize()
+  try {
+    const labels = displayLabels.value
+    const values = displayedVotes.value.length ? displayedVotes.value : displayValues.value
+    
+    if (labels.length === 0 || values.length === 0) {
+      console.warn('No data to render chart')
+      return
+    }
+    
+    // Don't manually set canvas dimensions - let Chart.js handle it with responsive: true
+    // Chart.js will use the container's dimensions when maintainAspectRatio is false
+    chartInstance = renderChart(canvasEl.value, labels, values, 'bar')
+    
+    if (!chartInstance) {
+      console.error('Failed to create chart instance')
+    } else {
+      // Force chart to resize to match container
+      chartInstance.resize()
+    }
+  } catch (error) {
+    console.error('Error rendering chart:', error)
   }
 }
 
@@ -308,17 +334,31 @@ async function loadPoll() {
         if (present.value) {
           const zeros = Array.from({ length: initialValues.length }, () => 0)
           displayedVotes.value = [...zeros]
-          // Wait for DOM to update and ensure canvas is ready
-          await nextTick()
-          // Small delay to ensure canvas container has dimensions
-          await new Promise(resolve => setTimeout(resolve, 50))
-          draw()
-          animateVotes(zeros, initialValues, 1000)
         } else {
           displayedVotes.value = [...initialValues]
-          await nextTick()
-          await new Promise(resolve => setTimeout(resolve, 50))
-          draw()
+        }
+        
+        // Wait for DOM to update and ensure canvas is ready
+        await nextTick()
+        // Longer delay to ensure canvas container has dimensions
+        await new Promise(resolve => setTimeout(resolve, 150))
+        
+        // Try drawing multiple times if needed
+        let attempts = 0
+        const tryDraw = () => {
+          if (canvasEl.value && poll.value && poll.value.type !== 'text') {
+            draw()
+            // If chart still not created after a moment, retry
+            if (!chartInstance && attempts < 3) {
+              attempts++
+              setTimeout(tryDraw, 200)
+            }
+          }
+        }
+        tryDraw()
+        
+        if (present.value) {
+          animateVotes(zeros, initialValues, 1000)
         }
       }
       // Check if there's a next poll
@@ -335,6 +375,15 @@ async function loadPoll() {
     loading.value = false
   }
 }
+
+// Watch for canvas element to become available
+watch(canvasEl, async (newCanvas) => {
+  if (newCanvas && poll.value && poll.value.type !== 'text' && !chartInstance) {
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 200))
+    draw()
+  }
+}, { flush: 'post' })
 
 onMounted(async () => {
   await loadPoll()
@@ -440,7 +489,20 @@ watch(() => route.fullPath, async () => {
     
     if (poll.value?.type !== 'text') {
       await nextTick()
-      draw()
+      await new Promise(resolve => setTimeout(resolve, 150))
+      // Try drawing multiple times if needed
+      let attempts = 0
+      const tryDraw = () => {
+        if (canvasEl.value && poll.value && poll.value.type !== 'text') {
+          draw()
+          // If chart still not created after a moment, retry
+          if (!chartInstance && attempts < 3) {
+            attempts++
+            setTimeout(tryDraw, 200)
+          }
+        }
+      }
+      tryDraw()
     }
   }
 })
