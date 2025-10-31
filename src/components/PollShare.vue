@@ -18,9 +18,11 @@
 import { computed, ref, onMounted } from 'vue'
 import QrcodeVue from 'qrcode.vue'
 import { getPoll } from '../utils/storage.js'
+import { useDialog } from '../composables/useDialog.js'
 
 const props = defineProps({ id: { type: String, required: true } })
 const poll = ref(null)
+const { success } = useDialog()
 
 // Register the component properly for template use
 const Qrcode = QrcodeVue
@@ -44,7 +46,7 @@ const shareUrl = computed(() => {
 
 async function copyLink() {
   await navigator.clipboard.writeText(shareUrl.value)
-  alert('Link copied!')
+  await success('Link copied!', 'Copied')
 }
 
 onMounted(async () => {

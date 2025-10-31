@@ -26,8 +26,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { listPollSets, deletePollSet, deletePollSetAndPolls } from '../utils/storage.js'
+import { useDialog } from '../composables/useDialog.js'
 
 const sets = ref([])
+const { confirm, alert, danger, success } = useDialog()
 
 async function load() {
   sets.value = await listPollSets()
@@ -42,24 +44,28 @@ function formatDate(ts) {
 }
 
 async function deleteSet(setId, setName) {
-  if (!confirm(`Delete poll set "${setName}"?`)) {
-    return
-  }
-  
-  const deletePolls = confirm(`Do you want to delete all polls in "${setName}" as well?\n\nClick OK to delete set and all polls, or Cancel to keep the polls (just remove the set).`)
-  
   try {
+    const confirmed = await confirm(`Delete poll set "${setName}"?`, 'Delete Poll Set')
+    if (!confirmed) {
+      return
+    }
+    
+    const deletePolls = await confirm(
+      `Do you want to delete all polls in "${setName}" as well?\n\nClick OK to delete set and all polls, or Cancel to keep the polls (just remove the set).`,
+      'Delete Polls Too?'
+    )
+    
     if (deletePolls) {
       await deletePollSetAndPolls(setId)
-      alert(`Poll set "${setName}" and all its polls have been deleted.`)
+      await success(`Poll set "${setName}" and all its polls have been deleted.`)
     } else {
       await deletePollSet(setId)
-      alert(`Poll set "${setName}" has been deleted. The polls are still available.`)
+      await success(`Poll set "${setName}" has been deleted. The polls are still available.`)
     }
     await load() // Reload sets list
   } catch (error) {
     console.error('Error deleting set:', error)
-    alert('Failed to delete poll set. Please try again.')
+    await alert('Failed to delete poll set. Please try again.', 'Error')
   }
 }
 </script>

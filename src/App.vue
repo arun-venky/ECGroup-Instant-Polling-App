@@ -6,15 +6,32 @@
     </div>
   </div>
   <audio id="bg-music" loop class="hidden"></audio>
+  <ConfirmDialog
+    :visible="dialogState.visible"
+    :title="dialogState.title"
+    :message="dialogState.message"
+    :confirm-text="dialogState.confirmText"
+    :cancel-text="dialogState.cancelText"
+    :show-cancel="dialogState.showCancel"
+    :type="dialogState.type"
+    :icon="dialogState.icon"
+    @confirm="handleConfirm"
+    @cancel="handleCancel"
+    @update:visible="(val) => dialogState.visible = val"
+  />
 </template>
 
 <script setup>
 import BackgroundWaves from './components/BackgroundWaves.vue'
+import ConfirmDialog from './components/ConfirmDialog.vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useDialog } from './composables/useDialog.js'
 
 const route = useRoute()
 const isPresent = computed(() => route.name === undefined ? (route.path?.includes('/results') && route.query.present === 'true') : route.query.present === 'true')
+
+const { dialogState, handleConfirm, handleCancel } = useDialog()
 </script>
 
 

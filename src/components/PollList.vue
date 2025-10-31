@@ -87,12 +87,15 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, listPollIdsBySetSorted, createPoll } from '../utils/storage.js'
+import { useDialog } from '../composables/useDialog.js'
 import QrcodeVue from 'qrcode.vue'
 
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 
 // Register the component properly for template use
 const Qrcode = QrcodeVue
+
+const { confirm, alert, danger } = useDialog()
 
 const polls = ref([])
 const sets = ref([])
@@ -141,11 +144,11 @@ async function startActive() {
     if (ids && ids.length > 0) {
       router.push(`/sets/${activeSet.value}/polls/${ids[0]}`)
     } else {
-      alert('No polls found in this set. Please add polls first.')
+      await alert('No polls found in this set. Please add polls first.', 'No Polls')
     }
   } catch (error) {
     console.error('Error starting poll set:', error)
-    alert('Failed to start poll set. Please try again.')
+    await alert('Failed to start poll set. Please try again.', 'Error')
   }
 }
 
@@ -176,15 +179,25 @@ function formatDate(ts) {
 }
 
 async function remove(id) {
-  if (!confirm('Delete this poll?')) return
-  await deletePoll(id)
-  await load()
+  try {
+    const confirmed = await danger('Delete this poll?', 'Delete Poll')
+    if (!confirmed) return
+    await deletePoll(id)
+    await load()
+  } catch {
+    // User cancelled
+  }
 }
 
 async function clearAll() {
-  if (!confirm('Delete ALL polls? This cannot be undone.')) return
-  await clearAllPolls()
-  await load()
+  try {
+    const confirmed = await danger('Delete ALL polls? This cannot be undone.', 'Delete All Polls')
+    if (!confirmed) return
+    await clearAllPolls()
+    await load()
+  } catch {
+    // User cancelled
+  }
 }
 
 function linkToPoll(p) {
