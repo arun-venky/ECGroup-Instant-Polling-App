@@ -15,7 +15,7 @@ const routes = [
   { path: '/sets/:setId/polls/create', component: PollCreator },
   { path: '/sets/:setId/start', async beforeEnter(to) {
       const mod = await import('../utils/storage.js')
-      const ids = mod.listPollIdsBySetSorted(to.params.setId)
+      const ids = await mod.listPollIdsBySetSorted(to.params.setId)
       if (ids && ids.length) {
         return { path: `/sets/${to.params.setId}/polls/${ids[0]}` }
       }

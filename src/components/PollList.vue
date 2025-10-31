@@ -17,7 +17,7 @@
       <div v-for="p in polls" :key="p.id" class="card">
         <div class="flex items-start gap-3">
           <div class="shrink-0">
-            <qrcode-vue :value="buildUrl(p)" :size="96" level="H" />
+            <Qrcode :value="buildUrl(p)" :size="96" level="H" />
           </div>
           <div class="flex-1 min-w-0">
             <div class="font-bold text-lg break-words">{{ p.question }}</div>
@@ -38,7 +38,7 @@
       <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl border border-gray-200">
         <div class="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 class="text-xl font-bold">Create Poll</h3>
-          <button class="w-auto" @click="closeCreate">✕</button>
+          <button class="btn p-2 min-w-[2.5rem]" @click="closeCreate">✕</button>
         </div>
         <div class="p-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -64,17 +64,17 @@
           <div v-if="showOptions" class="mt-3">
             <label class="block mb-1">Options</label>
             <div class="flex flex-col gap-2">
-              <div v-for="(opt, i) in form.options" :key="i" class="flex gap-2">
-                <input v-model="form.options[i]" placeholder="Option" />
-                <button class="w-auto" @click="removeOption(i)">Remove</button>
+              <div v-for="(opt, i) in form.options" :key="i" class="flex gap-2 items-center">
+                <input v-model="form.options[i]" placeholder="Option" class="flex-1" />
+                <button class="btn flex-shrink-0" @click="removeOption(i)">Remove</button>
               </div>
-              <button class="w-auto" @click="addOption">Add Option</button>
+              <button class="btn" @click="addOption">Add Option</button>
             </div>
           </div>
         </div>
-        <div class="p-4 border-t border-gray-200 flex justify-end gap-2">
-          <button class="w-auto" @click="closeCreate">Cancel</button>
-          <button class="w-auto" @click="createFromModal" :disabled="!canCreate">Create</button>
+        <div class="p-4 border-t border-gray-200 flex justify-end gap-2 items-center">
+          <button class="btn" @click="closeCreate">Cancel</button>
+          <button class="btn" @click="createFromModal" :disabled="!canCreate">Create</button>
         </div>
       </div>
     </div>
@@ -90,6 +90,9 @@ import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, li
 import QrcodeVue from 'qrcode.vue'
 
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
+
+// Register the component properly for template use
+const Qrcode = QrcodeVue
 
 const polls = ref([])
 const sets = ref([])

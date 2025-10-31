@@ -6,9 +6,9 @@
         <label class="block mb-1">Set Name</label>
         <input v-model="name" placeholder="e.g., Friday Quiz" />
       </div>
-      <button @click="create" :disabled="!name.trim()">Create Set</button>
+      <button class="w-full" @click="create" :disabled="!name.trim()">Create Set</button>
       <div class="text-center mt-2">
-        <router-link class="btn inline-block" to="/sets">Back to Sets</router-link>
+        <router-link class="btn" to="/sets">Back to Sets</router-link>
       </div>
     </div>
   </div>

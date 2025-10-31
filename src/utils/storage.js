@@ -190,7 +190,10 @@ export async function getAdjacentPollId(id, step = 1) {
 export async function getAdjacentPollIdSameSet(id, step = 1) {
   try {
     const current = await getPoll(id)
-    if (!current) return null
+    if (!current) {
+      console.warn('Current poll not found:', id)
+      return null
+    }
     
     const setId = current.setId || null
     const pollsRef = collection(db, COLLECTIONS.POLLS)
@@ -198,12 +201,27 @@ export async function getAdjacentPollIdSameSet(id, step = 1) {
     let snapshot
     if (setId) {
       // Query for specific setId
-      const q = query(
-        pollsRef,
-        where('setId', '==', setId),
-        orderBy('createdAt', 'asc')
-      )
-      snapshot = await getDocs(q)
+      try {
+        const q = query(
+          pollsRef,
+          where('setId', '==', setId),
+          orderBy('createdAt', 'asc')
+        )
+        snapshot = await getDocs(q)
+      } catch (queryError) {
+        // If composite index error, fallback to fetching all and filtering
+        if (queryError.code === 'failed-precondition') {
+          console.warn('Firestore index required. Fetching all polls and filtering...')
+          const allSnapshot = await getDocs(query(pollsRef, orderBy('createdAt', 'asc')))
+          const filteredDocs = allSnapshot.docs.filter(doc => {
+            const data = doc.data()
+            return data.setId === setId
+          })
+          snapshot = { docs: filteredDocs }
+        } else {
+          throw queryError
+        }
+      }
     } else {
       // For null setId, we need to query all and filter in memory
       // Firestore doesn't support querying for null directly
@@ -221,8 +239,15 @@ export async function getAdjacentPollIdSameSet(id, step = 1) {
     const polls = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }))
     const ids = polls.map(p => p.id)
     const idx = ids.indexOf(id)
-    if (idx === -1) return null
-    return ids[idx + step] || null
+    if (idx === -1) {
+      console.warn('Current poll not found in same set list:', id, 'Available IDs:', ids)
+      return null
+    }
+    const targetId = ids[idx + step]
+    if (!targetId) {
+      console.log('No adjacent poll found. Index:', idx, 'Step:', step, 'Total polls:', ids.length)
+    }
+    return targetId || null
   } catch (error) {
     console.error('Error getting adjacent poll same set:', error)
     return null
@@ -234,12 +259,27 @@ export async function listPollIdsBySetSorted(setId) {
     const pollsRef = collection(db, COLLECTIONS.POLLS)
     let snapshot
     if (setId) {
-      const q = query(
-        pollsRef,
-        where('setId', '==', setId),
-        orderBy('createdAt', 'asc')
-      )
-      snapshot = await getDocs(q)
+      try {
+        const q = query(
+          pollsRef,
+          where('setId', '==', setId),
+          orderBy('createdAt', 'asc')
+        )
+        snapshot = await getDocs(q)
+      } catch (queryError) {
+        // If composite index error, fallback to fetching all and filtering
+        if (queryError.code === 'failed-precondition') {
+          console.warn('Firestore index required. Fetching all polls and filtering...')
+          const allSnapshot = await getDocs(query(pollsRef, orderBy('createdAt', 'asc')))
+          const filteredDocs = allSnapshot.docs.filter(doc => {
+            const data = doc.data()
+            return data.setId === setId
+          })
+          snapshot = { docs: filteredDocs }
+        } else {
+          throw queryError
+        }
+      }
     } else {
       // For null setId, query all and filter
       const q = query(pollsRef, orderBy('createdAt', 'asc'))

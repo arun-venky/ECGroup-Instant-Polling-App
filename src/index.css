@@ -14,18 +14,24 @@ html, body {
 }
 
 button {
-  @apply px-4 py-2 rounded-lg bg-primary text-dark font-bold transition-all duration-300 w-full;
+  @apply px-4 py-2 rounded-lg bg-primary text-dark font-bold transition-all duration-300 whitespace-nowrap flex items-center justify-center min-w-fit;
 }
-button:hover {
+button:hover:not(:disabled) {
   @apply bg-accent scale-105;
+}
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
 }
 
 /* Shared button style for links and non-button elements */
 .btn {
-  @apply px-4 py-2 rounded-lg bg-primary text-dark font-bold transition-all duration-300;
+  @apply px-4 py-2 rounded-lg bg-primary text-dark font-bold transition-all duration-300 whitespace-nowrap flex items-center justify-center inline-flex;
 }
 .btn:hover {
   @apply bg-accent scale-105;
+}
+.btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
 }
 
 input, textarea, select {
@@ -42,7 +48,7 @@ h1, h2, h3 {
 
 /* Touch-friendly voting buttons */
 .option-button {
-  @apply w-full py-3 my-2 rounded-lg bg-secondary hover:bg-primary text-white text-2xl active:scale-95 transition-all duration-200;
+  @apply w-full py-3 my-2 rounded-lg bg-secondary hover:bg-primary text-white text-2xl active:scale-95 transition-all duration-200 whitespace-nowrap flex items-center justify-center;
 }
 
 /* Custom scrollbars for polls list */

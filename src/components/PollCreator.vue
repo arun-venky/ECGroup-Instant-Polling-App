@@ -34,9 +34,9 @@
         </div>
         <div>
           <label class="block mb-1">Create New Set</label>
-          <div class="flex gap-2">
-            <input v-model="newSetName" placeholder="e.g., Friday Quiz" />
-            <button class="w-auto" @click="createSet">Add</button>
+          <div class="flex gap-2 items-center">
+            <input v-model="newSetName" placeholder="e.g., Friday Quiz" class="flex-1" />
+            <button class="btn flex-shrink-0" @click="createSet">Add</button>
           </div>
         </div>
       </div>
@@ -44,18 +44,18 @@
       <div v-if="showOptions" class="mt-2">
         <label class="block mb-1">Options</label>
         <div class="flex flex-col gap-2">
-          <div v-for="(opt, i) in options" :key="i" class="flex gap-2">
-            <input v-model="options[i]" placeholder="Option" />
-            <button @click="removeOption(i)">Remove</button>
+          <div v-for="(opt, i) in options" :key="i" class="flex gap-2 items-center">
+            <input v-model="options[i]" placeholder="Option" class="flex-1" />
+            <button class="btn flex-shrink-0" @click="removeOption(i)">Remove</button>
           </div>
-          <button class="mt-1" @click="addOption">Add Option</button>
+          <button class="btn mt-1" @click="addOption">Add Option</button>
         </div>
       </div>
 
-      <button class="mt-4" @click="create">Create Poll</button>
+      <button class="mt-4 w-full" @click="create">Create Poll</button>
       <div class="flex justify-center gap-3 mt-2">
-        <router-link class="btn inline-block" to="/polls">Manage Polls</router-link>
-        <router-link class="btn inline-block" to="/sets">Poll Sets</router-link>
+        <router-link class="btn" to="/polls">Manage Polls</router-link>
+        <router-link class="btn" to="/sets">Poll Sets</router-link>
       </div>
     </div>
   </div>

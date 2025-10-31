@@ -7,10 +7,10 @@
       <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3 w-64">
         <div class="text-xs mb-2">Scan or copy link</div>
         <div class="flex items-center justify-center mb-2">
-          <qrcode-vue :value="voteUrl" :size="128" level="H" />
+          <Qrcode :value="voteUrl" :size="128" level="H" />
         </div>
         <div class="text-[10px] break-all mb-2 select-text">{{ voteUrl }}</div>
-        <button class="w-full" @click="copyLink">Copy link</button>
+        <button class="btn w-full" @click="copyLink">Copy link</button>
       </div>
     </div>
 
@@ -52,21 +52,21 @@
           </div>
         </div>
       </template>
-      <div class="flex flex-wrap gap-3 mt-2 justify-center text-center">
-        <router-link class="btn w-full sm:w-auto" :to="`/poll/${id}`">Back to Vote</router-link>
-        <router-link class="btn w-full sm:w-auto" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
-        <router-link v-if="present" class="btn w-full sm:w-auto" :to="`/results/${id}`">Exit Presentation</router-link>
-        <button class="w-full sm:w-auto" @click="go(-1)">Previous</button>
-        <button class="w-full sm:w-auto" @click="go(1)">Next</button>
+      <div class="flex flex-wrap gap-3 mt-2 justify-center items-center">
+        <router-link class="btn" :to="`/poll/${id}`">Back to Vote</router-link>
+        <router-link class="btn" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
+        <router-link v-if="present" class="btn" :to="`/results/${id}`">Exit Presentation</router-link>
+        <button class="btn" @click="go(-1)">Previous</button>
+        <button class="btn" @click="go(1)">Next</button>
       </div>
       <ConfettiReveal />
     </div>
     <!-- Fixed QR panel (left-bottom) - minimal overlay to avoid disturbing presentation area -->
     <div v-if="poll" class="fixed left-3 bottom-3 z-10 hidden sm:flex items-center gap-3 bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-3 w-72">
-      <qrcode-vue :value="voteUrl" :size="120" level="H" />
+      <Qrcode :value="voteUrl" :size="120" level="H" />
       <div class="flex-1 min-w-0">
         <div class="text-[10px] text-neutral break-all leading-tight">{{ voteUrl }}</div>
-        <button class="mt-2 w-full px-2 py-1 rounded bg-primary text-dark text-xs font-bold" @click="copyLink">Copy</button>
+        <button class="btn mt-2 w-full text-sm" @click="copyLink">Copy</button>
       </div>
     </div>
   </div>
@@ -90,6 +90,9 @@ const canvasEl = ref(null)
 let chartInstance = null
 
 const colors = ['#00C4CC', '#2F80ED', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444']
+
+// Register the component properly for template use
+const Qrcode = QrcodeVue
 
 function encodePoll(p) {
   if (!p) return ''

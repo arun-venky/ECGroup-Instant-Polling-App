@@ -2,12 +2,12 @@
   <div class="card">
     <h3 class="text-lg mb-2">Share this Poll</h3>
     <div class="flex flex-col sm:flex-row gap-4 items-center">
-      <qrcode-vue :value="shareUrl" :size="160" level="H" />
+      <Qrcode :value="shareUrl" :size="160" level="H" />
       <div class="flex-1 w-full">
         <div class="text-sm break-all">{{ shareUrl }}</div>
-        <div class="mt-3 flex gap-2">
-          <button class="sm:w-40" @click="copyLink">Copy link</button>
-          <router-link class="sm:w-40" :to="`/poll/${id}`">Open</router-link>
+        <div class="mt-3 flex gap-2 items-center">
+          <button class="btn" @click="copyLink">Copy link</button>
+          <router-link class="btn" :to="`/poll/${id}`">Open</router-link>
         </div>
       </div>
     </div>
@@ -21,6 +21,9 @@ import { getPoll } from '../utils/storage.js'
 
 const props = defineProps({ id: { type: String, required: true } })
 const poll = ref(null)
+
+// Register the component properly for template use
+const Qrcode = QrcodeVue
 
 function encodePoll(p) {
   if (!p) return ''

@@ -7,10 +7,10 @@
       <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3 w-64">
         <div class="text-xs mb-2">Scan or copy link</div>
         <div class="flex items-center justify-center mb-2">
-          <qrcode-vue :value="shareUrl" :size="128" level="H" />
+          <Qrcode :value="shareUrl" :size="128" level="H" />
         </div>
         <div class="text-[10px] break-all mb-2 select-text">{{ shareUrl }}</div>
-        <button class="w-full" @click="copyLink">Copy link</button>
+        <button class="btn w-full" @click="copyLink">Copy link</button>
       </div>
     </div>
 
@@ -35,7 +35,7 @@
           :disabled="alreadyVoted"
         ></textarea>
         <button 
-          class="btn" 
+          class="btn w-full" 
           :disabled="alreadyVoted || !textResponse.trim()" 
           @click="onTextSubmit"
         >
@@ -49,10 +49,10 @@
         </button>
       </div>
 
-      <div class="flex flex-wrap gap-3 mt-2 justify-center text-center">
-        <router-link v-if="poll.type !== 'text' || alreadyVoted" class="btn w-full sm:w-auto" :to="`/results/${id}`">View Results</router-link>
-        <button class="w-full sm:w-auto" @click="go(-1)">Previous</button>
-        <button class="w-full sm:w-auto" @click="go(1)">Next</button>
+      <div class="flex flex-wrap gap-3 mt-2 justify-center items-center">
+        <router-link v-if="poll.type !== 'text' || alreadyVoted" class="btn" :to="`/results/${id}`">View Results</router-link>
+        <button class="btn" @click="go(-1)">Previous</button>
+        <button class="btn" @click="go(1)">Next</button>
       </div>
     </div>
   </div>
@@ -74,6 +74,9 @@ const id = computed(() => route.params.id)
 const poll = ref(null)
 const alreadyVoted = ref(false)
 const textResponse = ref('')
+
+// Register the component properly for template use
+const Qrcode = QrcodeVue
 
 function encodePoll(p) {
   if (!p) return ''
