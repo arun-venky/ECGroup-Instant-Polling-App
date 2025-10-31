@@ -41,7 +41,19 @@
       <!-- Bar chart for all non-text poll types -->
       <template v-else>
         <!-- Sticky Options List -->
-        <div class="sticky top-0 bg-white z-20 py-2 mb-4 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
+        <div v-if="poll.type === 'image'" class="sticky top-0 bg-white z-20 py-2 mb-4 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div v-for="(item, i) in displayItems" :key="i" class="flex flex-col items-center gap-2 p-3 border border-gray-200 rounded-lg" :class="{ 'border-green-500 border-2 bg-green-50': item.isCorrect }">
+              <img :src="displayLabels[i]" alt="Option" class="w-full h-48 object-contain rounded-md" />
+              <div class="flex items-center gap-2 w-full justify-center">
+                <span v-if="item.isCorrect" class="text-green-600 text-sm font-semibold">✓</span>
+                <span class="text-accent font-bold">{{ item.percentage }}%</span>
+                <span class="text-neutral text-xs">({{ item.votes }})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="sticky top-0 bg-white z-20 py-2 mb-4 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
             <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
               <span v-if="item.labelType !== 'like'" class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
@@ -60,7 +72,7 @@
           </div>
         </div>
         <!-- Scrollable Chart Container -->
-        <div class="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
+        <div v-if="poll.type !== 'image'" class="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           <div class="chart-container w-full bg-white rounded-xl p-4 sm:p-6 shadow-md border border-gray-200" style="position: relative; min-height: 300px; height: 400px;">
             <canvas ref="canvasEl" style="display: block;"></canvas>
           </div>
@@ -201,7 +213,7 @@ const isCorrectAnswer = (index) => {
   const answer = poll.value.answer
   const pollType = poll.value.type
   
-  if (pollType === 'multiple' || pollType === 'emoji' || pollType === 'star') {
+  if (pollType === 'multiple' || pollType === 'emoji' || pollType === 'star' || pollType === 'image') {
     return parseInt(answer) === index
   } else if (pollType === 'like') {
     return answer === poll.value.options[index]
@@ -233,6 +245,8 @@ const displayItems = computed(() => {
       }
     } else if (poll.value?.type === 'like') {
       labelType = 'like'
+    } else if (poll.value?.type === 'image') {
+      labelType = 'image'
     }
     
     return {
@@ -320,6 +334,9 @@ function draw() {
     chartInstance = null
   }
   
+  // Don't render charts for image polls - they use image grid display
+  if (poll.value?.type === 'image') return
+  
   try {
     let labels = displayLabels.value
     const values = displayedVotes.value.length ? displayedVotes.value : displayValues.value
@@ -341,6 +358,9 @@ function draw() {
         if (label === 'Dislike') return '👎 Dislike'
         return label
       })
+    } else if (poll.value?.type === 'image') {
+      // For image polls, use placeholder text for chart labels
+      labels = labels.map((label, i) => `Image ${i + 1}`)
     }
     
     if (labels.length === 0 || values.length === 0) {

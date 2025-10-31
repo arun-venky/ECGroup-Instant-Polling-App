@@ -85,6 +85,19 @@
           </button>
         </div>
 
+        <div v-else-if="poll.type==='image'" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-4xl mx-auto">
+          <button 
+            v-for="(opt, i) in poll.options" 
+            :key="i" 
+            class="flex flex-col items-center gap-2 p-4 border-2 border-gray-300 rounded-lg hover:border-primary transition-colors bg-white"
+            :disabled="alreadyVoted" 
+            @click="onIndex(i)"
+          >
+            <img :src="opt" alt="Option" class="w-full h-48 object-contain rounded-md" />
+            <span class="text-sm font-medium">Option {{ i + 1 }}</span>
+          </button>
+        </div>
+
         <div v-else class="flex flex-col gap-3 items-center">
           <button v-for="(opt, i) in poll.options" :key="i" class="option-button" :disabled="alreadyVoted" @click="onIndex(i)">
             {{ opt }}

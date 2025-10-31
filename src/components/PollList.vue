@@ -76,6 +76,7 @@
                 <option value="star">Star Rating</option>
                 <option value="like">Like / Dislike</option>
                 <option value="emoji">Emoji Reactions</option>
+                <option value="image">Image Selection</option>
                 <option value="text">Text Response</option>
               </select>
             </div>
@@ -92,6 +93,30 @@
                 <button class="btn flex-shrink-0" @click="removeOption(i)">Remove</button>
               </div>
               <button class="btn" @click="addOption">Add Option</button>
+            </div>
+          </div>
+          <div v-if="form.type === 'image'" class="mt-3">
+            <label class="block mb-1">Upload Images</label>
+            <div class="flex flex-col gap-3">
+              <div v-for="(opt, i) in form.options" :key="i" class="border border-gray-300 rounded-md p-3">
+                <div v-if="opt && opt.startsWith('data:image')" class="flex items-center gap-3">
+                  <img :src="opt" alt="Option" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
+                  <div class="flex-1">
+                    <div class="text-sm text-neutral mb-1">Image {{ i + 1 }}</div>
+                    <button class="btn text-xs py-1" @click="removeOption(i)">Remove</button>
+                  </div>
+                </div>
+                <div v-else>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    class="text-sm"
+                    @change="(e) => handleImageUpload(e, i)"
+                  />
+                  <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
+                </div>
+              </div>
+              <button class="btn" @click="addImageOption">Add Image</button>
             </div>
           </div>
           <div v-if="form.type === 'emoji'" class="mt-3">
@@ -145,6 +170,14 @@
                 <option value="">No answer specified</option>
                 <option value="Like">👍 Like</option>
                 <option value="Dislike">👎 Dislike</option>
+              </select>
+            </div>
+            <div v-else-if="form.type === 'image'">
+              <select v-model="form.answer" class="w-full">
+                <option value="">No answer specified</option>
+                <option v-for="(opt, i) in form.options" :key="i" :value="i" v-if="opt && opt.startsWith('data:image')">
+                  Image {{ i + 1 }}
+                </option>
               </select>
             </div>
             <div v-else-if="form.type === 'text'">
@@ -359,6 +392,9 @@ watch(() => form.value.type, (newType, oldType) => {
     if (newType === 'emoji') {
       // Initialize with empty array for dropdown selection
       form.value.options = []
+    } else if (newType === 'image') {
+      // Initialize with empty string for image upload
+      form.value.options = ['']
     } else if (newType === 'like') {
       form.value.options = ['Like', 'Dislike']
     } else if (newType === 'star') {
@@ -382,6 +418,37 @@ function removeEmoji(index) {
   if (form.value.type === 'emoji') {
     form.value.options.splice(index, 1)
   }
+}
+function addImageOption() {
+  form.value.options.push('')
+}
+function handleImageUpload(event, index) {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // Check file size (1 MB = 1048576 bytes)
+  if (file.size > 1048576) {
+    alert('File size exceeds 1 MB limit. Please choose a smaller image.')
+    event.target.value = ''
+    return
+  }
+  
+  // Check if file is an image
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.')
+    event.target.value = ''
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.value.options[index] = e.target.result // Store as base64 data URL
+  }
+  reader.onerror = () => {
+    alert('Error reading image file. Please try again.')
+    event.target.value = ''
+  }
+  reader.readAsDataURL(file)
 }
 
 function openCreate() {
@@ -432,12 +499,15 @@ function edit(poll) {
     answer: answerValue
   }
   
-  // Handle like and emoji types
+  // Handle like, emoji, and image types
   if (poll.type === 'like') {
     formData.options = ['Like', 'Dislike']
   }
   if (poll.type === 'emoji') {
     formData.options = poll.options || ['😀', '😍', '🤔', '😮', '😂', '😊', '👍', '❤️', '🔥', '✨', '👏', '🎉']
+  }
+  if (poll.type === 'image') {
+    formData.options = poll.options || ['']
   }
   
   // Set form value all at once to ensure answer is preserved
@@ -474,7 +544,7 @@ async function savePoll() {
     
     // Check if answer has a meaningful value
     if (answer !== '' && answer !== null && answer !== undefined) {
-      if (form.value.type === 'multiple' || form.value.type === 'emoji') {
+      if (form.value.type === 'multiple' || form.value.type === 'emoji' || form.value.type === 'image') {
         // For index-based answers, ensure we have a valid number
         const num = typeof answer === 'number' ? answer : parseInt(answer)
         if (!isNaN(num) && num >= 0) {

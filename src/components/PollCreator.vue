@@ -15,6 +15,7 @@
             <option value="star">Star Rating</option>
             <option value="like">Like / Dislike</option>
             <option value="emoji">Emoji Reactions</option>
+            <option value="image">Image Selection</option>
             <option value="text">Text Response</option>
           </select>
         </div>
@@ -53,6 +54,30 @@
             <button class="btn flex-shrink-0" @click="removeOption(i)">Remove</button>
           </div>
           <button class="btn mt-1" @click="addOption">Add Option</button>
+        </div>
+      </div>
+      <div v-if="type === 'image'" class="mt-2">
+        <label class="block mb-1">Upload Images</label>
+        <div class="flex flex-col gap-3">
+          <div v-for="(opt, i) in options" :key="i" class="border border-gray-300 rounded-md p-3">
+            <div v-if="opt" class="flex items-center gap-3">
+              <img :src="opt" alt="Option" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
+              <div class="flex-1">
+                <div class="text-sm text-neutral mb-1">Image {{ i + 1 }}</div>
+                <button class="btn text-xs py-1" @click="removeOption(i)">Remove</button>
+              </div>
+            </div>
+            <div v-else>
+              <input 
+                type="file" 
+                accept="image/*" 
+                class="text-sm"
+                @change="(e) => handleImageUpload(e, i)"
+              />
+              <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
+            </div>
+          </div>
+          <button class="btn mt-1" @click="addImageOption">Add Image</button>
         </div>
       </div>
       <div v-if="type === 'emoji'" class="mt-2">
@@ -107,6 +132,14 @@
             <option value="">No answer specified</option>
             <option value="Like">👍 Like</option>
             <option value="Dislike">👎 Dislike</option>
+          </select>
+        </div>
+        <div v-else-if="type === 'image'">
+          <select v-model="answer" class="w-full">
+            <option value="">No answer specified</option>
+            <option v-for="(opt, i) in options" :key="i" :value="i" v-if="opt">
+              Image {{ i + 1 }}
+            </option>
           </select>
         </div>
         <div v-else-if="type === 'text'">
@@ -221,6 +254,10 @@ watch(type, () => {
     options.value = []
     answer.value = ''
   }
+  if (type.value === 'image') {
+    options.value = ['']
+    answer.value = ''
+  }
   if (type.value === 'text') {
     answer.value = ''
   }
@@ -232,8 +269,39 @@ watch(type, () => {
 function addOption() {
   options.value.push('New option')
 }
+function addImageOption() {
+  options.value.push('')
+}
 function removeOption(index) {
   options.value.splice(index, 1)
+}
+function handleImageUpload(event, index) {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // Check file size (1 MB = 1048576 bytes)
+  if (file.size > 1048576) {
+    alert('File size exceeds 1 MB limit. Please choose a smaller image.')
+    event.target.value = ''
+    return
+  }
+  
+  // Check if file is an image
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.')
+    event.target.value = ''
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    options.value[index] = e.target.result // Store as base64 data URL
+  }
+  reader.onerror = () => {
+    alert('Error reading image file. Please try again.')
+    event.target.value = ''
+  }
+  reader.readAsDataURL(file)
 }
 function removeEmoji(index) {
   if (type.value === 'emoji') {
@@ -249,6 +317,10 @@ async function create() {
     if (type.value === 'star') {
       finalOptions = Array.from({ length: stars.value }, (_, i) => `${i + 1} ⭐`)
     }
+    if (type.value === 'image') {
+      // Filter out empty image slots and keep only valid base64 images
+      finalOptions = options.value.filter(opt => opt && opt.startsWith('data:image'))
+    }
     if (type.value === 'text') {
       finalOptions = [] // Text polls don't need predefined options
     }
@@ -259,7 +331,7 @@ async function create() {
     
     // Check if answer has a meaningful value
     if (ans !== '' && ans !== null && ans !== undefined) {
-      if (type.value === 'multiple' || type.value === 'emoji') {
+      if (type.value === 'multiple' || type.value === 'emoji' || type.value === 'image') {
         // For index-based answers, ensure we have a valid number
         const num = typeof ans === 'number' ? ans : parseInt(ans)
         if (!isNaN(num) && num >= 0) {

@@ -19,7 +19,7 @@
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/start`">Start</router-link>
-              <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/polls`">View Polls</router-link>
+              <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/polls`">View</router-link>
               <button class="btn bg-red-500 hover:bg-red-600 text-white text-sm flex-1 sm:flex-none min-w-[80px] justify-center" @click="() => deleteSet(s.id, s.name)">Delete</button>
             </div>
           </div>

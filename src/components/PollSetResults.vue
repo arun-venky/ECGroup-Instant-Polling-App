@@ -53,7 +53,19 @@
           
           <!-- List display for all non-text poll types -->
           <div v-else>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
+            <!-- Image poll display -->
+            <div v-if="poll.type === 'image'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex flex-col items-center gap-2 p-3 border-2 rounded-lg transition-colors" :class="{ 'bg-green-100 border-green-500': item.isCorrect, 'bg-white border-gray-200': !item.isCorrect }">
+                <img :src="item.originalOption" alt="Option" class="w-full h-48 object-contain rounded-md" />
+                <div class="flex items-center gap-2 w-full justify-center">
+                  <span v-if="item.isCorrect" class="text-green-600 text-sm font-semibold">✓</span>
+                  <span class="text-accent font-bold">{{ item.percentage }}%</span>
+                  <span class="text-neutral text-xs">({{ item.votes }})</span>
+                </div>
+              </div>
+            </div>
+            <!-- Other poll types display -->
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
               <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex items-center gap-2 p-2 rounded-md transition-colors" :class="{ 'bg-green-100 border-2 border-green-500': item.isCorrect, 'bg-white border border-gray-200': !item.isCorrect }">
                 <span v-if="item.labelType !== 'like'" class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
                 <span v-else class="inline-block flex-shrink-0">
@@ -144,7 +156,7 @@ function isCorrectAnswer(poll, index) {
   const answer = poll.answer
   const pollType = poll.type
   
-  if (pollType === 'multiple' || pollType === 'emoji' || pollType === 'star') {
+  if (pollType === 'multiple' || pollType === 'emoji' || pollType === 'star' || pollType === 'image') {
     return parseInt(answer) === index
   } else if (pollType === 'like') {
     return answer === poll.options[index]
@@ -181,6 +193,8 @@ function getDisplayItems(poll) {
       }
     } else if (poll.type === 'like') {
       labelType = 'like'
+    } else if (poll.type === 'image') {
+      labelType = 'image'
     }
     
     return {
