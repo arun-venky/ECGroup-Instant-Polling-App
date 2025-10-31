@@ -26,7 +26,13 @@
       </div>
 
       <div v-else class="flex flex-col gap-4 pb-4">
-        <div v-if="alreadyVoted" class="text-accent text-center">You've already voted on this device.</div>
+        <div v-if="voteSubmitted" class="text-green-600 text-center font-semibold flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Vote submitted successfully!</span>
+        </div>
+        <div v-else-if="alreadyVoted" class="text-accent text-center">You've already voted on this device.</div>
 
         <div v-if="poll.type==='star'">
           <StarRating :max="poll.options.length" :disabled="alreadyVoted" @select="onIndex" />
@@ -100,8 +106,6 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPoll, votePoll, votePollText, hasVoted, getAdjacentPollIdSameSet } from '../utils/storage.js'
-import { playVoteSound } from '../utils/sound.js'
-import confetti from 'canvas-confetti'
 import StarRating from './StarRating.vue'
 import EmojiReaction from './EmojiReaction.vue'
 import QrcodeVue from 'qrcode.vue'
@@ -111,6 +115,7 @@ const router = useRouter()
 const id = computed(() => route.params.id)
 const poll = ref(null)
 const alreadyVoted = ref(false)
+const voteSubmitted = ref(false)
 const textResponse = ref('')
 const showQR = ref(false)
 const hasNext = ref(false)
@@ -196,8 +201,11 @@ async function onIndex(index) {
   const result = await votePoll(id.value, index)
   if (result) {
     alreadyVoted.value = await hasVoted(id.value)
-    playVoteSound()
-    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
+    voteSubmitted.value = true
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      voteSubmitted.value = false
+    }, 3000)
     // Don't auto-navigate - user must click "View Results" button
   }
 }
@@ -207,8 +215,11 @@ async function onTextSubmit() {
   const result = await votePollText(id.value, textResponse.value)
   if (result) {
     alreadyVoted.value = await hasVoted(id.value)
-    playVoteSound()
-    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
+    voteSubmitted.value = true
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      voteSubmitted.value = false
+    }, 3000)
     // Don't auto-navigate - user must click "View Results" button
   }
 }
