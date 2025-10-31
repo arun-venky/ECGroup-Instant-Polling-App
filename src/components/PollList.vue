@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-6xl mx-auto card flex flex-col" style="max-height: calc(100vh - 100px);">
+  <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
     <div class="flex items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-6 px-6 border-b border-gray-200 flex-shrink-0">
       <h2 class="text-2xl">All Polls</h2>
       <div class="flex items-center gap-2">
@@ -12,23 +12,23 @@
         <button class="btn w-auto" @click="clearAll">Clear All</button>
       </div>
     </div>
-    <div class="flex-1 overflow-y-auto pr-2 -mr-2">
-      <div v-if="!polls.length" class="text-neutral">No polls created yet.</div>
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div v-for="p in polls" :key="p.id" class="card">
-          <div class="flex items-start gap-3">
-            <div class="shrink-0">
+    <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      <div v-if="!polls.length" class="text-neutral p-4">No polls created yet.</div>
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4 p-1">
+      <div v-for="p in polls" :key="p.id" class="card">
+        <div class="flex items-start gap-3">
+          <div class="shrink-0">
               <Qrcode :value="buildUrl(p)" :size="96" level="H" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="font-bold text-lg break-words">{{ p.question }}</div>
-              <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
-              <div class="flex flex-wrap gap-2 mt-3">
-                <router-link class="btn" :to="linkToPoll(p)">Open</router-link>
-                <router-link class="btn" :to="linkToResults(p)">Results</router-link>
-                <button class="btn" @click="copy(buildUrl(p))">Copy Link</button>
-                <button class="btn" @click="edit(p)">Edit</button>
-                <button class="btn" @click="remove(p.id)">Delete</button>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-lg break-words">{{ p.question }}</div>
+            <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
+            <div class="flex flex-wrap gap-2 mt-3">
+                <router-link class="btn text-xs sm:text-sm whitespace-nowrap" :to="linkToPoll(p)">Open</router-link>
+                <router-link class="btn text-xs sm:text-sm whitespace-nowrap" :to="linkToResults(p)">Results</router-link>
+                <button class="btn text-xs sm:text-sm whitespace-nowrap" @click="copy(buildUrl(p))">Copy Link</button>
+                <button class="btn text-xs sm:text-sm whitespace-nowrap" @click="edit(p)">Edit</button>
+                <button class="btn text-xs sm:text-sm whitespace-nowrap" @click="remove(p.id)">Delete</button>
               </div>
             </div>
           </div>
@@ -355,7 +355,7 @@ async function savePoll() {
     })
     closeCreate()
     await load()
-    router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
+  router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
   }
 }
 </script>
