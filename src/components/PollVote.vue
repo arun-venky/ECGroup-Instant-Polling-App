@@ -33,7 +33,7 @@
         </div>
 
         <div v-else-if="poll.type==='emoji'" class="flex justify-center items-center">
-          <div class="flex flex-wrap justify-center gap-3 max-w-2xl">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-w-4xl w-full">
             <EmojiReaction :options="poll.options" :disabled="alreadyVoted" @select="onIndex" />
           </div>
         </div>
