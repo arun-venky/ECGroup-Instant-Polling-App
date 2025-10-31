@@ -27,16 +27,20 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block mb-1">Assign to Set</label>
-          <select v-model="selectedSetId">
+          <select v-model="selectedSetId" :disabled="loadingSets">
             <option value="">No Set</option>
             <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
+          <div v-if="loadingSets" class="text-xs text-neutral mt-1">Loading sets...</div>
         </div>
         <div>
           <label class="block mb-1">Create New Set</label>
           <div class="flex gap-2 items-center">
-            <input v-model="newSetName" placeholder="e.g., Friday Quiz" class="flex-1" />
-            <button class="btn flex-shrink-0" @click="createSet">Add</button>
+            <input v-model="newSetName" placeholder="e.g., Friday Quiz" class="flex-1" :disabled="creatingSet" />
+            <button class="btn flex-shrink-0" @click="createSet" :disabled="creatingSet || !newSetName.trim()">
+              <span v-if="creatingSet" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+              <span>{{ creatingSet ? 'Adding...' : 'Add' }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -81,7 +85,10 @@
         </div>
       </div>
 
-      <button class="mt-4 w-full text-base sm:text-lg py-3" @click="create">Create Poll</button>
+      <button class="mt-4 w-full text-base sm:text-lg py-3" @click="create" :disabled="creatingPoll || !question.trim()">
+        <span v-if="creatingPoll" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
+        <span>{{ creatingPoll ? 'Creating...' : 'Create Poll' }}</span>
+      </button>
       <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 mt-2">
         <router-link class="btn text-sm sm:text-base justify-center" to="/polls">Manage Polls</router-link>
         <router-link class="btn text-sm sm:text-base justify-center" to="/sets">Poll Sets</router-link>
@@ -111,9 +118,17 @@ const shareId = ref('')
 const sets = ref([])
 const selectedSetId = ref('')
 const newSetName = ref('')
+const loadingSets = ref(true)
+const creatingPoll = ref(false)
+const creatingSet = ref(false)
 
 async function loadSets() {
-  sets.value = await listPollSets()
+  loadingSets.value = true
+  try {
+    sets.value = await listPollSets()
+  } finally {
+    loadingSets.value = false
+  }
 }
 onMounted(loadSets)
 onMounted(() => {
@@ -150,47 +165,57 @@ function removeOption(index) {
 }
 
 async function create() {
-  if (!question.value.trim()) return
-  let finalOptions = options.value
-  if (type.value === 'star') {
-    finalOptions = Array.from({ length: stars.value }, (_, i) => `${i + 1} ⭐`)
-  }
-  if (type.value === 'text') {
-    finalOptions = [] // Text polls don't need predefined options
-  }
-  
-  // Normalize answer based on type
-  let normalizedAnswer = null
-  if (answer.value !== '' && answer.value !== null) {
-    if (type.value === 'multiple' || type.value === 'emoji') {
-      normalizedAnswer = parseInt(answer.value)
-    } else if (type.value === 'star') {
-      normalizedAnswer = parseInt(answer.value)
-    } else if (type.value === 'like') {
-      normalizedAnswer = answer.value
-    } else if (type.value === 'text') {
-      normalizedAnswer = answer.value.trim().toLowerCase()
+  if (!question.value.trim() || creatingPoll.value) return
+  creatingPoll.value = true
+  try {
+    let finalOptions = options.value
+    if (type.value === 'star') {
+      finalOptions = Array.from({ length: stars.value }, (_, i) => `${i + 1} ⭐`)
     }
+    if (type.value === 'text') {
+      finalOptions = [] // Text polls don't need predefined options
+    }
+    
+    // Normalize answer based on type
+    let normalizedAnswer = null
+    if (answer.value !== '' && answer.value !== null) {
+      if (type.value === 'multiple' || type.value === 'emoji') {
+        normalizedAnswer = parseInt(answer.value)
+      } else if (type.value === 'star') {
+        normalizedAnswer = parseInt(answer.value)
+      } else if (type.value === 'like') {
+        normalizedAnswer = answer.value
+      } else if (type.value === 'text') {
+        normalizedAnswer = answer.value.trim().toLowerCase()
+      }
+    }
+    
+    const poll = await createPoll({ 
+      question: question.value.trim(), 
+      type: type.value, 
+      options: finalOptions, 
+      setId: selectedSetId.value || null,
+      answer: normalizedAnswer
+    })
+    shareId.value = poll.id
+    router.push(`/poll/${poll.id}`)
+  } finally {
+    creatingPoll.value = false
   }
-  
-  const poll = await createPoll({ 
-    question: question.value.trim(), 
-    type: type.value, 
-    options: finalOptions, 
-    setId: selectedSetId.value || null,
-    answer: normalizedAnswer
-  })
-  shareId.value = poll.id
-  router.push(`/poll/${poll.id}`)
 }
 
 async function createSet() {
   const name = newSetName.value.trim()
-  if (!name) return
-  const set = await createPollSet(name)
-  await loadSets()
-  selectedSetId.value = set.id
-  newSetName.value = ''
+  if (!name || creatingSet.value) return
+  creatingSet.value = true
+  try {
+    const set = await createPollSet(name)
+    await loadSets()
+    selectedSetId.value = set.id
+    newSetName.value = ''
+  } finally {
+    creatingSet.value = false
+  }
 }
 </script>
 

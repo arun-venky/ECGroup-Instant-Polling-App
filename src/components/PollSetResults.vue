@@ -5,8 +5,9 @@
       <p class="text-neutral">Complete results for all polls in this set</p>
     </div>
     
-    <div v-if="loading" class="text-center py-12 text-neutral text-lg">
-      Loading results...
+    <div v-if="loading" class="text-center py-12 text-neutral">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+      <div class="text-lg">Loading results...</div>
     </div>
     
     <div v-else-if="!polls.length" class="text-center py-12 text-neutral text-lg">

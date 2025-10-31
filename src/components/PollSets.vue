@@ -4,7 +4,11 @@
       <h2 class="text-xl sm:text-2xl">Poll Sets</h2>
       <router-link class="btn w-full sm:w-auto" to="/sets/create">New Set</router-link>
     </div>
-    <div v-if="!sets.length" class="text-neutral text-sm sm:text-base">No sets yet. Create polls and assign them to a set.</div>
+    <div v-if="loading" class="text-neutral text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+      <div>Loading sets...</div>
+    </div>
+    <div v-else-if="!sets.length" class="text-neutral text-sm sm:text-base">No sets yet. Create polls and assign them to a set.</div>
     <div v-else class="flex flex-col gap-3">
       <div v-for="s in sets" :key="s.id" class="card p-4 sm:p-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -29,10 +33,16 @@ import { listPollSets, deletePollSet, deletePollSetAndPolls } from '../utils/sto
 import { useDialog } from '../composables/useDialog.js'
 
 const sets = ref([])
+const loading = ref(true)
 const { confirm, alert, danger, success } = useDialog()
 
 async function load() {
-  sets.value = await listPollSets()
+  loading.value = true
+  try {
+    sets.value = await listPollSets()
+  } finally {
+    loading.value = false
+  }
 }
 onMounted(load)
 

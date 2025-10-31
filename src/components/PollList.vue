@@ -8,12 +8,19 @@
           <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
         <button v-if="activeSet" class="btn text-sm flex-1 sm:flex-none min-w-[100px] justify-center" @click="openCreate()">Add Poll</button>
-        <button class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :disabled="!activeSet" @click="startActive">Start</button>
+        <button class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :disabled="!activeSet || startingPoll" @click="startActive">
+          <span v-if="startingPoll" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+          <span>{{ startingPoll ? 'Starting...' : 'Start' }}</span>
+        </button>
         <button class="btn text-sm flex-1 sm:flex-none min-w-[100px] justify-center" @click="clearAll">Clear All</button>
       </div>
     </div>
     <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
-      <div v-if="!polls.length" class="text-neutral p-4">No polls created yet.</div>
+      <div v-if="loading" class="text-neutral text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+        <div>Loading polls...</div>
+      </div>
+      <div v-else-if="!polls.length" class="text-neutral p-4">No polls created yet.</div>
       <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 p-1">
       <div v-for="p in polls" :key="p.id" class="card p-4 sm:p-6">
         <div class="flex flex-col sm:flex-row items-start gap-3">
@@ -104,8 +111,11 @@
           </div>
         </div>
         <div class="p-3 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 items-center">
-          <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="closeCreate">Cancel</button>
-          <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="savePoll" :disabled="!canCreate">{{ editingPoll ? 'Save' : 'Create' }}</button>
+          <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="closeCreate" :disabled="savingPoll">Cancel</button>
+          <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="savePoll" :disabled="!canCreate || savingPoll">
+            <span v-if="savingPoll" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+            <span>{{ savingPoll ? (editingPoll ? 'Saving...' : 'Creating...') : (editingPoll ? 'Save' : 'Create') }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -133,6 +143,9 @@ const sets = ref([])
 const activeSet = ref('')
 const route = useRoute()
 const router = useRouter()
+const loading = ref(true)
+const savingPoll = ref(false)
+const startingPoll = ref(false)
 
 const showCreate = ref(false)
 const showEdit = ref(false)
@@ -140,14 +153,19 @@ const editingPoll = ref(null)
 const form = ref({ question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' })
 
 async function load() {
-  const ids = await listPollIdsSorted()
-  const pollPromises = ids.map(id => getPoll(id))
-  let all = (await Promise.all(pollPromises)).filter(Boolean)
-  sets.value = await listPollSets()
-  if (activeSet.value) {
-    all = all.filter(p => (p.setId || '') === activeSet.value)
+  loading.value = true
+  try {
+    const ids = await listPollIdsSorted()
+    const pollPromises = ids.map(id => getPoll(id))
+    let all = (await Promise.all(pollPromises)).filter(Boolean)
+    sets.value = await listPollSets()
+    if (activeSet.value) {
+      all = all.filter(p => (p.setId || '') === activeSet.value)
+    }
+    polls.value = all
+  } finally {
+    loading.value = false
   }
-  polls.value = all
 }
 
 onMounted(load)
@@ -168,10 +186,10 @@ watch(() => route.fullPath, () => {
 })
 
 async function startActive() {
-  if (!activeSet.value) {
-    console.warn('No active set selected')
+  if (!activeSet.value || startingPoll.value) {
     return
   }
+  startingPoll.value = true
   try {
     console.log('Starting poll set:', activeSet.value)
     const ids = await listPollIdsBySetSorted(activeSet.value)
@@ -187,6 +205,8 @@ async function startActive() {
   } catch (error) {
     console.error('Error starting poll set:', error)
     await alert('Failed to start poll set. Please try again.', 'Error')
+  } finally {
+    startingPoll.value = false
   }
 }
 
@@ -312,50 +332,55 @@ function closeCreate() {
 const canCreate = computed(() => !!form.value.question.trim())
 
 async function savePoll() {
-  if (!canCreate.value) return
-  let finalOptions = form.value.options
-  if (form.value.type === 'like') finalOptions = ['Like', 'Dislike']
-  if (form.value.type === 'emoji') finalOptions = ['😀', '😍', '🤔', '😮']
-  if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
-  if (form.value.type === 'text') finalOptions = [] // Text polls don't need predefined options
-  
-  // Normalize answer based on type
-  let normalizedAnswer = null
-  if (form.value.answer !== '' && form.value.answer !== null) {
-    if (form.value.type === 'multiple' || form.value.type === 'emoji') {
-      normalizedAnswer = parseInt(form.value.answer)
-    } else if (form.value.type === 'star') {
-      normalizedAnswer = parseInt(form.value.answer)
-    } else if (form.value.type === 'like') {
-      normalizedAnswer = form.value.answer
-    } else if (form.value.type === 'text') {
-      normalizedAnswer = form.value.answer.trim().toLowerCase()
+  if (!canCreate.value || savingPoll.value) return
+  savingPoll.value = true
+  try {
+    let finalOptions = form.value.options
+    if (form.value.type === 'like') finalOptions = ['Like', 'Dislike']
+    if (form.value.type === 'emoji') finalOptions = ['😀', '😍', '🤔', '😮']
+    if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
+    if (form.value.type === 'text') finalOptions = [] // Text polls don't need predefined options
+    
+    // Normalize answer based on type
+    let normalizedAnswer = null
+    if (form.value.answer !== '' && form.value.answer !== null) {
+      if (form.value.type === 'multiple' || form.value.type === 'emoji') {
+        normalizedAnswer = parseInt(form.value.answer)
+      } else if (form.value.type === 'star') {
+        normalizedAnswer = parseInt(form.value.answer)
+      } else if (form.value.type === 'like') {
+        normalizedAnswer = form.value.answer
+      } else if (form.value.type === 'text') {
+        normalizedAnswer = form.value.answer.trim().toLowerCase()
+      }
     }
-  }
-  
-  if (editingPoll.value) {
-    // Update existing poll
-    await updatePoll(editingPoll.value.id, {
-      question: form.value.question.trim(),
-      type: form.value.type,
-      options: finalOptions,
-      setId: editingPoll.value.setId, // Preserve existing setId
-      answer: normalizedAnswer
-    })
-    closeCreate()
-    await load()
-  } else {
-    // Create new poll
-    const poll = await createPoll({ 
-      question: form.value.question.trim(), 
-      type: form.value.type, 
-      options: finalOptions, 
-      setId: activeSet.value || null,
-      answer: normalizedAnswer
-    })
-    closeCreate()
-    await load()
-  router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
+    
+    if (editingPoll.value) {
+      // Update existing poll
+      await updatePoll(editingPoll.value.id, {
+        question: form.value.question.trim(),
+        type: form.value.type,
+        options: finalOptions,
+        setId: editingPoll.value.setId, // Preserve existing setId
+        answer: normalizedAnswer
+      })
+      closeCreate()
+      await load()
+    } else {
+      // Create new poll
+      const poll = await createPoll({ 
+        question: form.value.question.trim(), 
+        type: form.value.type, 
+        options: finalOptions, 
+        setId: activeSet.value || null,
+        answer: normalizedAnswer
+      })
+      closeCreate()
+      await load()
+      router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
+    }
+  } finally {
+    savingPoll.value = false
   }
 }
 </script>

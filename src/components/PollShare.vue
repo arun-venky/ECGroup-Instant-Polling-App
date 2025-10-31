@@ -1,7 +1,11 @@
 <template>
   <div class="card px-4 sm:px-6">
     <h3 class="text-base sm:text-lg mb-2">Share this Poll</h3>
-    <div class="flex flex-col items-center">
+    <div v-if="loading" class="flex flex-col items-center py-8">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+      <div class="text-neutral">Loading...</div>
+    </div>
+    <div v-else class="flex flex-col items-center">
       <Qrcode :value="shareUrl" :size="140" level="H" class="sm:w-40 sm:h-40" />
       <div class="mt-3 flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
         <button class="btn text-sm sm:text-base w-full sm:w-auto min-w-[120px] justify-center" @click="copyLink">Copy link</button>
@@ -19,6 +23,7 @@ import { useDialog } from '../composables/useDialog.js'
 
 const props = defineProps({ id: { type: String, required: true } })
 const poll = ref(null)
+const loading = ref(true)
 const { success } = useDialog()
 
 // Register the component properly for template use
@@ -47,7 +52,12 @@ async function copyLink() {
 }
 
 onMounted(async () => {
-  poll.value = await getPoll(props.id)
+  loading.value = true
+  try {
+    poll.value = await getPoll(props.id)
+  } finally {
+    loading.value = false
+  }
 })
 </script>
 
