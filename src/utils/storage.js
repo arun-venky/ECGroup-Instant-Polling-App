@@ -43,13 +43,14 @@ function invalidateCache() {
   pollsCacheTime = 0
 }
 
-export async function createPoll({ question, type, options, setId = null, answer = null }) {
+export async function createPoll({ question, questionImage = null, type, options, setId = null, answer = null }) {
   try {
   const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
     // Votes are now stored in the votes collection, not in the poll document
     const pollData = {
       id,
       question,
+      questionImage: questionImage || null,
       type,
       options,
       createdAt: Date.now(),
@@ -67,7 +68,7 @@ export async function createPoll({ question, type, options, setId = null, answer
   }
 }
 
-export async function updatePoll(id, { question, type, options, setId = null, answer = null }) {
+export async function updatePoll(id, { question, questionImage = null, type, options, setId = null, answer = null }) {
   try {
     const pollRef = doc(db, COLLECTIONS.POLLS, id)
     const pollSnap = await getDoc(pollRef)
@@ -81,6 +82,7 @@ export async function updatePoll(id, { question, type, options, setId = null, an
     // Update poll data (preserve createdAt, id)
     const updateData = {
       question,
+      questionImage: questionImage !== undefined ? questionImage : existingData.questionImage,
       type,
       options,
       setId: setId !== undefined ? setId : existingData.setId,

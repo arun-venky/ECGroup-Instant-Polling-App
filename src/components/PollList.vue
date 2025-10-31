@@ -67,7 +67,26 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
               <label class="block mb-1">Question</label>
-              <input v-model="form.question" placeholder="What's your question?" />
+              <textarea v-model="form.question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block mb-1">Question Image (optional)</label>
+              <div v-if="form.questionImage" class="mb-2">
+                <img :src="form.questionImage" alt="Question image" class="max-w-full h-48 object-contain rounded-md border border-gray-200" />
+                <button class="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="form.questionImage = ''" title="Remove image">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+              <input 
+                v-else
+                type="file" 
+                accept="image/*" 
+                class="text-sm"
+                @change="handleQuestionImageUpload"
+              />
+              <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
             </div>
             <div>
               <label class="block mb-1">Poll Type</label>
@@ -90,7 +109,11 @@
             <div class="flex flex-col gap-2">
               <div v-for="(opt, i) in form.options" :key="i" class="flex gap-2 items-center">
                 <input v-model="form.options[i]" placeholder="Option" class="flex-1" />
-                <button class="btn flex-shrink-0" @click="removeOption(i)">Remove</button>
+                <button class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0" @click="removeOption(i)" title="Remove option">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </div>
               <button class="btn" @click="addOption">Add Option</button>
             </div>
@@ -104,7 +127,11 @@
                     <img :src="opt" alt="Option" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
                     <div class="flex-1">
                       <div class="text-sm text-neutral mb-1">Image {{ i + 1 }}</div>
-                      <button class="btn text-xs py-1" @click="removeOption(i)">Remove</button>
+                      <button class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="removeOption(i)" title="Remove image">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                   <div v-else>
@@ -431,6 +458,34 @@ function removeEmoji(index) {
 function addImageOption() {
   form.value.options.push('')
 }
+function handleQuestionImageUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // Check file size (1 MB = 1048576 bytes)
+  if (file.size > 1048576) {
+    alert('File size exceeds 1 MB limit. Please choose a smaller image.')
+    event.target.value = ''
+    return
+  }
+  
+  // Check if file is an image
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.')
+    event.target.value = ''
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.value.questionImage = e.target.result // Store as base64 data URL
+  }
+  reader.onerror = () => {
+    alert('Error reading image file. Please try again.')
+    event.target.value = ''
+  }
+  reader.readAsDataURL(file)
+}
 function handleImageUpload(event, index) {
   const file = event.target.files[0]
   if (!file) return
@@ -500,6 +555,7 @@ function edit(poll) {
   // Set all values at once to avoid watch triggering and clearing answer
   const formData = {
     question: poll.question || '',
+    questionImage: poll.questionImage || '',
     type: poll.type || 'multiple',
     options: poll.type === 'star' 
       ? poll.options || [] 
@@ -527,7 +583,7 @@ function closeCreate() {
   showCreate.value = false
   showEdit.value = false
   editingPoll.value = null
-  form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
+  form.value = { question: '', questionImage: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
 }
 
 const canCreate = computed(() => !!form.value.question.trim())
@@ -606,6 +662,7 @@ async function savePoll() {
       // Update existing poll
       await updatePoll(editingPoll.value.id, {
         question: form.value.question.trim(),
+        questionImage: form.value.questionImage || null,
         type: form.value.type,
         options: finalOptions,
         setId: editingPoll.value.setId, // Preserve existing setId
@@ -616,7 +673,8 @@ async function savePoll() {
     } else {
       // Create new poll
       const poll = await createPoll({ 
-        question: form.value.question.trim(), 
+        question: form.value.question.trim(),
+        questionImage: form.value.questionImage || null,
         type: form.value.type, 
         options: finalOptions, 
         setId: activeSet.value || null,

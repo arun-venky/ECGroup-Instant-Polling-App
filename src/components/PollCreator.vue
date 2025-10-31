@@ -4,7 +4,27 @@
     <div class="flex flex-col gap-4">
       <div>
         <label class="block mb-1">Question</label>
-        <input v-model="question" placeholder="What's your question?" />
+        <textarea v-model="question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="block mb-1">Question Image (optional)</label>
+        <div v-if="questionImage" class="mb-2">
+          <img :src="questionImage" alt="Question image" class="max-w-full h-48 object-contain rounded-md border border-gray-200" />
+          <button class="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="questionImage = ''" title="Remove image">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+        <input 
+          v-else
+          type="file" 
+          accept="image/*" 
+          class="text-sm"
+          @change="handleQuestionImageUpload"
+        />
+        <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -51,7 +71,11 @@
         <div class="flex flex-col gap-2">
           <div v-for="(opt, i) in options" :key="i" class="flex gap-2 items-center">
             <input v-model="options[i]" placeholder="Option" class="flex-1" />
-            <button class="btn flex-shrink-0" @click="removeOption(i)">Remove</button>
+            <button class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0" @click="removeOption(i)" title="Remove option">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
           <button class="btn mt-1" @click="addOption">Add Option</button>
         </div>
@@ -65,7 +89,11 @@
                 <img :src="opt" alt="Option" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
                 <div class="flex-1">
                   <div class="text-sm text-neutral mb-1">Image {{ i + 1 }}</div>
-                  <button class="btn text-xs py-1" @click="removeOption(i)">Remove</button>
+                  <button class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="removeOption(i)" title="Remove image">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </div>
               <div v-else>
@@ -176,6 +204,7 @@ import { useRouter, useRoute } from 'vue-router'
 const router = useRouter()
 const route = useRoute()
 const question = ref('')
+const questionImage = ref('')
 const type = ref('multiple')
 const options = ref(['Option A', 'Option B'])
 const stars = ref(5)
@@ -279,6 +308,35 @@ function addImageOption() {
 function removeOption(index) {
   options.value.splice(index, 1)
 }
+function handleQuestionImageUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  // Check file size (1 MB = 1048576 bytes)
+  if (file.size > 1048576) {
+    alert('File size exceeds 1 MB limit. Please choose a smaller image.')
+    event.target.value = ''
+    return
+  }
+  
+  // Check if file is an image
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.')
+    event.target.value = ''
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    questionImage.value = e.target.result // Store as base64 data URL
+  }
+  reader.onerror = () => {
+    alert('Error reading image file. Please try again.')
+    event.target.value = ''
+  }
+  reader.readAsDataURL(file)
+}
+
 function handleImageUpload(event, index) {
   const file = event.target.files[0]
   if (!file) return
@@ -382,6 +440,7 @@ async function create() {
     
     const poll = await createPoll({ 
       question: question.value.trim(), 
+      questionImage: questionImage.value || null,
       type: type.value, 
       options: finalOptions, 
       setId: selectedSetId.value || null,

@@ -19,11 +19,12 @@
       
       <div v-else class="flex flex-col gap-6 pb-4">
         <div v-for="(poll, index) in polls" :key="poll.id" class="card px-4 sm:px-6 flex flex-col">
-          <div class="mb-4">
-            <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-1 break-words">
-              {{ index + 1 }}. {{ poll.question }}
-            </h2>
-          </div>
+                <div class="mb-4">
+                  <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-1 break-words">
+                    {{ index + 1 }}. {{ poll.question }}
+                  </h2>
+                  <img v-if="poll.questionImage" :src="poll.questionImage" alt="Question image" class="mt-3 max-w-full max-h-48 object-contain rounded-md border border-gray-200" />
+                </div>
         
           <!-- Text responses display -->
           <div v-if="poll.type === 'text'" class="flex flex-col gap-6">

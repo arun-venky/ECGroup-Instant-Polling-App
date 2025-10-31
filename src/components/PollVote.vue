@@ -2,7 +2,10 @@
   <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden px-4 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
     <!-- Sticky Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
-      <h2 class="text-xl sm:text-2xl md:text-3xl break-words pr-12 sm:pr-16 flex-1">{{ poll?.question || 'Poll' }}</h2>
+      <div class="flex-1 pr-12 sm:pr-16">
+        <h2 class="text-xl sm:text-2xl md:text-3xl break-words">{{ poll?.question || 'Poll' }}</h2>
+        <img v-if="poll?.questionImage" :src="poll.questionImage" alt="Question image" class="mt-3 max-w-full max-h-64 object-contain rounded-md border border-gray-200" />
+      </div>
       <!-- QR tooltip trigger (hover/tap to show) -->
       <div v-if="poll" class="absolute top-3 right-3 sm:relative sm:top-0 sm:right-0 group flex-shrink-0">
         <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
