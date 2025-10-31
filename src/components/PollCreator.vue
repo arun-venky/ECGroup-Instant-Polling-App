@@ -2,29 +2,31 @@
   <div class="max-w-2xl mx-auto card px-4 sm:px-6">
     <h1 class="text-xl sm:text-2xl mb-4">Create a Poll</h1>
     <div class="flex flex-col gap-4">
-      <div>
-        <label class="block mb-1">Question</label>
-        <textarea v-model="question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
-      </div>
-
-      <div class="mb-3">
-        <label class="block mb-1">Question Image (optional)</label>
-        <div v-if="questionImage" class="mb-2">
-          <img :src="questionImage" alt="Question image" class="max-w-full h-48 object-contain rounded-md border border-gray-200" />
-          <button class="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="questionImage = ''" title="Remove image">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+      <div class="border border-gray-300 rounded-md p-3 max-h-96 overflow-y-auto">
+        <div>
+          <label class="block mb-1">Question</label>
+          <textarea v-model="question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
         </div>
-        <input 
-          v-else
-          type="file" 
-          accept="image/*" 
-          class="text-sm"
-          @change="handleQuestionImageUpload"
-        />
-        <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
+
+        <div class="mb-3 mt-4">
+          <label class="block mb-1">Question Image (optional)</label>
+          <div v-if="questionImage" class="mb-2">
+            <img :src="questionImage" alt="Question image" class="max-w-full h-48 object-contain rounded-md border border-gray-200" />
+            <button class="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="questionImage = ''" title="Remove image">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+          <input 
+            v-else
+            type="file" 
+            accept="image/*" 
+            class="text-sm"
+            @change="handleQuestionImageUpload"
+          />
+          <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

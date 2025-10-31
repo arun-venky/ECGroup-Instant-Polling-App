@@ -23,7 +23,9 @@
                   <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-1 break-words">
                     {{ index + 1 }}. {{ poll.question }}
                   </h2>
-                  <img v-if="poll.questionImage" :src="poll.questionImage" alt="Question image" class="mt-3 max-w-full max-h-48 object-contain rounded-md border border-gray-200" />
+                  <div v-if="poll.questionImage" class="mt-3 flex justify-center">
+                    <img :src="poll.questionImage" alt="Question image" class="max-w-full max-h-48 object-contain rounded-md border border-gray-200" />
+                  </div>
                 </div>
         
           <!-- Text responses display -->

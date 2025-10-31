@@ -4,7 +4,9 @@
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
             <div class="flex-1">
               <h2 class="text-xl sm:text-2xl md:text-3xl break-words">{{ poll?.question || 'Results' }}</h2>
-              <img v-if="poll?.questionImage" :src="poll.questionImage" alt="Question image" class="mt-3 max-w-full max-h-48 object-contain rounded-md border border-gray-200" />
+              <div v-if="poll?.questionImage" class="mt-3 flex justify-center">
+                <img :src="poll.questionImage" alt="Question image" class="max-w-full max-h-48 object-contain rounded-md border border-gray-200" />
+              </div>
             </div>
           </div>
 
