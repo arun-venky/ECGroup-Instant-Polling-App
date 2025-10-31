@@ -71,7 +71,16 @@
         <div v-if="options.length > 0" class="mt-2">
           <label class="block mb-1 text-sm">Selected Emojis ({{ options.length }}):</label>
           <div class="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-md">
-            <span v-for="(opt, i) in options" :key="i" class="text-2xl">{{ opt }}</span>
+            <span 
+              v-for="(opt, i) in options" 
+              :key="i" 
+              class="text-2xl relative inline-flex items-center justify-center cursor-pointer hover:bg-red-100 rounded p-1 transition-colors group"
+              @click="removeEmoji(i)"
+              title="Click to remove"
+            >
+              {{ opt }}
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</span>
+            </span>
           </div>
         </div>
       </div>
@@ -225,6 +234,11 @@ function addOption() {
 }
 function removeOption(index) {
   options.value.splice(index, 1)
+}
+function removeEmoji(index) {
+  if (type.value === 'emoji') {
+    options.value.splice(index, 1)
+  }
 }
 
 async function create() {
