@@ -32,8 +32,10 @@
           <StarRating :max="poll.options.length" :disabled="alreadyVoted" @select="onIndex" />
         </div>
 
-        <div v-else-if="poll.type==='emoji'" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <EmojiReaction :options="poll.options" :disabled="alreadyVoted" @select="onIndex" />
+        <div v-else-if="poll.type==='emoji'" class="flex justify-center items-center">
+          <div class="flex flex-wrap justify-center gap-3 max-w-2xl">
+            <EmojiReaction :options="poll.options" :disabled="alreadyVoted" @select="onIndex" />
+          </div>
         </div>
 
         <div v-else-if="poll.type==='text'" class="flex flex-col gap-3">
@@ -55,7 +57,7 @@
         <div v-else-if="poll.type==='like'" class="flex flex-row gap-4 justify-center items-center">
           <button 
             v-if="poll.options[0] === 'Like'"
-            class="option-button flex flex-col items-center gap-2 px-8 py-6" 
+            class="option-button flex flex-col items-center gap-2 px-8 py-6 w-auto max-w-[200px]" 
             :disabled="alreadyVoted" 
             @click="onIndex(0)"
           >
@@ -66,7 +68,7 @@
           </button>
           <button 
             v-if="poll.options[1] === 'Dislike'"
-            class="option-button flex flex-col items-center gap-2 px-8 py-6" 
+            class="option-button flex flex-col items-center gap-2 px-8 py-6 w-auto max-w-[200px]" 
             :disabled="alreadyVoted" 
             @click="onIndex(1)"
           >

@@ -61,23 +61,33 @@ async function deleteSet(setId, setName) {
     if (!confirmed) {
       return
     }
-    
+  } catch (error) {
+    // User cancelled the first confirmation dialog - silently return
+    return
+  }
+  
+  try {
     const deletePolls = await confirm(
       `Do you want to delete all polls in "${setName}" as well?\n\nClick OK to delete set and all polls, or Cancel to keep the polls (just remove the set).`,
       'Delete Polls Too?'
     )
     
-    if (deletePolls) {
-      await deletePollSetAndPolls(setId)
-      await success(`Poll set "${setName}" and all its polls have been deleted.`)
-    } else {
-      await deletePollSet(setId)
-      await success(`Poll set "${setName}" has been deleted. The polls are still available.`)
+    try {
+      if (deletePolls) {
+        await deletePollSetAndPolls(setId)
+        await success(`Poll set "${setName}" and all its polls have been deleted.`)
+      } else {
+        await deletePollSet(setId)
+        await success(`Poll set "${setName}" has been deleted. The polls are still available.`)
+      }
+      await load() // Reload sets list
+    } catch (error) {
+      console.error('Error deleting set:', error)
+      await alert('Failed to delete poll set. Please try again.', 'Error')
     }
-    await load() // Reload sets list
   } catch (error) {
-    console.error('Error deleting set:', error)
-    await alert('Failed to delete poll set. Please try again.', 'Error')
+    // User cancelled the second confirmation dialog - silently return
+    return
   }
 }
 </script>
