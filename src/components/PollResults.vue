@@ -190,26 +190,29 @@ const textResponseItems = computed(() => {
   
   // Calculate percentages for each item
   const percentages = items.map(item => Math.round((item.count * 100) / total))
-  const maxPercent = Math.max(...percentages)
+  const maxPercent = Math.max(...percentages, 1) // At least 1 to avoid division by zero
   
-  // Font size range: min 18px (for smallest), max 80px (for 100% or maximum)
-  const minFontSize = 18
-  const maxFontSize = 80
+  // Font size range: min 20px (for smallest), max 96px (for highest percentage)
+  const minFontSize = 20
+  const maxFontSize = 96
   
-  // Scale font size based on percentage relative to maximum
-  // If max is 100%, use it directly; otherwise scale proportionally
-  const scaleFactor = maxPercent > 0 ? maxFontSize / Math.max(maxPercent, 20) : 1
+  // Scale font size proportionally: smallest percentage gets minFontSize, largest gets maxFontSize
+  // All others scale linearly between min and max based on their percentage relative to maxPercent
+  const minPercent = Math.min(...percentages)
+  const percentRange = maxPercent - minPercent || 1 // Avoid division by zero
   
   return items.map((item, i) => {
     const percent = percentages[i]
-    // Font size is proportional to percentage, but at least minFontSize
-    const fontSize = Math.max(minFontSize, minFontSize + (percent * scaleFactor))
+    // Scale linearly from minFontSize to maxFontSize based on position in range
+    const fontSize = percentRange > 0
+      ? minFontSize + ((percent - minPercent) / percentRange) * (maxFontSize - minFontSize)
+      : minFontSize // All same size if all percentages are equal
     
     return {
       text: item.text,
       count: item.count,
       percentage: percent,
-      fontSize: Math.round(Math.min(fontSize, maxFontSize))
+      fontSize: Math.round(fontSize)
     }
   })
 })
