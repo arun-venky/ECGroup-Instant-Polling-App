@@ -198,15 +198,7 @@ async function onIndex(index) {
     alreadyVoted.value = await hasVoted(id.value)
     playVoteSound()
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
-    const setId = poll.value?.setId
-    // If this is the last poll in the set, show all results
-    if (setId && !hasNext.value) {
-      router.push(`/sets/${setId}/results`)
-    } else if (setId) {
-      router.push(`/sets/${setId}/results/${id.value}`)
-    } else {
-      router.push(`/results/${id.value}`)
-    }
+    // Don't auto-navigate - user must click "View Results" button
   }
 }
 
@@ -215,17 +207,9 @@ async function onTextSubmit() {
   const result = await votePollText(id.value, textResponse.value)
   if (result) {
     alreadyVoted.value = await hasVoted(id.value)
-  playVoteSound()
-  confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
-  const setId = poll.value?.setId
-    // If this is the last poll in the set, show all results
-    if (setId && !hasNext.value) {
-      router.push(`/sets/${setId}/results`)
-    } else if (setId) {
-      router.push(`/sets/${setId}/results/${id.value}`)
-    } else {
-      router.push(`/results/${id.value}`)
-    }
+    playVoteSound()
+    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
+    // Don't auto-navigate - user must click "View Results" button
   }
 }
 
