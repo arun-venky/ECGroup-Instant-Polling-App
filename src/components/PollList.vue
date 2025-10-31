@@ -71,6 +71,34 @@
               <button class="btn" @click="addOption">Add Option</button>
             </div>
           </div>
+          <div class="mt-4">
+            <label class="block mb-1">
+              Correct Answer 
+              <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
+            </label>
+            <div v-if="form.type === 'multiple' || form.type === 'emoji'">
+              <select v-model="form.answer" class="w-full">
+                <option value="">No answer specified</option>
+                <option v-for="(opt, i) in form.options" :key="i" :value="i">{{ opt }}</option>
+              </select>
+            </div>
+            <div v-else-if="form.type === 'star'">
+              <select v-model="form.answer" class="w-full">
+                <option value="">No answer specified</option>
+                <option v-for="n in form.stars" :key="n" :value="n">{{ n }} ⭐</option>
+              </select>
+            </div>
+            <div v-else-if="form.type === 'like'">
+              <select v-model="form.answer" class="w-full">
+                <option value="">No answer specified</option>
+                <option value="Like">Like</option>
+                <option value="Dislike">Dislike</option>
+              </select>
+            </div>
+            <div v-else-if="form.type === 'text'">
+              <input v-model="form.answer" placeholder="Expected answer text (case-insensitive)" class="w-full" />
+            </div>
+          </div>
         </div>
         <div class="p-4 border-t border-gray-200 flex justify-end gap-2 items-center">
           <button class="btn" @click="closeCreate">Cancel</button>
@@ -104,7 +132,7 @@ const route = useRoute()
 const router = useRouter()
 
 const showCreate = ref(false)
-const form = ref({ question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5 })
+const form = ref({ question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' })
 
 async function load() {
   const ids = await listPollIdsSorted()
@@ -140,10 +168,15 @@ async function startActive() {
     return
   }
   try {
+    console.log('Starting poll set:', activeSet.value)
     const ids = await listPollIdsBySetSorted(activeSet.value)
+    console.log('Poll IDs for set:', ids)
     if (ids && ids.length > 0) {
-      router.push(`/sets/${activeSet.value}/polls/${ids[0]}`)
+      const targetPath = `/sets/${activeSet.value}/polls/${ids[0]}`
+      console.log('Navigating to:', targetPath)
+      await router.push(targetPath)
     } else {
+      console.warn('No polls found in set:', activeSet.value)
       await alert('No polls found in this set. Please add polls first.', 'No Polls')
     }
   } catch (error) {
@@ -211,6 +244,10 @@ function linkToResults(p) {
 
 const showOptions = computed(() => form.value.type === 'multiple' || form.value.type === 'emoji')
 
+watch(() => form.value.type, () => {
+  form.value.answer = ''
+})
+
 function addOption() {
   form.value.options.push('New option')
 }
@@ -223,6 +260,7 @@ function openCreate() {
 }
 function closeCreate() {
   showCreate.value = false
+  form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
 }
 
 const canCreate = computed(() => !!form.value.question.trim())
@@ -234,9 +272,30 @@ async function createFromModal() {
   if (form.value.type === 'emoji') finalOptions = ['😀', '😍', '🤔', '😮']
   if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
   if (form.value.type === 'text') finalOptions = [] // Text polls don't need predefined options
-  const poll = await createPoll({ question: form.value.question.trim(), type: form.value.type, options: finalOptions, setId: activeSet.value || null })
+  
+  // Normalize answer based on type
+  let normalizedAnswer = null
+  if (form.value.answer !== '' && form.value.answer !== null) {
+    if (form.value.type === 'multiple' || form.value.type === 'emoji') {
+      normalizedAnswer = parseInt(form.value.answer)
+    } else if (form.value.type === 'star') {
+      normalizedAnswer = parseInt(form.value.answer)
+    } else if (form.value.type === 'like') {
+      normalizedAnswer = form.value.answer
+    } else if (form.value.type === 'text') {
+      normalizedAnswer = form.value.answer.trim().toLowerCase()
+    }
+  }
+  
+  const poll = await createPoll({ 
+    question: form.value.question.trim(), 
+    type: form.value.type, 
+    options: finalOptions, 
+    setId: activeSet.value || null,
+    answer: normalizedAnswer
+  })
   showCreate.value = false
-  form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5 }
+  form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
   await load()
   router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
 }

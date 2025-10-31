@@ -33,7 +33,7 @@
               fontWeight: 'bold'
             }"
           >
-            {{ item.text }} <span class="opacity-75">({{ item.percentage }}%)</span>
+            {{ item.text }}<span v-if="!present" class="opacity-75"> ({{ item.percentage }}%)</span>
           </div>
         </div>
       </div>

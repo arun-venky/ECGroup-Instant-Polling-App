@@ -43,20 +43,18 @@ function invalidateCache() {
   pollsCacheTime = 0
 }
 
-export async function createPoll({ question, type, options, setId = null }) {
+export async function createPoll({ question, type, options, setId = null, answer = null }) {
   try {
     const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
-    const votes = type === 'text' ? [] : new Array(options.length).fill(0)
-    const textResponses = type === 'text' ? [] : null
+    // Votes are now stored in the votes collection, not in the poll document
     const pollData = {
       id,
       question,
       type,
       options,
-      votes,
-      textResponses,
       createdAt: Date.now(),
-      setId: setId || null
+      setId: setId || null,
+      answer: answer || null // Store the correct answer for validation
     }
     
     const pollRef = doc(db, COLLECTIONS.POLLS, id)
@@ -76,7 +74,15 @@ export async function getPoll(id) {
     
     if (pollSnap.exists()) {
       const data = pollSnap.data()
-      return { ...data, id: pollSnap.id }
+      // Aggregate votes from votes collection
+      const { votes, textResponses } = await aggregateVotes(id, data.type, data.options || [])
+      
+      return {
+        ...data,
+        id: pollSnap.id,
+        votes: votes || [],
+        textResponses: textResponses || []
+      }
     }
     return null
   } catch (error) {
@@ -85,33 +91,65 @@ export async function getPoll(id) {
   }
 }
 
+// Aggregate votes from votes collection for a poll
+async function aggregateVotes(pollId, pollType, options) {
+  try {
+    const votesRef = collection(db, COLLECTIONS.VOTES)
+    const q = query(votesRef, where('pollId', '==', pollId))
+    const snapshot = await getDocs(q)
+    
+    if (pollType === 'text') {
+      // For text polls, return array of text responses
+      const textResponses = []
+      snapshot.forEach((doc) => {
+        const data = doc.data()
+        if (data.textResponse) {
+          textResponses.push(data.textResponse)
+        }
+      })
+      return { textResponses, votes: null }
+    } else {
+      // For other poll types, aggregate by optionIndex
+      const votes = new Array(options.length).fill(0)
+      snapshot.forEach((doc) => {
+        const data = doc.data()
+        if (typeof data.optionIndex === 'number' && data.optionIndex >= 0 && data.optionIndex < votes.length) {
+          votes[data.optionIndex] = (votes[data.optionIndex] || 0) + 1
+        }
+      })
+      return { votes, textResponses: null }
+    }
+  } catch (error) {
+    console.error('Error aggregating votes:', error)
+    // Fallback to empty arrays
+    if (pollType === 'text') {
+      return { textResponses: [], votes: null }
+    }
+    return { votes: new Array(options.length).fill(0), textResponses: null }
+  }
+}
+
 export async function votePoll(id, index) {
   try {
+    // Verify poll exists
     const pollRef = doc(db, COLLECTIONS.POLLS, id)
+    const pollSnap = await getDoc(pollRef)
+    if (!pollSnap.exists()) {
+      throw new Error('Poll does not exist')
+    }
     
-    // Use transaction for atomic update of array element
-    await runTransaction(db, async (transaction) => {
-      const pollSnap = await transaction.get(pollRef)
-      if (!pollSnap.exists()) {
-        throw new Error('Poll does not exist')
-      }
-      
-      const pollData = pollSnap.data()
-      const votes = [...(pollData.votes || [])]
-      
-      // Ensure votes array is long enough
-      while (votes.length <= index) {
-        votes.push(0)
-      }
-      
-      // Increment the vote count
-      votes[index] = (votes[index] || 0) + 1
-      
-      transaction.update(pollRef, { votes })
-    })
+    // Create a vote document in the votes collection
+    const voteId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
+    const voteRef = doc(db, COLLECTIONS.VOTES, voteId)
+    const voteData = {
+      pollId: id,
+      optionIndex: index,
+      createdAt: Date.now()
+    }
     
+    await setDoc(voteRef, voteData)
     invalidateCache()
-    // Return updated poll
+    // Return updated poll with aggregated votes
     return await getPoll(id)
   } catch (error) {
     console.error('Error voting on poll:', error)
@@ -125,26 +163,25 @@ export async function votePollText(id, textResponse) {
       throw new Error('Text response cannot be empty')
     }
     
+    // Verify poll exists
     const pollRef = doc(db, COLLECTIONS.POLLS, id)
+    const pollSnap = await getDoc(pollRef)
+    if (!pollSnap.exists()) {
+      throw new Error('Poll does not exist')
+    }
     
-    // Use transaction for atomic update
-    await runTransaction(db, async (transaction) => {
-      const pollSnap = await transaction.get(pollRef)
-      if (!pollSnap.exists()) {
-        throw new Error('Poll does not exist')
-      }
-      
-      const pollData = pollSnap.data()
-      const textResponses = [...(pollData.textResponses || [])]
-      
-      // Add the new text response
-      textResponses.push(textResponse.trim())
-      
-      transaction.update(pollRef, { textResponses })
-    })
+    // Create a vote document in the votes collection with text response
+    const voteId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : generateId()
+    const voteRef = doc(db, COLLECTIONS.VOTES, voteId)
+    const voteData = {
+      pollId: id,
+      textResponse: textResponse.trim(),
+      createdAt: Date.now()
+    }
     
+    await setDoc(voteRef, voteData)
     invalidateCache()
-    // Return updated poll
+    // Return updated poll with aggregated votes
     return await getPoll(id)
   } catch (error) {
     console.error('Error submitting text response:', error)
@@ -256,6 +293,7 @@ export async function getAdjacentPollIdSameSet(id, step = 1) {
 
 export async function listPollIdsBySetSorted(setId) {
   try {
+    console.log('listPollIdsBySetSorted called with setId:', setId)
     const pollsRef = collection(db, COLLECTIONS.POLLS)
     let snapshot
     if (setId) {
@@ -266,6 +304,7 @@ export async function listPollIdsBySetSorted(setId) {
           orderBy('createdAt', 'asc')
         )
         snapshot = await getDocs(q)
+        console.log('Query succeeded, found', snapshot.docs.length, 'polls')
       } catch (queryError) {
         // If composite index error, fallback to fetching all and filtering
         if (queryError.code === 'failed-precondition') {
@@ -273,10 +312,16 @@ export async function listPollIdsBySetSorted(setId) {
           const allSnapshot = await getDocs(query(pollsRef, orderBy('createdAt', 'asc')))
           const filteredDocs = allSnapshot.docs.filter(doc => {
             const data = doc.data()
-            return data.setId === setId
+            const matches = data.setId === setId
+            if (!matches && data.setId) {
+              console.log('Poll', doc.id, 'has setId', data.setId, 'expected', setId)
+            }
+            return matches
           })
+          console.log('Filtered to', filteredDocs.length, 'polls')
           snapshot = { docs: filteredDocs }
         } else {
+          console.error('Query error (not index issue):', queryError)
           throw queryError
         }
       }
@@ -290,7 +335,9 @@ export async function listPollIdsBySetSorted(setId) {
       })
       snapshot = { docs: filteredDocs }
     }
-    return snapshot.docs.map(doc => doc.id)
+    const ids = snapshot.docs.map(doc => doc.id)
+    console.log('Returning poll IDs:', ids)
+    return ids
   } catch (error) {
     console.error('Error listing polls by set:', error)
     return []
@@ -299,8 +346,21 @@ export async function listPollIdsBySetSorted(setId) {
 
 export async function deletePoll(id) {
   try {
+    // Delete all votes for this poll
+    const votesRef = collection(db, COLLECTIONS.VOTES)
+    const votesQuery = query(votesRef, where('pollId', '==', id))
+    const votesSnapshot = await getDocs(votesQuery)
+    
+    const batch = writeBatch(db)
+    votesSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+    
+    // Delete the poll
     const pollRef = doc(db, COLLECTIONS.POLLS, id)
-    await deleteDoc(pollRef)
+    batch.delete(pollRef)
+    
+    await batch.commit()
     invalidateCache()
   } catch (error) {
     console.error('Error deleting poll:', error)
@@ -310,10 +370,18 @@ export async function deletePoll(id) {
 
 export async function clearAllPolls() {
   try {
-    const pollsRef = collection(db, COLLECTIONS.POLLS)
-    const snapshot = await getDocs(pollsRef)
+    // Delete all votes
+    const votesRef = collection(db, COLLECTIONS.VOTES)
+    const votesSnapshot = await getDocs(votesRef)
     const batch = writeBatch(db)
     
+    votesSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+    
+    // Delete all polls
+    const pollsRef = collection(db, COLLECTIONS.POLLS)
+    const snapshot = await getDocs(pollsRef)
     snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref)
     })
@@ -378,15 +446,28 @@ export async function deletePollSetAndPolls(setId) {
     )
     const snapshot = await getDocs(q)
     
-    // Delete the set
-    const setRef = doc(db, COLLECTIONS.POLL_SETS, setId)
+    // Get all vote IDs for these polls
+    const pollIds = snapshot.docs.map(doc => doc.id)
+    const votesRef = collection(db, COLLECTIONS.VOTES)
     
-    // Batch delete polls and set
+    // For each poll, get its votes and delete them
     const batch = writeBatch(db)
     
+    for (const pollId of pollIds) {
+      const votesQuery = query(votesRef, where('pollId', '==', pollId))
+      const votesSnapshot = await getDocs(votesQuery)
+      votesSnapshot.docs.forEach((doc) => {
+        batch.delete(doc.ref)
+      })
+    }
+    
+    // Delete all polls in the set
     snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref)
     })
+    
+    // Delete the set
+    const setRef = doc(db, COLLECTIONS.POLL_SETS, setId)
     batch.delete(setRef)
     
     await batch.commit()
@@ -406,11 +487,70 @@ export async function deletePollSetAndPolls(setId) {
 
 // Real-time listener for poll updates
 export function subscribeToPoll(id, callback) {
+  let pollUnsubscribe = null
+  let votesUnsubscribe = null
+  
   const pollRef = doc(db, COLLECTIONS.POLLS, id)
-  return onSnapshot(pollRef, (snapshot) => {
-    if (snapshot.exists()) {
-      const data = snapshot.data()
-      callback({ ...data, id: snapshot.id })
+  
+  // Subscribe to poll changes
+  pollUnsubscribe = onSnapshot(pollRef, async (pollSnapshot) => {
+    if (pollSnapshot.exists()) {
+      const pollData = pollSnapshot.data()
+      
+      // Also subscribe to votes collection for this poll
+      const votesRef = collection(db, COLLECTIONS.VOTES)
+      const votesQuery = query(votesRef, where('pollId', '==', id))
+      
+      // Unsubscribe from previous votes listener
+      if (votesUnsubscribe) {
+        votesUnsubscribe()
+      }
+      
+      // Subscribe to votes changes
+      votesUnsubscribe = onSnapshot(votesQuery, async (votesSnapshot) => {
+        try {
+          // Aggregate votes
+          const { votes, textResponses } = await aggregateVotes(id, pollData.type, pollData.options || [])
+          
+          // Call callback with poll data including aggregated votes
+          callback({
+            ...pollData,
+            id: pollSnapshot.id,
+            votes: votes || [],
+            textResponses: textResponses || []
+          })
+        } catch (error) {
+          console.error('Error aggregating votes in subscription:', error)
+          // Fallback to poll data without votes
+          callback({
+            ...pollData,
+            id: pollSnapshot.id,
+            votes: [],
+            textResponses: []
+          })
+        }
+      }, (error) => {
+        console.error('Error in votes subscription:', error)
+      })
+      
+      // Initial aggregation
+      try {
+        const { votes, textResponses } = await aggregateVotes(id, pollData.type, pollData.options || [])
+        callback({
+          ...pollData,
+          id: pollSnapshot.id,
+          votes: votes || [],
+          textResponses: textResponses || []
+        })
+      } catch (error) {
+        console.error('Error in initial vote aggregation:', error)
+        callback({
+          ...pollData,
+          id: pollSnapshot.id,
+          votes: [],
+          textResponses: []
+        })
+      }
     } else {
       callback(null)
     }
@@ -418,6 +558,12 @@ export function subscribeToPoll(id, callback) {
     console.error('Error in poll subscription:', error)
     callback(null)
   })
+  
+  // Return unsubscribe function
+  return () => {
+    if (pollUnsubscribe) pollUnsubscribe()
+    if (votesUnsubscribe) votesUnsubscribe()
+  }
 }
 
 // Helper function to load all polls (for backward compatibility)

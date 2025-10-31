@@ -52,6 +52,35 @@
         </div>
       </div>
 
+      <div class="mt-4">
+        <label class="block mb-1">
+          Correct Answer 
+          <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
+        </label>
+        <div v-if="type === 'multiple' || type === 'emoji'">
+          <select v-model="answer" class="w-full">
+            <option value="">No answer specified</option>
+            <option v-for="(opt, i) in options" :key="i" :value="i">{{ opt }}</option>
+          </select>
+        </div>
+        <div v-else-if="type === 'star'">
+          <select v-model="answer" class="w-full">
+            <option value="">No answer specified</option>
+            <option v-for="n in stars" :key="n" :value="n">{{ n }} ⭐</option>
+          </select>
+        </div>
+        <div v-else-if="type === 'like'">
+          <select v-model="answer" class="w-full">
+            <option value="">No answer specified</option>
+            <option value="Like">Like</option>
+            <option value="Dislike">Dislike</option>
+          </select>
+        </div>
+        <div v-else-if="type === 'text'">
+          <input v-model="answer" placeholder="Expected answer text (case-insensitive)" class="w-full" />
+        </div>
+      </div>
+
       <button class="mt-4 w-full" @click="create">Create Poll</button>
       <div class="flex justify-center gap-3 mt-2">
         <router-link class="btn" to="/polls">Manage Polls</router-link>
@@ -77,6 +106,7 @@ const question = ref('')
 const type = ref('multiple')
 const options = ref(['Option A', 'Option B'])
 const stars = ref(5)
+const answer = ref('')
 const shareId = ref('')
 const sets = ref([])
 const selectedSetId = ref('')
@@ -98,9 +128,17 @@ const showOptions = computed(() => type.value === 'multiple' || type.value === '
 watch(type, () => {
   if (type.value === 'like') {
     options.value = ['Like', 'Dislike']
+    answer.value = ''
   }
   if (type.value === 'emoji') {
     options.value = ['😀', '😍', '🤔', '😮']
+    answer.value = ''
+  }
+  if (type.value === 'text') {
+    answer.value = ''
+  }
+  if (type.value === 'star') {
+    answer.value = ''
   }
 })
 
@@ -120,7 +158,28 @@ async function create() {
   if (type.value === 'text') {
     finalOptions = [] // Text polls don't need predefined options
   }
-  const poll = await createPoll({ question: question.value.trim(), type: type.value, options: finalOptions, setId: selectedSetId.value || null })
+  
+  // Normalize answer based on type
+  let normalizedAnswer = null
+  if (answer.value !== '' && answer.value !== null) {
+    if (type.value === 'multiple' || type.value === 'emoji') {
+      normalizedAnswer = parseInt(answer.value)
+    } else if (type.value === 'star') {
+      normalizedAnswer = parseInt(answer.value)
+    } else if (type.value === 'like') {
+      normalizedAnswer = answer.value
+    } else if (type.value === 'text') {
+      normalizedAnswer = answer.value.trim().toLowerCase()
+    }
+  }
+  
+  const poll = await createPoll({ 
+    question: question.value.trim(), 
+    type: type.value, 
+    options: finalOptions, 
+    setId: selectedSetId.value || null,
+    answer: normalizedAnswer
+  })
   shareId.value = poll.id
   router.push(`/poll/${poll.id}`)
 }
