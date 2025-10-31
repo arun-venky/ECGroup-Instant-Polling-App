@@ -114,8 +114,8 @@
             <div v-else-if="form.type === 'like'">
               <select v-model="form.answer" class="w-full">
                 <option value="">No answer specified</option>
-                <option value="Like">Like</option>
-                <option value="Dislike">Dislike</option>
+                <option value="Like">👍 Like</option>
+                <option value="Dislike">👎 Dislike</option>
               </select>
             </div>
             <div v-else-if="form.type === 'text'">
