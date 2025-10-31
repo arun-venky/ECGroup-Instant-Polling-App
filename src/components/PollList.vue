@@ -2,18 +2,22 @@
   <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden px-2 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-2 sm:-mx-6 px-2 sm:px-6 border-b border-gray-200 flex-shrink-0">
       <h2 class="text-xl sm:text-2xl">All Polls</h2>
-      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-        <router-link v-if="activeSet || route.params.setId" class="btn text-sm flex-1 sm:flex-none min-w-[100px] justify-center" to="/sets">Back to Sets</router-link>
-        <select v-model="activeSet" class="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base min-w-[120px]">
-          <option value="">All Sets</option>
-          <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
-        <button v-if="activeSet" class="btn text-sm flex-1 sm:flex-none min-w-[100px] justify-center" @click="openCreate()">Add Poll</button>
-        <button class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :disabled="!activeSet || startingPoll" @click="startActive">
-          <span v-if="startingPoll" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-          <span>{{ startingPoll ? 'Starting...' : 'Start' }}</span>
-        </button>
-        <button class="btn text-sm flex-1 sm:flex-none min-w-[100px] justify-center" @click="clearAll">Clear All</button>
+      <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <router-link v-if="activeSet || route.params.setId" class="btn text-sm w-full sm:w-auto sm:min-w-[120px] justify-center" to="/sets">Back to Sets</router-link>
+          <select v-model="activeSet" class="px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base w-full sm:w-auto sm:min-w-[120px]">
+            <option value="">All Sets</option>
+            <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
+          </select>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+          <button v-if="activeSet" class="btn text-sm w-full sm:w-auto sm:min-w-[100px] justify-center" @click="openCreate()">Add Poll</button>
+          <button class="btn text-sm w-full sm:w-auto sm:min-w-[100px] justify-center" :disabled="!activeSet || startingPoll" @click="startActive">
+            <span v-if="startingPoll" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+            <span>{{ startingPoll ? 'Starting...' : 'Start' }}</span>
+          </button>
+          <button class="btn text-sm w-full sm:w-auto sm:min-w-[100px] justify-center" @click="clearAll">Clear All</button>
+        </div>
       </div>
     </div>
     <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
