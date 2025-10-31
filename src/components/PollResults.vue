@@ -17,17 +17,40 @@
     <div v-if="!poll" class="text-neutral">Poll not found.</div>
 
     <div v-else class="flex flex-col gap-4">
-      <!-- Chart display for all poll types including text -->
-      <div class="chart-container h-[50vh] sm:h-[60vh]">
-        <canvas ref="canvasEl"></canvas>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base">
-        <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
-          <span class="inline-block w-3 h-3 rounded-sm" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-          <span class="flex-1 break-words">{{ item.label }}</span>
-          <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+      <!-- Text responses display with font size based on percentage -->
+      <div v-if="poll.type === 'text'" class="flex flex-col gap-6">
+        <div v-if="!consolidatedTextResponses || consolidatedTextResponses.length === 0" class="text-neutral text-center py-12 text-xl">
+          No responses yet
+        </div>
+        <div v-else class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 p-6 min-h-[50vh] sm:min-h-[60vh]">
+          <div
+            v-for="(item, i) in textResponseItems"
+            :key="i"
+            class="inline-block transition-all duration-500"
+            :style="{
+              fontSize: item.fontSize + 'px',
+              color: colors[i % colors.length],
+              fontWeight: 'bold'
+            }"
+          >
+            {{ item.text }} <span class="opacity-75">({{ item.percentage }}%)</span>
+          </div>
         </div>
       </div>
+      
+      <!-- Chart display for other poll types -->
+      <template v-else>
+        <div class="chart-container h-[50vh] sm:h-[60vh]">
+          <canvas ref="canvasEl"></canvas>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base">
+          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
+            <span class="inline-block w-3 h-3 rounded-sm" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+            <span class="flex-1 break-words">{{ item.label }}</span>
+            <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
+          </div>
+        </div>
+      </template>
       <div class="flex flex-wrap gap-3 mt-2 justify-center items-center">
         <router-link class="btn" :to="`/poll/${id}`">Back to Vote</router-link>
         <router-link class="btn" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
@@ -152,8 +175,47 @@ const displayItems = computed(() => {
   }))
 })
 
+// Text response items with font sizes based on percentage
+const textResponseItems = computed(() => {
+  if (!poll.value || poll.value.type !== 'text') {
+    return []
+  }
+  
+  const items = consolidatedTextResponses.value
+  if (items.length === 0) return []
+  
+  // Calculate percentages
+  const total = items.reduce((sum, item) => sum + item.count, 0)
+  if (total === 0) return []
+  
+  // Calculate percentages for each item
+  const percentages = items.map(item => Math.round((item.count * 100) / total))
+  const maxPercent = Math.max(...percentages)
+  
+  // Font size range: min 18px (for smallest), max 80px (for 100% or maximum)
+  const minFontSize = 18
+  const maxFontSize = 80
+  
+  // Scale font size based on percentage relative to maximum
+  // If max is 100%, use it directly; otherwise scale proportionally
+  const scaleFactor = maxPercent > 0 ? maxFontSize / Math.max(maxPercent, 20) : 1
+  
+  return items.map((item, i) => {
+    const percent = percentages[i]
+    // Font size is proportional to percentage, but at least minFontSize
+    const fontSize = Math.max(minFontSize, minFontSize + (percent * scaleFactor))
+    
+    return {
+      text: item.text,
+      count: item.count,
+      percentage: percent,
+      fontSize: Math.round(Math.min(fontSize, maxFontSize))
+    }
+  })
+})
+
 function draw() {
-  if (!poll.value || !canvasEl.value) return
+  if (!poll.value || !canvasEl.value || poll.value.type === 'text') return
   if (chartInstance) {
     chartInstance.destroy()
   }
@@ -173,21 +235,26 @@ let unsubscribePoll = null
 onMounted(async () => {
   poll.value = await getPoll(id.value)
   if (poll.value) {
-    // Get initial values based on poll type
-    const initialValues = displayValues.value
-    // If presentation mode, animate in from zero
-    if (present.value) {
-      const zeros = Array.from({ length: initialValues.length }, () => 0)
-      displayedVotes.value = [...zeros]
-      draw()
-      animateVotes(zeros, initialValues, 1000)
+    // For text polls, we don't use charts or displayedVotes
+    if (poll.value.type === 'text') {
+      // Text responses will be displayed via textResponseItems computed property
     } else {
-      displayedVotes.value = [...initialValues]
-      draw()
+      // Get initial values based on poll type
+      const initialValues = displayValues.value
+      // If presentation mode, animate in from zero
+      if (present.value) {
+        const zeros = Array.from({ length: initialValues.length }, () => 0)
+        displayedVotes.value = [...zeros]
+        draw()
+        animateVotes(zeros, initialValues, 1000)
+      } else {
+        displayedVotes.value = [...initialValues]
+        draw()
+      }
     }
   } else {
     displayedVotes.value = []
-    if (canvasEl.value) draw()
+    if (canvasEl.value && poll.value?.type !== 'text') draw()
   }
   
   // Set up real-time listener for poll updates
@@ -195,11 +262,15 @@ onMounted(async () => {
     if (updatedPoll) {
       const prev = poll.value
       poll.value = updatedPoll
-      // Get current and new values based on poll type
-      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.type === 'text' ? [] : (prev?.votes || []))
-      const newVals = updatedPoll.type === 'text' 
-        ? consolidatedTextResponses.value.map(item => item.count)
-        : (updatedPoll.votes || [])
+      
+      // For text polls, updates are handled automatically via computed properties
+      if (updatedPoll.type === 'text') {
+        return
+      }
+      
+      // For other poll types, animate vote changes
+      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
+      const newVals = updatedPoll.votes || []
       
       // Only animate if values actually changed
       if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
@@ -243,7 +314,11 @@ watch(() => route.fullPath, async () => {
   // Load new poll
   poll.value = await getPoll(id.value)
   if (poll.value) {
-    displayedVotes.value = [...displayValues.value]
+    if (poll.value.type === 'text') {
+      // Text polls don't use displayedVotes
+    } else {
+      displayedVotes.value = [...displayValues.value]
+    }
   } else {
     displayedVotes.value = []
   }
@@ -253,11 +328,15 @@ watch(() => route.fullPath, async () => {
     if (updatedPoll) {
       const prev = poll.value
       poll.value = updatedPoll
-      // Get current and new values based on poll type
-      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.type === 'text' ? [] : (prev?.votes || []))
-      const newVals = updatedPoll.type === 'text' 
-        ? consolidatedTextResponses.value.map(item => item.count)
-        : (updatedPoll.votes || [])
+      
+      // For text polls, updates are handled automatically via computed properties
+      if (updatedPoll.type === 'text') {
+        return
+      }
+      
+      // For other poll types, animate vote changes
+      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
+      const newVals = updatedPoll.votes || []
       
       // Only animate if values actually changed
       if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
@@ -270,19 +349,19 @@ watch(() => route.fullPath, async () => {
     }
   })
   
-  draw()
+  if (poll.value?.type !== 'text') {
+    draw()
+  }
 })
 
 watch(present, async (isOn) => {
   if (isOn) {
     setBackgroundMusic('/assets/sounds/reveal.mp3', 0.8)
     playBackgroundMusic(0.15)
-    // Re-animate bars when entering presentation
+    // Re-animate bars when entering presentation (only for non-text polls)
     const latest = await getPoll(id.value)
-    if (latest) {
-      const currentValues = latest.type === 'text'
-        ? consolidatedTextResponses.value.map(item => item.count)
-        : (latest.votes || [])
+    if (latest && latest.type !== 'text') {
+      const currentValues = latest.votes || []
       const from = displayedVotes.value.length ? [...displayedVotes.value] : Array.from({ length: currentValues.length }, () => 0)
       animateVotes(from, currentValues, 1000)
     }
