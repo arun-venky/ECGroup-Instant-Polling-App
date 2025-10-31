@@ -13,13 +13,20 @@ const routes = [
   { path: '/sets/create', component: PollSetCreate },
   // List polls inside a set
   { path: '/sets/:setId/polls/create', component: PollCreator },
-  { path: '/sets/:setId/start', async beforeEnter(to) {
-      const mod = await import('../utils/storage.js')
-      const ids = await mod.listPollIdsBySetSorted(to.params.setId)
-      if (ids && ids.length) {
-        return { path: `/sets/${to.params.setId}/polls/${ids[0]}` }
+  { path: '/sets/:setId/start', async beforeEnter(to, from, next) {
+      try {
+        const mod = await import('../utils/storage.js')
+        const ids = await mod.listPollIdsBySetSorted(to.params.setId)
+        if (ids && ids.length > 0) {
+          next(`/sets/${to.params.setId}/polls/${ids[0]}`)
+        } else {
+          console.warn('No polls found for set:', to.params.setId)
+          next('/sets')
+        }
+      } catch (error) {
+        console.error('Error starting poll set:', error)
+        next('/sets')
       }
-      return { path: '/sets' }
     }
   },
   { path: '/sets/:setId/polls', component: PollList },

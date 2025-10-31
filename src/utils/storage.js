@@ -356,6 +356,54 @@ export async function listPollSets() {
   }
 }
 
+export async function deletePollSet(setId) {
+  try {
+    const setRef = doc(db, COLLECTIONS.POLL_SETS, setId)
+    await deleteDoc(setRef)
+    // Note: Polls with this setId will remain but the set reference will be removed
+    // You might want to also remove setId from polls, but that's optional
+  } catch (error) {
+    console.error('Error deleting poll set:', error)
+    throw error
+  }
+}
+
+export async function deletePollSetAndPolls(setId) {
+  try {
+    // Get all polls in this set
+    const pollsRef = collection(db, COLLECTIONS.POLLS)
+    const q = query(
+      pollsRef,
+      where('setId', '==', setId)
+    )
+    const snapshot = await getDocs(q)
+    
+    // Delete the set
+    const setRef = doc(db, COLLECTIONS.POLL_SETS, setId)
+    
+    // Batch delete polls and set
+    const batch = writeBatch(db)
+    
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+    batch.delete(setRef)
+    
+    await batch.commit()
+    invalidateCache()
+  } catch (error) {
+    // If composite index error, try alternative approach
+    if (error.code === 'failed-precondition') {
+      console.warn('Firestore index required. Deleting set only...')
+      const setRef = doc(db, COLLECTIONS.POLL_SETS, setId)
+      await deleteDoc(setRef)
+    } else {
+      console.error('Error deleting poll set and polls:', error)
+      throw error
+    }
+  }
+}
+
 // Real-time listener for poll updates
 export function subscribeToPoll(id, callback) {
   const pollRef = doc(db, COLLECTIONS.POLLS, id)

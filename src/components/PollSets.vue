@@ -13,8 +13,9 @@
             <div class="text-xs text-neutral">{{ formatDate(s.createdAt) }}</div>
           </div>
           <div class="flex items-center gap-2">
-            <router-link class="btn w-auto" :to="`/sets/${s.id}/start`">Start</router-link>
-            <router-link class="btn w-auto" :to="`/sets/${s.id}/polls`">View Polls</router-link>
+            <router-link class="btn" :to="`/sets/${s.id}/start`">Start</router-link>
+            <router-link class="btn" :to="`/sets/${s.id}/polls`">View Polls</router-link>
+            <button class="btn bg-red-500 hover:bg-red-600 text-white" @click="() => deleteSet(s.id, s.name)">Delete</button>
           </div>
         </div>
       </div>
@@ -24,7 +25,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { listPollSets } from '../utils/storage.js'
+import { listPollSets, deletePollSet, deletePollSetAndPolls } from '../utils/storage.js'
 
 const sets = ref([])
 
@@ -40,8 +41,26 @@ function formatDate(ts) {
   try { return new Date(ts).toLocaleString() } catch { return '' }
 }
 
-function filterSet(setId) {
-  // Navigate to /polls and rely on its dropdown filter (user can select the set there)
+async function deleteSet(setId, setName) {
+  if (!confirm(`Delete poll set "${setName}"?`)) {
+    return
+  }
+  
+  const deletePolls = confirm(`Do you want to delete all polls in "${setName}" as well?\n\nClick OK to delete set and all polls, or Cancel to keep the polls (just remove the set).`)
+  
+  try {
+    if (deletePolls) {
+      await deletePollSetAndPolls(setId)
+      alert(`Poll set "${setName}" and all its polls have been deleted.`)
+    } else {
+      await deletePollSet(setId)
+      alert(`Poll set "${setName}" has been deleted. The polls are still available.`)
+    }
+    await load() // Reload sets list
+  } catch (error) {
+    console.error('Error deleting set:', error)
+    alert('Failed to delete poll set. Please try again.')
+  }
 }
 </script>
 

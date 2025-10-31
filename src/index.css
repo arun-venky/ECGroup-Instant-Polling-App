@@ -34,6 +34,14 @@ button:disabled {
   @apply opacity-50 cursor-not-allowed;
 }
 
+/* Override for special button styles */
+.btn.bg-red-500 {
+  @apply bg-red-500 text-white;
+}
+.btn.bg-red-500:hover {
+  @apply bg-red-600 scale-105;
+}
+
 input, textarea, select {
   @apply bg-white text-dark rounded-md px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full shadow-sm;
 }

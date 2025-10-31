@@ -132,9 +132,21 @@ watch(() => route.fullPath, () => {
 })
 
 async function startActive() {
-  if (!activeSet.value) return
-  const ids = await listPollIdsBySetSorted(activeSet.value)
-  if (ids.length) router.push(`/sets/${activeSet.value}/polls/${ids[0]}`)
+  if (!activeSet.value) {
+    console.warn('No active set selected')
+    return
+  }
+  try {
+    const ids = await listPollIdsBySetSorted(activeSet.value)
+    if (ids && ids.length > 0) {
+      router.push(`/sets/${activeSet.value}/polls/${ids[0]}`)
+    } else {
+      alert('No polls found in this set. Please add polls first.')
+    }
+  } catch (error) {
+    console.error('Error starting poll set:', error)
+    alert('Failed to start poll set. Please try again.')
+  }
 }
 
 function encodePoll(p) {
