@@ -4,13 +4,10 @@
     <!-- QR tooltip trigger (hover to show, copy link allowed) -->
     <div v-if="poll" class="absolute top-3 right-3 group">
       <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm">QR</button>
-      <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3 w-64">
-        <div class="text-xs mb-2">Scan or copy link</div>
-        <div class="flex items-center justify-center mb-2">
+      <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3">
+        <div class="flex items-center justify-center">
           <Qrcode :value="voteUrl" :size="128" level="H" />
         </div>
-        <div class="text-[10px] break-all mb-2 select-text">{{ voteUrl }}</div>
-        <button class="btn w-full" @click="copyLink">Copy link</button>
       </div>
     </div>
 
@@ -61,12 +58,8 @@
       <ConfettiReveal />
     </div>
     <!-- Fixed QR panel (left-bottom) - minimal overlay to avoid disturbing presentation area -->
-    <div v-if="poll" class="fixed left-3 bottom-3 z-10 hidden sm:flex items-center gap-3 bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-3 w-72">
+    <div v-if="poll" class="fixed left-3 bottom-3 z-10 hidden sm:flex items-center bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-3">
       <Qrcode :value="voteUrl" :size="120" level="H" />
-      <div class="flex-1 min-w-0">
-        <div class="text-[10px] text-neutral break-all leading-tight">{{ voteUrl }}</div>
-        <button class="btn mt-2 w-full text-sm" @click="copyLink">Copy</button>
-      </div>
     </div>
   </div>
 </template>

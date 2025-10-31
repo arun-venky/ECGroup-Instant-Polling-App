@@ -1,14 +1,11 @@
 <template>
   <div class="card">
     <h3 class="text-lg mb-2">Share this Poll</h3>
-    <div class="flex flex-col sm:flex-row gap-4 items-center">
+    <div class="flex flex-col items-center">
       <Qrcode :value="shareUrl" :size="160" level="H" />
-      <div class="flex-1 w-full">
-        <div class="text-sm break-all">{{ shareUrl }}</div>
-        <div class="mt-3 flex gap-2 items-center">
-          <button class="btn" @click="copyLink">Copy link</button>
-          <router-link class="btn" :to="`/poll/${id}`">Open</router-link>
-        </div>
+      <div class="mt-3 flex gap-2 items-center">
+        <button class="btn" @click="copyLink">Copy link</button>
+        <router-link class="btn" :to="`/poll/${id}`">Open</router-link>
       </div>
     </div>
   </div>
