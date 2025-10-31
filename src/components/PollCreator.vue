@@ -58,27 +58,29 @@
       </div>
       <div v-if="type === 'image'" class="mt-2">
         <label class="block mb-1">Upload Images</label>
-        <div class="flex flex-col gap-3">
-          <div v-for="(opt, i) in options" :key="i" class="border border-gray-300 rounded-md p-3">
-            <div v-if="opt" class="flex items-center gap-3">
-              <img :src="opt" alt="Option" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
-              <div class="flex-1">
-                <div class="text-sm text-neutral mb-1">Image {{ i + 1 }}</div>
-                <button class="btn text-xs py-1" @click="removeOption(i)">Remove</button>
+        <div class="border border-gray-300 rounded-md p-2 max-h-64 overflow-y-auto">
+          <div class="flex flex-col gap-3">
+            <div v-for="(opt, i) in options" :key="i" class="border border-gray-300 rounded-md p-3 flex-shrink-0">
+              <div v-if="opt" class="flex items-center gap-3">
+                <img :src="opt" alt="Option" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
+                <div class="flex-1">
+                  <div class="text-sm text-neutral mb-1">Image {{ i + 1 }}</div>
+                  <button class="btn text-xs py-1" @click="removeOption(i)">Remove</button>
+                </div>
+              </div>
+              <div v-else>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  class="text-sm"
+                  @change="(e) => handleImageUpload(e, i)"
+                />
+                <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
               </div>
             </div>
-            <div v-else>
-              <input 
-                type="file" 
-                accept="image/*" 
-                class="text-sm"
-                @change="(e) => handleImageUpload(e, i)"
-              />
-              <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
-            </div>
           </div>
-          <button class="btn mt-1" @click="addImageOption">Add Image</button>
         </div>
+        <button class="btn mt-2" @click="addImageOption">Add Image</button>
       </div>
       <div v-if="type === 'emoji'" class="mt-2">
         <label class="block mb-1">Select Emojis</label>

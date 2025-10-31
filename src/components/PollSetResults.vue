@@ -56,7 +56,7 @@
             <!-- Image poll display -->
             <div v-if="poll.type === 'image'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div v-for="(item, i) in getDisplayItems(poll)" :key="i" class="flex flex-col items-center gap-2 p-3 border-2 rounded-lg transition-colors" :class="{ 'bg-green-100 border-green-500': item.isCorrect, 'bg-white border-gray-200': !item.isCorrect }">
-                <img :src="item.originalOption" alt="Option" class="w-full h-48 object-contain rounded-md" />
+                <img :src="item.originalOption" alt="Option" class="w-full h-32 object-contain rounded-md" />
                 <div class="flex items-center gap-2 w-full justify-center">
                   <span v-if="item.isCorrect" class="text-green-600 text-sm font-semibold">✓</span>
                   <span class="text-accent font-bold">{{ item.percentage }}%</span>
