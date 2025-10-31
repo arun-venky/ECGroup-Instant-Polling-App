@@ -40,9 +40,9 @@
         <div class="chart-container h-[50vh] sm:h-[60vh]">
           <canvas ref="canvasEl"></canvas>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
           <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
-            <span class="inline-block w-3 h-3 rounded-sm" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+            <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
             <span class="flex-1 break-words">{{ item.label }}</span>
             <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
           </div>
@@ -53,7 +53,8 @@
         <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}?present=true`">Presentation</router-link>
         <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}`">Exit Present</router-link>
         <button class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(-1)">Previous</button>
-        <button class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
+        <button v-if="hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
+        <router-link v-if="poll?.setId && !hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[150px] justify-center py-2" :to="`/sets/${poll.setId}/results`">View All Results</router-link>
       </div>
       <ConfettiReveal />
     </div>
@@ -80,6 +81,7 @@ const present = computed(() => route.query.present === 'true')
 const poll = ref(null)
 const showQR = ref(false)
 const canvasEl = ref(null)
+const hasNext = ref(false)
 let chartInstance = null
 
 const colors = ['#00C4CC', '#2F80ED', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444']
@@ -254,6 +256,9 @@ onMounted(async () => {
     if (canvasEl.value && poll.value?.type !== 'text') draw()
   }
   
+  // Check if there's a next poll
+  await checkHasNext()
+  
   // Set up real-time listener for poll updates
   unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
     if (updatedPoll) {
@@ -301,6 +306,15 @@ onBeforeUnmount(() => {
   if (present.value) stopBackgroundMusic()
 })
 
+async function checkHasNext() {
+  if (!poll.value) {
+    hasNext.value = false
+    return
+  }
+  const nextId = await getAdjacentPollIdSameSet(id.value, 1)
+  hasNext.value = !!nextId
+}
+
 watch(() => route.fullPath, async () => {
   // Unsubscribe from previous poll
   if (unsubscribePoll) {
@@ -319,6 +333,9 @@ watch(() => route.fullPath, async () => {
   } else {
     displayedVotes.value = []
   }
+  
+  // Check if there's a next poll
+  await checkHasNext()
   
   // Set up listener for new poll
   unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {

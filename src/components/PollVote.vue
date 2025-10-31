@@ -49,7 +49,7 @@
       <div class="flex flex-wrap gap-2 sm:gap-3 mt-2 justify-center items-center">
         <router-link v-if="poll.type !== 'text' || alreadyVoted" class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" :to="`/results/${id}`">View Results</router-link>
         <button class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(-1)">Previous</button>
-        <button class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(1)">Next</button>
+        <button v-if="hasNext" class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(1)">Next</button>
       </div>
     </div>
   </div>
@@ -72,6 +72,7 @@ const poll = ref(null)
 const alreadyVoted = ref(false)
 const textResponse = ref('')
 const showQR = ref(false)
+const hasNext = ref(false)
 
 // Register the component properly for template use
 const Qrcode = QrcodeVue
@@ -98,14 +99,22 @@ async function copyLink() {
   await navigator.clipboard.writeText(shareUrl.value)
 }
 
+async function checkHasNext() {
+  if (!poll.value) return false
+  const nextId = await getAdjacentPollIdSameSet(id.value, 1)
+  hasNext.value = !!nextId
+}
+
 onMounted(async () => {
   poll.value = await getPoll(id.value)
   alreadyVoted.value = await hasVoted(id.value)
+  await checkHasNext()
 })
 
 watch(() => route.params.id, async () => {
   poll.value = await getPoll(route.params.id)
   alreadyVoted.value = await hasVoted(route.params.id)
+  await checkHasNext()
 })
 
 async function onIndex(index) {
@@ -116,8 +125,14 @@ async function onIndex(index) {
     playVoteSound()
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
     const setId = poll.value?.setId
-    if (setId) router.push(`/sets/${setId}/results/${id.value}`)
-    else router.push(`/results/${id.value}`)
+    // If this is the last poll in the set, show all results
+    if (setId && !hasNext.value) {
+      router.push(`/sets/${setId}/results`)
+    } else if (setId) {
+      router.push(`/sets/${setId}/results/${id.value}`)
+    } else {
+      router.push(`/results/${id.value}`)
+    }
   }
 }
 
@@ -129,8 +144,14 @@ async function onTextSubmit() {
     playVoteSound()
     confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
     const setId = poll.value?.setId
-    if (setId) router.push(`/sets/${setId}/results/${id.value}`)
-    else router.push(`/results/${id.value}`)
+    // If this is the last poll in the set, show all results
+    if (setId && !hasNext.value) {
+      router.push(`/sets/${setId}/results`)
+    } else if (setId) {
+      router.push(`/sets/${setId}/results/${id.value}`)
+    } else {
+      router.push(`/results/${id.value}`)
+    }
   }
 }
 

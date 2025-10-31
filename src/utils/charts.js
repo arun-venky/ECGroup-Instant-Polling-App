@@ -7,9 +7,16 @@ export function randomChartType() { return 'bar' }
 
 export function renderChart(canvas, labels, values, type) {
   if (!canvas) return null
+  
+  // Detect mobile viewport (640px is Tailwind's sm breakpoint)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+  
   const labelPlugin = {
     id: 'insideLabels',
     afterDatasetsDraw(chart) {
+      // Skip labels on mobile
+      if (isMobile) return
+      
       const { ctx, data } = chart
       const dataset = data.datasets[0]
       if (!dataset) return
@@ -55,8 +62,28 @@ export function renderChart(canvas, labels, values, type) {
       tooltip: { enabled: true },
     },
     scales: type === 'bar' ? {
-      x: { ticks: { color: '#183247' }, grid: { color: 'rgba(24,50,71,0.06)' } },
-      y: { beginAtZero: true, ticks: { color: '#183247', precision: 0 }, grid: { color: 'rgba(24,50,71,0.08)' } },
+      x: { 
+        ticks: { 
+          color: '#183247',
+          font: {
+            size: isMobile ? 10 : 12
+          },
+          maxRotation: isMobile ? 45 : 0,
+          minRotation: isMobile ? 45 : 0
+        }, 
+        grid: { color: 'rgba(24,50,71,0.06)' } 
+      },
+      y: { 
+        beginAtZero: true, 
+        ticks: { 
+          color: '#183247', 
+          precision: 0,
+          font: {
+            size: isMobile ? 10 : 12
+          }
+        }, 
+        grid: { color: 'rgba(24,50,71,0.08)' } 
+      },
     } : {},
   }
   return new Chart(canvas.getContext('2d'), { type, data, options, plugins: [labelPlugin] })
