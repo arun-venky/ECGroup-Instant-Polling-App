@@ -17,41 +17,17 @@
     <div v-if="!poll" class="text-neutral">Poll not found.</div>
 
     <div v-else class="flex flex-col gap-4">
-      <!-- Text responses display -->
-      <div v-if="poll.type === 'text'" class="flex flex-col gap-4">
-        <div class="text-lg font-semibold">Responses ({{ textResponsesCount }})</div>
-        <div class="max-h-[60vh] overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
-          <div v-if="!poll.textResponses || poll.textResponses.length === 0" class="text-neutral text-center py-8">
-            No responses yet
-          </div>
-          <div v-else class="space-y-3">
-            <div 
-              v-for="(response, i) in poll.textResponses" 
-              :key="i" 
-              class="p-3 bg-white rounded-md border border-gray-200 shadow-sm"
-            >
-              <div class="flex items-start gap-2">
-                <span class="text-sm text-neutral font-medium min-w-[2rem]">#{{ i + 1 }}</span>
-                <span class="flex-1 text-base whitespace-pre-wrap break-words">{{ response }}</span>
-              </div>
-            </div>
-          </div>
+      <!-- Chart display for all poll types including text -->
+      <div class="chart-container h-[50vh] sm:h-[60vh]">
+        <canvas ref="canvasEl"></canvas>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base">
+        <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
+          <span class="inline-block w-3 h-3 rounded-sm" :style="{ backgroundColor: colors[i % colors.length] }"></span>
+          <span class="flex-1 break-words">{{ item.label }}</span>
+          <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
         </div>
       </div>
-      
-      <!-- Chart display for other poll types -->
-      <template v-else>
-        <div class="chart-container h-[50vh] sm:h-[60vh]">
-          <canvas ref="canvasEl"></canvas>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base">
-          <div v-for="(opt, i) in poll.options" :key="i" class="flex items-center gap-2">
-            <span class="inline-block w-3 h-3 rounded-sm" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-            <span class="flex-1">{{ opt }}</span>
-            <span class="text-accent font-bold">{{ percentages[i] }}%</span>
-          </div>
-        </div>
-      </template>
       <div class="flex flex-wrap gap-3 mt-2 justify-center items-center">
         <router-link class="btn" :to="`/poll/${id}`">Back to Vote</router-link>
         <router-link class="btn" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
@@ -116,6 +92,48 @@ async function copyLink() {
   await navigator.clipboard.writeText(voteUrl.value)
 }
 
+// Consolidate text responses into grouped counts
+const consolidatedTextResponses = computed(() => {
+  if (!poll.value || poll.value.type !== 'text' || !poll.value.textResponses) {
+    return []
+  }
+  
+  // Group responses by normalized text (trimmed, case-insensitive)
+  const groups = new Map()
+  poll.value.textResponses.forEach(response => {
+    const normalized = response.trim().toLowerCase()
+    const original = response.trim()
+    
+    if (!groups.has(normalized)) {
+      groups.set(normalized, { text: original, count: 0 })
+    }
+    groups.get(normalized).count++
+  })
+  
+  // Convert to array and sort by count (descending), then by text (ascending) for ties
+  return Array.from(groups.values())
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count
+      return a.text.localeCompare(b.text)
+    })
+})
+
+// For text polls: labels are consolidated response texts, values are counts
+// For other polls: labels are options, values are votes
+const displayLabels = computed(() => {
+  if (poll.value?.type === 'text') {
+    return consolidatedTextResponses.value.map(item => item.text)
+  }
+  return poll.value?.options || []
+})
+
+const displayValues = computed(() => {
+  if (poll.value?.type === 'text') {
+    return consolidatedTextResponses.value.map(item => item.count)
+  }
+  return poll.value?.votes || []
+})
+
 // Animated display values to show rising votes
 const displayedVotes = ref([])
 const total = computed(() => (displayedVotes.value.length ? displayedVotes.value.reduce((a, b) => a + b, 0) : 0))
@@ -123,12 +141,19 @@ const percentages = computed(() => {
   const t = total.value || 1
   return (displayedVotes.value || []).map(v => Math.round((v * 100) / t))
 })
-const textResponsesCount = computed(() => {
-  return poll.value?.textResponses?.length || 0
+
+// Items to display with labels and percentages
+const displayItems = computed(() => {
+  const labels = displayLabels.value
+  const percents = percentages.value
+  return labels.map((label, i) => ({
+    label,
+    percentage: percents[i] || 0
+  }))
 })
 
 function draw() {
-  if (!poll.value || !canvasEl.value || poll.value.type === 'text') return
+  if (!poll.value || !canvasEl.value) return
   if (chartInstance) {
     chartInstance.destroy()
   }
@@ -138,8 +163,9 @@ function draw() {
     canvasEl.value.width = parent.clientWidth
     canvasEl.value.height = parent.clientHeight
   }
-  const values = displayedVotes.value.length ? displayedVotes.value : (poll.value?.votes || [])
-  chartInstance = renderChart(canvasEl.value, poll.value.options, values, 'bar')
+  const labels = displayLabels.value
+  const values = displayedVotes.value.length ? displayedVotes.value : displayValues.value
+  chartInstance = renderChart(canvasEl.value, labels, values, 'bar')
 }
 
 let unsubscribePoll = null
@@ -147,20 +173,17 @@ let unsubscribePoll = null
 onMounted(async () => {
   poll.value = await getPoll(id.value)
   if (poll.value) {
-    // For text polls, no need to initialize votes
-    if (poll.value.type === 'text') {
-      // Text responses are displayed directly
+    // Get initial values based on poll type
+    const initialValues = displayValues.value
+    // If presentation mode, animate in from zero
+    if (present.value) {
+      const zeros = Array.from({ length: initialValues.length }, () => 0)
+      displayedVotes.value = [...zeros]
+      draw()
+      animateVotes(zeros, initialValues, 1000)
     } else {
-      // If presentation mode, animate in from zero
-      if (present.value) {
-        const zeros = Array.from({ length: poll.value.votes.length }, () => 0)
-        displayedVotes.value = [...zeros]
-        draw()
-        animateVotes(zeros, poll.value.votes, 1000)
-      } else {
-        displayedVotes.value = [...poll.value.votes]
-        draw()
-      }
+      displayedVotes.value = [...initialValues]
+      draw()
     }
   } else {
     displayedVotes.value = []
@@ -172,15 +195,18 @@ onMounted(async () => {
     if (updatedPoll) {
       const prev = poll.value
       poll.value = updatedPoll
-      // For text polls, just update the poll data (responses will auto-update)
-      if (updatedPoll.type === 'text') {
-        // Text responses are displayed directly from poll.textResponses
-        return
-      }
-      // For other poll types, animate vote changes
-      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
-      const newVals = updatedPoll.votes || []
+      // Get current and new values based on poll type
+      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.type === 'text' ? [] : (prev?.votes || []))
+      const newVals = updatedPoll.type === 'text' 
+        ? consolidatedTextResponses.value.map(item => item.count)
+        : (updatedPoll.votes || [])
+      
+      // Only animate if values actually changed
       if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
+        // Ensure arrays are same length for animation
+        const maxLen = Math.max(oldVals.length, newVals.length)
+        while (oldVals.length < maxLen) oldVals.push(0)
+        while (newVals.length < maxLen) newVals.push(0)
         animateVotes(oldVals, newVals, 800)
       }
     }
@@ -217,7 +243,7 @@ watch(() => route.fullPath, async () => {
   // Load new poll
   poll.value = await getPoll(id.value)
   if (poll.value) {
-    displayedVotes.value = [...poll.value.votes]
+    displayedVotes.value = [...displayValues.value]
   } else {
     displayedVotes.value = []
   }
@@ -227,22 +253,24 @@ watch(() => route.fullPath, async () => {
     if (updatedPoll) {
       const prev = poll.value
       poll.value = updatedPoll
-      // For text polls, just update (responses auto-update)
-      if (updatedPoll.type === 'text') {
-        return
-      }
-      // For other poll types, animate vote changes
-      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
-      const newVals = updatedPoll.votes || []
+      // Get current and new values based on poll type
+      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.type === 'text' ? [] : (prev?.votes || []))
+      const newVals = updatedPoll.type === 'text' 
+        ? consolidatedTextResponses.value.map(item => item.count)
+        : (updatedPoll.votes || [])
+      
+      // Only animate if values actually changed
       if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
+        // Ensure arrays are same length for animation
+        const maxLen = Math.max(oldVals.length, newVals.length)
+        while (oldVals.length < maxLen) oldVals.push(0)
+        while (newVals.length < maxLen) newVals.push(0)
         animateVotes(oldVals, newVals, 800)
       }
     }
   })
   
-  if (poll.value?.type !== 'text') {
-    draw()
-  }
+  draw()
 })
 
 watch(present, async (isOn) => {
@@ -252,8 +280,11 @@ watch(present, async (isOn) => {
     // Re-animate bars when entering presentation
     const latest = await getPoll(id.value)
     if (latest) {
-      const from = displayedVotes.value.length ? [...displayedVotes.value] : Array.from({ length: latest.votes.length }, () => 0)
-      animateVotes(from, latest.votes, 1000)
+      const currentValues = latest.type === 'text'
+        ? consolidatedTextResponses.value.map(item => item.count)
+        : (latest.votes || [])
+      const from = displayedVotes.value.length ? [...displayedVotes.value] : Array.from({ length: currentValues.length }, () => 0)
+      animateVotes(from, currentValues, 1000)
     }
   } else {
     stopBackgroundMusic()
