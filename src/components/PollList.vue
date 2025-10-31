@@ -27,8 +27,18 @@
       </div>
       <div v-else-if="!polls.length" class="text-neutral p-4">No polls created yet.</div>
       <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 p-1">
-      <div v-for="p in polls" :key="p.id" class="card p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row items-start gap-3">
+      <div v-for="p in polls" :key="p.id" class="card p-4 sm:p-6 relative">
+        <!-- Copy button in top right corner -->
+        <button 
+          class="absolute top-3 right-3 p-2 rounded-md bg-gray-100 hover:bg-gray-200 text-neutral hover:text-primary transition-colors flex items-center justify-center min-w-[36px] min-h-[36px]"
+          @click="copy(buildUrl(p))"
+          title="Copy poll link"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        </button>
+        <div class="flex flex-col sm:flex-row items-start gap-3 pr-10">
           <div class="shrink-0 mx-auto sm:mx-0">
               <Qrcode :value="buildUrl(p)" :size="120" level="H" class="sm:w-36 sm:h-36" />
           </div>
@@ -37,8 +47,6 @@
             <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
             <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-3">
                 <router-link class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" :to="linkToPoll(p)">Open</router-link>
-                <router-link class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" :to="linkToResults(p)">Results</router-link>
-                <button class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" @click="copy(buildUrl(p))">Copy</button>
                 <button class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" @click="edit(p)">Edit</button>
                 <button class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" @click="remove(p.id)">Delete</button>
               </div>
@@ -267,10 +275,6 @@ function linkToPoll(p) {
   const setId = p.setId || activeSet.value
   return setId ? `/sets/${setId}/polls/${p.id}` : `/poll/${p.id}`
 }
-function linkToResults(p) {
-  const setId = p.setId || activeSet.value
-  return setId ? `/sets/${setId}/results/${p.id}` : `/results/${p.id}`
-}
 
 const showOptions = computed(() => form.value.type === 'multiple' || form.value.type === 'emoji')
 
@@ -299,10 +303,22 @@ function edit(poll) {
   
   // Determine answer value for the form
   let answerValue = ''
-  if (poll.answer !== null && poll.answer !== undefined) {
-    if (poll.type === 'multiple' || poll.type === 'emoji' || poll.type === 'star') {
+  if (poll.answer !== null && poll.answer !== undefined && poll.answer !== '') {
+    if (poll.type === 'multiple' || poll.type === 'emoji') {
+      // For index-based answers, convert to string for the select
       answerValue = String(poll.answer)
-    } else {
+    } else if (poll.type === 'star') {
+      // For star polls, convert index (0-4) to star number (1-5) for the select
+      // The select uses star numbers (1, 2, 3, 4, 5) but votes use indices (0, 1, 2, 3, 4)
+      const index = typeof poll.answer === 'number' ? poll.answer : parseInt(poll.answer)
+      if (!isNaN(index) && index >= 0) {
+        answerValue = String(index + 1) // Convert to 1-based star number
+      }
+    } else if (poll.type === 'like') {
+      // For like/dislike, use the string value directly
+      answerValue = String(poll.answer)
+    } else if (poll.type === 'text') {
+      // For text, use the original text value
       answerValue = String(poll.answer)
     }
   }
@@ -348,15 +364,35 @@ async function savePoll() {
     
     // Normalize answer based on type
     let normalizedAnswer = null
-    if (form.value.answer !== '' && form.value.answer !== null) {
+    const answer = form.value.answer
+    
+    // Check if answer has a meaningful value
+    if (answer !== '' && answer !== null && answer !== undefined) {
       if (form.value.type === 'multiple' || form.value.type === 'emoji') {
-        normalizedAnswer = parseInt(form.value.answer)
+        // For index-based answers, ensure we have a valid number
+        const num = typeof answer === 'number' ? answer : parseInt(answer)
+        if (!isNaN(num) && num >= 0) {
+          normalizedAnswer = num
+        }
       } else if (form.value.type === 'star') {
-        normalizedAnswer = parseInt(form.value.answer)
+        // For star polls, convert star number (1-5) to index (0-4)
+        // The select uses star numbers (1, 2, 3, 4, 5) but votes use indices (0, 1, 2, 3, 4)
+        const starNum = typeof answer === 'number' ? answer : parseInt(answer)
+        if (!isNaN(starNum) && starNum >= 1) {
+          normalizedAnswer = starNum - 1 // Convert to 0-based index
+        }
       } else if (form.value.type === 'like') {
-        normalizedAnswer = form.value.answer
+        // For like/dislike, store as string
+        const trimmed = String(answer).trim()
+        if (trimmed) {
+          normalizedAnswer = trimmed
+        }
       } else if (form.value.type === 'text') {
-        normalizedAnswer = form.value.answer.trim().toLowerCase()
+        // For text, store as lowercase trimmed string
+        const trimmed = String(answer).trim()
+        if (trimmed) {
+          normalizedAnswer = trimmed.toLowerCase()
+        }
       }
     }
     

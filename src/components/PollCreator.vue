@@ -178,15 +178,35 @@ async function create() {
     
     // Normalize answer based on type
     let normalizedAnswer = null
-    if (answer.value !== '' && answer.value !== null) {
+    const ans = answer.value
+    
+    // Check if answer has a meaningful value
+    if (ans !== '' && ans !== null && ans !== undefined) {
       if (type.value === 'multiple' || type.value === 'emoji') {
-        normalizedAnswer = parseInt(answer.value)
+        // For index-based answers, ensure we have a valid number
+        const num = typeof ans === 'number' ? ans : parseInt(ans)
+        if (!isNaN(num) && num >= 0) {
+          normalizedAnswer = num
+        }
       } else if (type.value === 'star') {
-        normalizedAnswer = parseInt(answer.value)
+        // For star polls, convert star number (1-5) to index (0-4)
+        // The select uses star numbers (1, 2, 3, 4, 5) but votes use indices (0, 1, 2, 3, 4)
+        const starNum = typeof ans === 'number' ? ans : parseInt(ans)
+        if (!isNaN(starNum) && starNum >= 1) {
+          normalizedAnswer = starNum - 1 // Convert to 0-based index
+        }
       } else if (type.value === 'like') {
-        normalizedAnswer = answer.value
+        // For like/dislike, store as string
+        const trimmed = String(ans).trim()
+        if (trimmed) {
+          normalizedAnswer = trimmed
+        }
       } else if (type.value === 'text') {
-        normalizedAnswer = answer.value.trim().toLowerCase()
+        // For text, store as lowercase trimmed string
+        const trimmed = String(ans).trim()
+        if (trimmed) {
+          normalizedAnswer = trimmed.toLowerCase()
+        }
       }
     }
     
