@@ -209,12 +209,25 @@ const displayItems = computed(() => {
     ? displayedVotes.value 
     : displayValues.value
   
-  return labels.map((label, i) => ({
-    label,
-    percentage: percents[i] || 0,
-    votes: values[i] || 0,
-    isCorrect: isCorrectAnswer(i)
-  }))
+  return labels.map((label, i) => {
+    // For star polls, format label to show actual number of stars
+    let formattedLabel = label
+    if (poll.value?.type === 'star') {
+      // Extract number from label (e.g., "1 ⭐" -> 1, "5 ⭐" -> 5)
+      const match = label.match(/^(\d+)/)
+      if (match) {
+        const starCount = parseInt(match[1])
+        formattedLabel = '⭐'.repeat(starCount)
+      }
+    }
+    
+    return {
+      label: formattedLabel,
+      percentage: percents[i] || 0,
+      votes: values[i] || 0,
+      isCorrect: isCorrectAnswer(i)
+    }
+  })
 })
 
 // Text response items with font sizes based on percentage
@@ -293,8 +306,20 @@ function draw() {
   }
   
   try {
-    const labels = displayLabels.value
+    let labels = displayLabels.value
     const values = displayedVotes.value.length ? displayedVotes.value : displayValues.value
+    
+    // Format labels for star polls in charts
+    if (poll.value?.type === 'star') {
+      labels = labels.map(label => {
+        const match = label.match(/^(\d+)/)
+        if (match) {
+          const starCount = parseInt(match[1])
+          return '⭐'.repeat(starCount)
+        }
+        return label
+      })
+    }
     
     if (labels.length === 0 || values.length === 0) {
       console.warn('No data to render chart')

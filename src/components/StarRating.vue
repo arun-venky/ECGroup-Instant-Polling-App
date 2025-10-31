@@ -1,7 +1,7 @@
 <template>
   <div class="flex justify-center gap-3">
     <button v-for="i in max" :key="i" class="option-button" :class="{ 'bg-primary text-dark': i<=hover }" :disabled="disabled" @mouseenter="hover = i" @mouseleave="hover = 0" @click="$emit('select', i-1)">
-      {{ i }} ⭐
+      {{ '⭐'.repeat(i) }}
     </button>
   </div>
 </template>

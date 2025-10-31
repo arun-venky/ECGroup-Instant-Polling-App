@@ -70,7 +70,7 @@
         <div v-else-if="type === 'star'">
           <select v-model="answer" class="w-full">
             <option value="">No answer specified</option>
-            <option v-for="n in stars" :key="n" :value="n">{{ n }} ⭐</option>
+            <option v-for="n in stars" :key="n" :value="n">{{ '⭐'.repeat(n) }}</option>
           </select>
         </div>
         <div v-else-if="type === 'like'">
