@@ -6,7 +6,7 @@
       <div class="text-neutral">Loading...</div>
     </div>
     <div v-else class="flex flex-col items-center">
-      <Qrcode :value="shareUrl" :size="420" level="H" class="sm:w-120 sm:h-120" />
+      <Qrcode :value="shareUrl" :size="210" level="H" class="sm:w-60 sm:h-60" />
       <div class="mt-3 flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
         <button class="btn text-sm sm:text-base w-full sm:w-auto min-w-[120px] justify-center" @click="copyLink">Copy link</button>
         <router-link class="btn text-sm sm:text-base w-full sm:w-auto min-w-[120px] justify-center" :to="`/poll/${id}`">Open</router-link>

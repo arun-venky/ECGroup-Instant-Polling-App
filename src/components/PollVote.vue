@@ -8,7 +8,7 @@
         <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
         <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
           <div class="flex items-center justify-center">
-            <Qrcode :value="shareUrl" :size="540" level="H" class="sm:w-144 sm:h-144" />
+            <Qrcode :value="shareUrl" :size="270" level="H" class="sm:w-72 sm:h-72" />
           </div>
         </div>
       </div>

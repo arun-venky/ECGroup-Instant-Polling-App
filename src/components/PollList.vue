@@ -26,7 +26,7 @@
       <div v-for="p in polls" :key="p.id" class="card p-4 sm:p-6">
         <div class="flex flex-col sm:flex-row items-start gap-3">
           <div class="shrink-0 mx-auto sm:mx-0">
-              <Qrcode :value="buildUrl(p)" :size="240" level="H" class="sm:w-72 sm:h-72" />
+              <Qrcode :value="buildUrl(p)" :size="120" level="H" class="sm:w-36 sm:h-36" />
           </div>
           <div class="flex-1 min-w-0 w-full">
             <div class="font-bold text-base sm:text-lg break-words">{{ p.question }}</div>
