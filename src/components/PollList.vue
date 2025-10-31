@@ -177,9 +177,11 @@
             <div v-else-if="form.type === 'image'">
               <select v-model="form.answer" class="w-full">
                 <option value="">No answer specified</option>
-                <option v-for="(opt, i) in form.options" :key="i" :value="i" v-if="opt && opt.startsWith('data:image')">
-                  Image {{ i + 1 }}
-                </option>
+                <template v-for="(opt, i) in form.options" :key="i">
+                  <option v-if="opt && opt.startsWith('data:image')" :value="i">
+                    Image {{ i + 1 }}
+                  </option>
+                </template>
               </select>
             </div>
             <div v-else-if="form.type === 'text'">
@@ -542,6 +544,10 @@ async function savePoll() {
         ? form.value.options 
         : ['😀', '😍', '🤔', '😮', '😂', '😊', '👍', '❤️', '🔥', '✨', '👏', '🎉']
     }
+    if (form.value.type === 'image') {
+      // Filter out empty image slots and keep only valid base64 images
+      finalOptions = form.value.options.filter(opt => opt && opt.startsWith('data:image'))
+    }
     if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
     if (form.value.type === 'text') finalOptions = [] // Text polls don't need predefined options
     
@@ -551,7 +557,24 @@ async function savePoll() {
     
     // Check if answer has a meaningful value
     if (answer !== '' && answer !== null && answer !== undefined) {
-      if (form.value.type === 'multiple' || form.value.type === 'emoji' || form.value.type === 'image') {
+      if (form.value.type === 'image') {
+        // For image polls, the answer index is from the original form.options array
+        // We need to map it to the filtered options array (which only contains valid images)
+        const originalIndex = typeof answer === 'number' ? answer : parseInt(answer)
+        if (!isNaN(originalIndex) && originalIndex >= 0 && originalIndex < form.value.options.length) {
+          // Count how many valid images are before this index
+          let filteredIndex = 0
+          for (let i = 0; i < originalIndex; i++) {
+            if (form.value.options[i] && form.value.options[i].startsWith('data:image')) {
+              filteredIndex++
+            }
+          }
+          // Check if the selected index itself is a valid image
+          if (form.value.options[originalIndex] && form.value.options[originalIndex].startsWith('data:image')) {
+            normalizedAnswer = filteredIndex
+          }
+        }
+      } else if (form.value.type === 'multiple' || form.value.type === 'emoji') {
         // For index-based answers, ensure we have a valid number
         const num = typeof answer === 'number' ? answer : parseInt(answer)
         if (!isNaN(num) && num >= 0) {

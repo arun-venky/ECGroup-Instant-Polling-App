@@ -139,9 +139,11 @@
         <div v-else-if="type === 'image'">
           <select v-model="answer" class="w-full">
             <option value="">No answer specified</option>
-            <option v-for="(opt, i) in options" :key="i" :value="i" v-if="opt">
-              Image {{ i + 1 }}
-            </option>
+            <template v-for="(opt, i) in options" :key="i">
+              <option v-if="opt && opt.startsWith('data:image')" :value="i">
+                Image {{ i + 1 }}
+              </option>
+            </template>
           </select>
         </div>
         <div v-else-if="type === 'text'">
@@ -333,7 +335,24 @@ async function create() {
     
     // Check if answer has a meaningful value
     if (ans !== '' && ans !== null && ans !== undefined) {
-      if (type.value === 'multiple' || type.value === 'emoji' || type.value === 'image') {
+      if (type.value === 'image') {
+        // For image polls, the answer index is from the original options array
+        // We need to map it to the filtered options array (which only contains valid images)
+        const originalIndex = typeof ans === 'number' ? ans : parseInt(ans)
+        if (!isNaN(originalIndex) && originalIndex >= 0 && originalIndex < options.value.length) {
+          // Count how many valid images are before this index
+          let filteredIndex = 0
+          for (let i = 0; i < originalIndex; i++) {
+            if (options.value[i] && options.value[i].startsWith('data:image')) {
+              filteredIndex++
+            }
+          }
+          // Check if the selected index itself is a valid image
+          if (options.value[originalIndex] && options.value[originalIndex].startsWith('data:image')) {
+            normalizedAnswer = filteredIndex
+          }
+        }
+      } else if (type.value === 'multiple' || type.value === 'emoji') {
         // For index-based answers, ensure we have a valid number
         const num = typeof ans === 'number' ? ans : parseInt(ans)
         if (!isNaN(num) && num >= 0) {
