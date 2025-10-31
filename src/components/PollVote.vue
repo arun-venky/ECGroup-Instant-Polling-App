@@ -80,19 +80,19 @@ async function copyLink() {
   await navigator.clipboard.writeText(shareUrl.value)
 }
 
-onMounted(() => {
-  poll.value = getPoll(id.value)
+onMounted(async () => {
+  poll.value = await getPoll(id.value)
   alreadyVoted.value = hasVoted(id.value)
 })
 
-watch(() => route.params.id, () => {
-  poll.value = getPoll(route.params.id)
+watch(() => route.params.id, async () => {
+  poll.value = await getPoll(route.params.id)
   alreadyVoted.value = hasVoted(route.params.id)
 })
 
-function onIndex(index) {
+async function onIndex(index) {
   if (alreadyVoted.value) return
-  votePoll(id.value, index)
+  await votePoll(id.value, index)
   markVoted(id.value)
   alreadyVoted.value = true
   playVoteSound()
@@ -102,9 +102,9 @@ function onIndex(index) {
   else router.push(`/results/${id.value}`)
 }
 
-function go(step) {
+async function go(step) {
   const currentId = id.value
-  const targetId = getAdjacentPollIdSameSet(currentId, step)
+  const targetId = await getAdjacentPollIdSameSet(currentId, step)
   if (!targetId) return
   const setId = poll.value?.setId
   if (setId) router.push(`/sets/${setId}/polls/${targetId}`)

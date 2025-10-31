@@ -22,10 +22,10 @@ import { useRouter } from 'vue-router'
 const name = ref('')
 const router = useRouter()
 
-function create() {
+async function create() {
   const n = name.value.trim()
   if (!n) return
-  const set = createPollSet(n)
+  const set = await createPollSet(n)
   router.push(`/sets/${set.id}/polls/create`)
 }
 </script>

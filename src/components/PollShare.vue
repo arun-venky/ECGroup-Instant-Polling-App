@@ -15,11 +15,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import QrcodeVue from 'qrcode.vue'
 import { getPoll } from '../utils/storage.js'
 
 const props = defineProps({ id: { type: String, required: true } })
+const poll = ref(null)
 
 function encodePoll(p) {
   if (!p) return ''
@@ -32,9 +33,8 @@ function encodePoll(p) {
 
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
 const shareUrl = computed(() => {
-  const poll = getPoll(props.id)
-  const data = encodePoll(poll)
-  const setId = poll?.setId
+  const data = encodePoll(poll.value)
+  const setId = poll.value?.setId
   const path = setId ? `/sets/${setId}/polls/${props.id}` : `/poll/${props.id}`
   return data ? `${BASE}?poll=${props.id}&data=${data}#${path}` : `${BASE}?poll=${props.id}#${path}`
 })
@@ -43,6 +43,10 @@ async function copyLink() {
   await navigator.clipboard.writeText(shareUrl.value)
   alert('Link copied!')
 }
+
+onMounted(async () => {
+  poll.value = await getPoll(props.id)
+})
 </script>
 
 

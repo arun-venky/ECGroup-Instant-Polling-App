@@ -99,10 +99,11 @@ const router = useRouter()
 const showCreate = ref(false)
 const form = ref({ question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5 })
 
-function load() {
-  const ids = listPollIdsSorted()
-  let all = ids.map(id => getPoll(id)).filter(Boolean)
-  sets.value = listPollSets()
+async function load() {
+  const ids = await listPollIdsSorted()
+  const pollPromises = ids.map(id => getPoll(id))
+  let all = (await Promise.all(pollPromises)).filter(Boolean)
+  sets.value = await listPollSets()
   if (activeSet.value) {
     all = all.filter(p => (p.setId || '') === activeSet.value)
   }
@@ -126,9 +127,9 @@ watch(() => route.fullPath, () => {
   if (preset !== activeSet.value) activeSet.value = preset
 })
 
-function startActive() {
+async function startActive() {
   if (!activeSet.value) return
-  const ids = listPollIdsBySetSorted(activeSet.value)
+  const ids = await listPollIdsBySetSorted(activeSet.value)
   if (ids.length) router.push(`/sets/${activeSet.value}/polls/${ids[0]}`)
 }
 
@@ -158,16 +159,16 @@ function formatDate(ts) {
   } catch { return '' }
 }
 
-function remove(id) {
+async function remove(id) {
   if (!confirm('Delete this poll?')) return
-  deletePoll(id)
-  load()
+  await deletePoll(id)
+  await load()
 }
 
-function clearAll() {
+async function clearAll() {
   if (!confirm('Delete ALL polls? This cannot be undone.')) return
-  clearAllPolls()
-  load()
+  await clearAllPolls()
+  await load()
 }
 
 function linkToPoll(p) {
@@ -197,16 +198,16 @@ function closeCreate() {
 
 const canCreate = computed(() => !!form.value.question.trim())
 
-function createFromModal() {
+async function createFromModal() {
   if (!canCreate.value) return
   let finalOptions = form.value.options
   if (form.value.type === 'like') finalOptions = ['Like', 'Dislike']
   if (form.value.type === 'emoji') finalOptions = ['😀', '😍', '🤔', '😮']
   if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
-  const poll = createPoll({ question: form.value.question.trim(), type: form.value.type, options: finalOptions, setId: activeSet.value || null })
+  const poll = await createPoll({ question: form.value.question.trim(), type: form.value.type, options: finalOptions, setId: activeSet.value || null })
   showCreate.value = false
   form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5 }
-  load()
+  await load()
   router.push(activeSet.value ? `/sets/${activeSet.value}/polls/${poll.id}` : `/poll/${poll.id}`)
 }
 </script>

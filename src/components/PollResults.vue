@@ -50,7 +50,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPoll, getAdjacentPollIdSameSet } from '../utils/storage.js'
+import { getPoll, getAdjacentPollIdSameSet, subscribeToPoll } from '../utils/storage.js'
 import { renderChart } from '../utils/charts.js'
 import { playRevealSound, setBackgroundMusic, playBackgroundMusic, stopBackgroundMusic } from '../utils/sound.js'
 import ConfettiReveal from './ConfettiReveal.vue'
@@ -111,8 +111,10 @@ function draw() {
   chartInstance = renderChart(canvasEl.value, poll.value.options, values, 'bar')
 }
 
+let unsubscribePoll = null
+
 onMounted(async () => {
-  poll.value = getPoll(id.value)
+  poll.value = await getPoll(id.value)
   if (poll.value) {
     // If presentation mode, animate in from zero
     if (present.value) {
@@ -128,6 +130,20 @@ onMounted(async () => {
     displayedVotes.value = []
     draw()
   }
+  
+  // Set up real-time listener for poll updates
+  unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
+    if (updatedPoll) {
+      const prev = poll.value
+      poll.value = updatedPoll
+      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
+      const newVals = updatedPoll.votes || []
+      if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
+        animateVotes(oldVals, newVals, 800)
+      }
+    }
+  })
+  
   await nextTick()
   playRevealSound()
   if (present.value) {
@@ -135,30 +151,57 @@ onMounted(async () => {
     playBackgroundMusic(0.15)
   }
   window.addEventListener('resize', draw)
-  window.addEventListener('storage', onStorage)
   window.addEventListener('keydown', onKeyDown)
-  startPolling()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', draw)
-  window.removeEventListener('storage', onStorage)
   window.removeEventListener('keydown', onKeyDown)
-  stopPolling()
+  if (unsubscribePoll) {
+    unsubscribePoll()
+    unsubscribePoll = null
+  }
   if (chartInstance) chartInstance.destroy()
   if (present.value) stopBackgroundMusic()
 })
 
-watch(() => route.fullPath, () => {
+watch(() => route.fullPath, async () => {
+  // Unsubscribe from previous poll
+  if (unsubscribePoll) {
+    unsubscribePoll()
+    unsubscribePoll = null
+  }
+  
+  // Load new poll
+  poll.value = await getPoll(id.value)
+  if (poll.value) {
+    displayedVotes.value = [...poll.value.votes]
+  } else {
+    displayedVotes.value = []
+  }
+  
+  // Set up listener for new poll
+  unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
+    if (updatedPoll) {
+      const prev = poll.value
+      poll.value = updatedPoll
+      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
+      const newVals = updatedPoll.votes || []
+      if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
+        animateVotes(oldVals, newVals, 800)
+      }
+    }
+  })
+  
   draw()
 })
 
-watch(present, (isOn) => {
+watch(present, async (isOn) => {
   if (isOn) {
     setBackgroundMusic('/assets/sounds/reveal.mp3', 0.8)
     playBackgroundMusic(0.15)
     // Re-animate bars when entering presentation
-    const latest = getPoll(id.value)
+    const latest = await getPoll(id.value)
     if (latest) {
       const from = displayedVotes.value.length ? [...displayedVotes.value] : Array.from({ length: latest.votes.length }, () => 0)
       animateVotes(from, latest.votes, 1000)
@@ -168,32 +211,7 @@ watch(present, (isOn) => {
   }
 })
 
-function onStorage(e) {
-  if (e.key === 'polls_v1') {
-    refreshFromStorage()
-  }
-}
-
-let pollTimer = null
-function startPolling() {
-  pollTimer = setInterval(refreshFromStorage, 1000)
-}
-function stopPolling() {
-  if (pollTimer) clearInterval(pollTimer)
-  pollTimer = null
-}
-
-function refreshFromStorage() {
-  const latest = getPoll(id.value)
-  if (!latest) return
-  const prev = poll.value
-  poll.value = latest
-  const oldVals = displayedVotes.value.length ? displayedVotes.value : (prev?.votes || [])
-  const newVals = latest.votes || []
-  if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
-    animateVotes(oldVals, newVals, 800)
-  }
-}
+// Real-time updates are handled by the Firestore listener in onMounted
 
 function animateVotes(from, to, duration = 800) {
   const start = performance.now()
@@ -223,9 +241,9 @@ function animateVotes(from, to, duration = 800) {
   requestAnimationFrame(frame)
 }
 
-function go(step) {
+async function go(step) {
   const currentId = id.value
-  const targetId = getAdjacentPollIdSameSet(currentId, step)
+  const targetId = await getAdjacentPollIdSameSet(currentId, step)
   if (!targetId) return
   const setId = poll.value?.setId
   if (present.value) {

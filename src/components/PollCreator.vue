@@ -84,8 +84,8 @@ const sets = ref([])
 const selectedSetId = ref('')
 const newSetName = ref('')
 
-function loadSets() {
-  sets.value = listPollSets()
+async function loadSets() {
+  sets.value = await listPollSets()
 }
 onMounted(loadSets)
 onMounted(() => {
@@ -113,40 +113,40 @@ function removeOption(index) {
   options.value.splice(index, 1)
 }
 
-function create() {
+async function create() {
   if (!question.value.trim()) return
   let finalOptions = options.value
   if (type.value === 'star') {
     finalOptions = Array.from({ length: stars.value }, (_, i) => `${i + 1} ⭐`)
   }
-  const poll = createPoll({ question: question.value.trim(), type: type.value, options: finalOptions, setId: selectedSetId.value || null })
+  const poll = await createPoll({ question: question.value.trim(), type: type.value, options: finalOptions, setId: selectedSetId.value || null })
   shareId.value = poll.id
   router.push(`/poll/${poll.id}`)
 }
 
-function importAIQuiz() {
+async function importAIQuiz() {
   // Bulk create one poll per question
   const ids = []
   let setId = selectedSetId.value
   if (!setId) {
-    const set = createPollSet(newSetName.value.trim() || 'AI Quiz')
+    const set = await createPollSet(newSetName.value.trim() || 'AI Quiz')
     setId = set.id
-    loadSets()
+    await loadSets()
     selectedSetId.value = setId
   }
-  aiQuiz.forEach(({ q, options }) => {
-    const p = createPoll({ question: q, type: 'multiple', options, setId })
+  for (const { q, options } of aiQuiz) {
+    const p = await createPoll({ question: q, type: 'multiple', options, setId })
     ids.push(p.id)
-  })
+  }
   alert(`Imported ${ids.length} questions. Opening the first poll…`)
   router.push(`/poll/${ids[0]}`)
 }
 
-function createSet() {
+async function createSet() {
   const name = newSetName.value.trim()
   if (!name) return
-  const set = createPollSet(name)
-  loadSets()
+  const set = await createPollSet(name)
+  await loadSets()
   selectedSetId.value = set.id
   newSetName.value = ''
 }

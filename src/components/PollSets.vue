@@ -28,8 +28,8 @@ import { listPollSets } from '../utils/storage.js'
 
 const sets = ref([])
 
-function load() {
-  sets.value = listPollSets()
+async function load() {
+  sets.value = await listPollSets()
 }
 onMounted(load)
 
