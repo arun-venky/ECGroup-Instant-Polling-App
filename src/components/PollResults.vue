@@ -56,9 +56,9 @@
         <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" :to="`/poll/${id}`">Back to Vote</router-link>
         <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}?present=true`">Presentation</router-link>
         <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}`">Exit Present</router-link>
-        <button class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(-1)">Previous</button>
-        <button v-if="hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
-        <router-link v-if="poll?.setId && !hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[150px] justify-center py-2" :to="`/sets/${poll.setId}/results`">View All Results</router-link>
+        <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(-1)">Previous</button>
+        <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
+        <router-link v-if="poll?.setId" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[150px] justify-center py-2" :to="`/sets/${poll.setId}/results`">View All Results</router-link>
       </div>
       <ConfettiReveal />
     </div>
@@ -84,6 +84,7 @@ const present = computed(() => route.query.present === 'true')
 const poll = ref(null)
 const showQR = ref(false)
 const hasNext = ref(false)
+const hasPrevious = ref(false)
 const loading = ref(true)
 const loadError = ref(false)
 
@@ -277,10 +278,14 @@ onBeforeUnmount(() => {
 async function checkHasNext() {
   if (!poll.value) {
     hasNext.value = false
+    hasPrevious.value = false
     return
   }
   const nextId = await getAdjacentPollIdSameSet(id.value, 1)
   hasNext.value = !!nextId
+  // Check for previous poll to determine if set has more than one poll
+  const prevId = await getAdjacentPollIdSameSet(id.value, -1)
+  hasPrevious.value = !!prevId
 }
 
 watch(() => route.fullPath, async () => {

@@ -55,8 +55,8 @@
 
       <div class="flex flex-wrap gap-2 sm:gap-3 mt-2 justify-center items-center">
         <router-link v-if="poll.type !== 'text' || alreadyVoted" class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" :to="`/results/${id}`">View Results</router-link>
-        <button class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(-1)">Previous</button>
-        <button v-if="hasNext" class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(1)">Next</button>
+        <button v-if="hasPrevious || hasNext" class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(-1)">Previous</button>
+        <button v-if="hasPrevious || hasNext" class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(1)">Next</button>
       </div>
     </div>
   </div>
@@ -80,6 +80,7 @@ const alreadyVoted = ref(false)
 const textResponse = ref('')
 const showQR = ref(false)
 const hasNext = ref(false)
+const hasPrevious = ref(false)
 const loading = ref(true)
 const loadError = ref(false)
 
@@ -109,9 +110,16 @@ async function copyLink() {
 }
 
 async function checkHasNext() {
-  if (!poll.value) return false
+  if (!poll.value) {
+    hasNext.value = false
+    hasPrevious.value = false
+    return false
+  }
   const nextId = await getAdjacentPollIdSameSet(id.value, 1)
   hasNext.value = !!nextId
+  // Check for previous poll to determine if set has more than one poll
+  const prevId = await getAdjacentPollIdSameSet(id.value, -1)
+  hasPrevious.value = !!prevId
 }
 
 async function loadPoll() {
