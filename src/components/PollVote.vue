@@ -63,8 +63,8 @@
     <!-- Sticky Footer -->
     <div v-if="!loading && !loadError && poll" class="flex flex-wrap gap-2 sm:gap-3 justify-center items-center pt-3 pb-2 sticky bottom-0 bg-white border-t border-gray-200 flex-shrink-0 -mx-4 sm:-mx-6 px-4 sm:px-6">
       <router-link v-if="poll.type !== 'text' || alreadyVoted" class="btn text-xs sm:text-sm md:text-base sm:flex-none min-w-[120px] max-w-[200px] justify-center py-2" :to="resultsLink">View Results</router-link>
-      <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base sm:flex-none min-w-[100px] max-w-[150px] justify-center py-2" @click="go(-1)">Previous</button>
-      <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base sm:flex-none min-w-[100px] max-w-[150px] justify-center py-2" @click="go(1)">Next</button>
+      <button v-if="hasPrevious" class="btn text-xs sm:text-sm md:text-base sm:flex-none min-w-[100px] max-w-[150px] justify-center py-2" @click="go(-1)">Previous</button>
+      <button v-if="hasNext" class="btn text-xs sm:text-sm md:text-base sm:flex-none min-w-[100px] max-w-[150px] justify-center py-2" @click="go(1)">Next</button>
     </div>
   </div>
 </template>
