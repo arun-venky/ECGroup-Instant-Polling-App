@@ -14,7 +14,7 @@ html, body {
 }
 
 button {
-  @apply px-4 py-2 rounded-lg bg-primary text-dark font-bold transition-all duration-300 whitespace-nowrap flex items-center justify-center min-w-fit;
+  @apply px-4 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-primary text-dark font-bold transition-all duration-300 whitespace-nowrap flex items-center justify-center min-w-fit min-h-[44px];
 }
 button:hover:not(:disabled) {
   @apply bg-accent scale-105;
@@ -22,13 +22,19 @@ button:hover:not(:disabled) {
 button:disabled {
   @apply opacity-50 cursor-not-allowed;
 }
+button:active {
+  @apply scale-95;
+}
 
 /* Shared button style for links and non-button elements */
 .btn {
-  @apply px-4 py-2 rounded-lg bg-primary text-dark font-bold transition-all duration-300 whitespace-nowrap flex items-center justify-center inline-flex;
+  @apply px-4 py-2 sm:px-4 sm:py-2.5 rounded-lg bg-primary text-dark font-bold transition-all duration-300 whitespace-nowrap flex items-center justify-center inline-flex min-h-[44px];
 }
 .btn:hover {
   @apply bg-accent scale-105;
+}
+.btn:active {
+  @apply scale-95;
 }
 .btn:disabled {
   @apply opacity-50 cursor-not-allowed;
@@ -58,7 +64,7 @@ h1, h2, h3 {
 
 /* Touch-friendly voting buttons */
 .option-button {
-  @apply w-full py-3 my-2 rounded-lg bg-secondary hover:bg-primary text-white text-2xl active:scale-95 transition-all duration-200 whitespace-nowrap flex items-center justify-center;
+  @apply w-full py-4 sm:py-3 my-2 rounded-lg bg-secondary hover:bg-primary text-white text-xl sm:text-2xl active:scale-95 transition-all duration-200 whitespace-nowrap flex items-center justify-center min-h-[56px] sm:min-h-[48px];
 }
 
 /* Custom scrollbars for polls list */

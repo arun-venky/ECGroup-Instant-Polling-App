@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen relative" :class="isPresent ? 'overflow-hidden' : ''">
     <BackgroundWaves :speed="isPresent ? 'fast' : 'normal'" />
-    <div class="container mx-auto px-4 py-6 sm:py-10">
+    <div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10">
       <router-view />
     </div>
   </div>

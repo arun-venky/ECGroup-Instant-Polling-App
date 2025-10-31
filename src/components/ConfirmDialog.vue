@@ -4,25 +4,25 @@
       <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/40" @click="onCancel"></div>
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden relative z-10">
-          <div class="p-6">
-            <div v-if="icon" class="flex items-center justify-center mb-4">
-              <div :class="iconClass" class="w-12 h-12 rounded-full flex items-center justify-center text-2xl">
+          <div class="p-4 sm:p-6">
+            <div v-if="icon" class="flex items-center justify-center mb-3 sm:mb-4">
+              <div :class="iconClass" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-xl sm:text-2xl">
                 {{ icon }}
               </div>
             </div>
-            <h3 v-if="title" class="text-xl font-bold text-dark mb-2">{{ title }}</h3>
-            <p class="text-neutral mb-6 whitespace-pre-line">{{ message }}</p>
-            <div class="flex gap-3 justify-end">
+            <h3 v-if="title" class="text-lg sm:text-xl font-bold text-dark mb-2 break-words">{{ title }}</h3>
+            <p class="text-sm sm:text-base text-neutral mb-4 sm:mb-6 whitespace-pre-line break-words">{{ message }}</p>
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
               <button 
                 v-if="showCancel"
-                class="btn" 
+                class="btn text-sm sm:text-base w-full sm:w-auto justify-center order-2 sm:order-1" 
                 style="background-color: #e5e7eb; color: #1F2937;"
                 @click="onCancel"
               >
                 {{ cancelText }}
               </button>
               <button 
-                class="btn"
+                class="btn text-sm sm:text-base w-full sm:w-auto justify-center order-1 sm:order-2"
                 :class="confirmButtonClass"
                 @click="onConfirm"
               >

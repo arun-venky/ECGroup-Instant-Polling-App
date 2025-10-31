@@ -1,6 +1,6 @@
 <template>
-  <div class="max-w-2xl mx-auto card">
-    <h1 class="text-2xl mb-4">Create a Poll</h1>
+  <div class="max-w-2xl mx-auto card px-4 sm:px-6">
+    <h1 class="text-xl sm:text-2xl mb-4">Create a Poll</h1>
     <div class="flex flex-col gap-4">
       <div>
         <label class="block mb-1">Question</label>
@@ -81,10 +81,10 @@
         </div>
       </div>
 
-      <button class="mt-4 w-full" @click="create">Create Poll</button>
-      <div class="flex justify-center gap-3 mt-2">
-        <router-link class="btn" to="/polls">Manage Polls</router-link>
-        <router-link class="btn" to="/sets">Poll Sets</router-link>
+      <button class="mt-4 w-full text-base sm:text-lg py-3" @click="create">Create Poll</button>
+      <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 mt-2">
+        <router-link class="btn text-sm sm:text-base justify-center" to="/polls">Manage Polls</router-link>
+        <router-link class="btn text-sm sm:text-base justify-center" to="/sets">Poll Sets</router-link>
       </div>
     </div>
   </div>

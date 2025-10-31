@@ -1,12 +1,12 @@
 <template>
-  <div class="max-w-2xl mx-auto card relative">
-    <h2 class="text-xl mb-4 pr-16">{{ poll?.question || 'Poll' }}</h2>
-    <!-- QR tooltip trigger (hover to show, copy link allowed) -->
+  <div class="max-w-2xl mx-auto card relative px-4 sm:px-6">
+    <h2 class="text-lg sm:text-xl mb-4 pr-12 sm:pr-16 break-words">{{ poll?.question || 'Poll' }}</h2>
+    <!-- QR tooltip trigger (hover/tap to show) -->
     <div v-if="poll" class="absolute top-3 right-3 group">
-      <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm">QR</button>
-      <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3">
+      <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
+      <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
         <div class="flex items-center justify-center">
-          <Qrcode :value="shareUrl" :size="128" level="H" />
+          <Qrcode :value="shareUrl" :size="120" level="H" class="sm:w-32 sm:h-32" />
         </div>
       </div>
     </div>
@@ -46,10 +46,10 @@
         </button>
       </div>
 
-      <div class="flex flex-wrap gap-3 mt-2 justify-center items-center">
-        <router-link v-if="poll.type !== 'text' || alreadyVoted" class="btn" :to="`/results/${id}`">View Results</router-link>
-        <button class="btn" @click="go(-1)">Previous</button>
-        <button class="btn" @click="go(1)">Next</button>
+      <div class="flex flex-wrap gap-2 sm:gap-3 mt-2 justify-center items-center">
+        <router-link v-if="poll.type !== 'text' || alreadyVoted" class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" :to="`/results/${id}`">View Results</router-link>
+        <button class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(-1)">Previous</button>
+        <button class="btn text-sm sm:text-base flex-1 sm:flex-none min-w-[100px] justify-center" @click="go(1)">Next</button>
       </div>
     </div>
   </div>
@@ -71,6 +71,7 @@ const id = computed(() => route.params.id)
 const poll = ref(null)
 const alreadyVoted = ref(false)
 const textResponse = ref('')
+const showQR = ref(false)
 
 // Register the component properly for template use
 const Qrcode = QrcodeVue

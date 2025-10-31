@@ -1,34 +1,34 @@
 <template>
-  <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
-    <div class="flex items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-6 px-6 border-b border-gray-200 flex-shrink-0">
-      <h2 class="text-2xl">All Polls</h2>
-      <div class="flex items-center gap-2">
-        <select v-model="activeSet" class="px-3 py-2 border border-gray-300 rounded-md">
+  <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden px-2 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-2 sm:-mx-6 px-2 sm:px-6 border-b border-gray-200 flex-shrink-0">
+      <h2 class="text-xl sm:text-2xl">All Polls</h2>
+      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <select v-model="activeSet" class="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base min-w-[120px]">
           <option value="">All Sets</option>
           <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <button v-if="activeSet" class="btn w-auto" @click="openCreate()">Add Poll</button>
-        <button class="btn w-auto" :disabled="!activeSet" @click="startActive">Start</button>
-        <button class="btn w-auto" @click="clearAll">Clear All</button>
+        <button v-if="activeSet" class="btn text-sm flex-1 sm:flex-none min-w-[100px] justify-center" @click="openCreate()">Add Poll</button>
+        <button class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :disabled="!activeSet" @click="startActive">Start</button>
+        <button class="btn text-sm flex-1 sm:flex-none min-w-[100px] justify-center" @click="clearAll">Clear All</button>
       </div>
     </div>
     <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
       <div v-if="!polls.length" class="text-neutral p-4">No polls created yet.</div>
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4 p-1">
-      <div v-for="p in polls" :key="p.id" class="card">
-        <div class="flex items-start gap-3">
-          <div class="shrink-0">
-              <Qrcode :value="buildUrl(p)" :size="96" level="H" />
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 p-1">
+      <div v-for="p in polls" :key="p.id" class="card p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row items-start gap-3">
+          <div class="shrink-0 mx-auto sm:mx-0">
+              <Qrcode :value="buildUrl(p)" :size="80" level="H" class="sm:w-24 sm:h-24" />
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="font-bold text-lg break-words">{{ p.question }}</div>
+          <div class="flex-1 min-w-0 w-full">
+            <div class="font-bold text-base sm:text-lg break-words">{{ p.question }}</div>
             <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
-            <div class="flex flex-wrap gap-2 mt-3">
-                <router-link class="btn text-xs sm:text-sm whitespace-nowrap" :to="linkToPoll(p)">Open</router-link>
-                <router-link class="btn text-xs sm:text-sm whitespace-nowrap" :to="linkToResults(p)">Results</router-link>
-                <button class="btn text-xs sm:text-sm whitespace-nowrap" @click="copy(buildUrl(p))">Copy Link</button>
-                <button class="btn text-xs sm:text-sm whitespace-nowrap" @click="edit(p)">Edit</button>
-                <button class="btn text-xs sm:text-sm whitespace-nowrap" @click="remove(p.id)">Delete</button>
+            <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-3">
+                <router-link class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" :to="linkToPoll(p)">Open</router-link>
+                <router-link class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" :to="linkToResults(p)">Results</router-link>
+                <button class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" @click="copy(buildUrl(p))">Copy</button>
+                <button class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" @click="edit(p)">Edit</button>
+                <button class="btn text-xs sm:text-sm whitespace-nowrap justify-center py-2" @click="remove(p.id)">Delete</button>
               </div>
             </div>
           </div>
@@ -37,13 +37,13 @@
     </div>
     
     <!-- Create/Edit Poll Modal -->
-    <div v-if="showCreate || showEdit" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl border border-gray-200">
-        <div class="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 class="text-xl font-bold">{{ editingPoll ? 'Edit Poll' : 'Create Poll' }}</h3>
-          <button class="btn p-2 min-w-[2.5rem]" @click="closeCreate">✕</button>
+    <div v-if="showCreate || showEdit" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-2 sm:p-4 overflow-y-auto">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl border border-gray-200 my-auto max-h-[95vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <h3 class="text-lg sm:text-xl font-bold">{{ editingPoll ? 'Edit Poll' : 'Create Poll' }}</h3>
+          <button class="btn p-2 min-w-[2.5rem] min-h-[2.5rem]" @click="closeCreate">✕</button>
         </div>
-        <div class="p-4">
+        <div class="p-3 sm:p-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
               <label class="block mb-1">Question</label>
@@ -103,9 +103,9 @@
             </div>
           </div>
         </div>
-        <div class="p-4 border-t border-gray-200 flex justify-end gap-2 items-center">
-          <button class="btn" @click="closeCreate">Cancel</button>
-          <button class="btn" @click="savePoll" :disabled="!canCreate">{{ editingPoll ? 'Save' : 'Create' }}</button>
+        <div class="p-3 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 items-center">
+          <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="closeCreate">Cancel</button>
+          <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="savePoll" :disabled="!canCreate">{{ editingPoll ? 'Save' : 'Create' }}</button>
         </div>
       </div>
     </div>

@@ -1,12 +1,12 @@
 <template>
-  <div class="max-w-6xl mx-auto card relative">
-    <h2 class="mb-3 pr-16 text-2xl sm:text-3xl">{{ poll?.question || 'Results' }}</h2>
-    <!-- QR tooltip trigger (hover to show, copy link allowed) -->
+  <div class="max-w-6xl mx-auto card relative px-4 sm:px-6">
+    <h2 class="mb-3 pr-12 sm:pr-16 text-xl sm:text-2xl md:text-3xl break-words">{{ poll?.question || 'Results' }}</h2>
+    <!-- QR tooltip trigger (hover/tap to show) -->
     <div v-if="poll" class="absolute top-3 right-3 group">
-      <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm">QR</button>
-      <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3">
+      <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
+      <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
         <div class="flex items-center justify-center">
-          <Qrcode :value="voteUrl" :size="128" level="H" />
+          <Qrcode :value="voteUrl" :size="120" level="H" class="sm:w-32 sm:h-32" />
         </div>
       </div>
     </div>
@@ -19,7 +19,7 @@
         <div v-if="!consolidatedTextResponses || consolidatedTextResponses.length === 0" class="text-neutral text-center py-12 text-xl">
           No responses yet
         </div>
-        <div v-else class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 p-6 min-h-[50vh] sm:min-h-[60vh]">
+        <div v-else class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 p-3 sm:p-6 min-h-[40vh] sm:min-h-[50vh] md:min-h-[60vh]">
           <div
             v-for="(item, i) in textResponseItems"
             :key="i"
@@ -48,18 +48,18 @@
           </div>
         </div>
       </template>
-      <div class="flex flex-wrap gap-3 mt-2 justify-center items-center">
-        <router-link class="btn" :to="`/poll/${id}`">Back to Vote</router-link>
-        <router-link class="btn" :to="`/results/${id}?present=true`">Presentation Mode</router-link>
-        <router-link v-if="present" class="btn" :to="`/results/${id}`">Exit Presentation</router-link>
-        <button class="btn" @click="go(-1)">Previous</button>
-        <button class="btn" @click="go(1)">Next</button>
+      <div class="flex flex-wrap gap-2 sm:gap-3 mt-2 justify-center items-center">
+        <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" :to="`/poll/${id}`">Back to Vote</router-link>
+        <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}?present=true`">Presentation</router-link>
+        <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}`">Exit Present</router-link>
+        <button class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(-1)">Previous</button>
+        <button class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
       </div>
       <ConfettiReveal />
     </div>
     <!-- Fixed QR panel (left-bottom) - minimal overlay to avoid disturbing presentation area -->
-    <div v-if="poll" class="fixed left-3 bottom-3 z-10 hidden sm:flex items-center bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-3">
-      <Qrcode :value="voteUrl" :size="120" level="H" />
+    <div v-if="poll" class="fixed left-2 sm:left-3 bottom-2 sm:bottom-3 z-10 hidden sm:flex items-center bg-white/90 backdrop-blur rounded-lg border border-gray-200 shadow p-2 sm:p-3">
+      <Qrcode :value="voteUrl" :size="100" level="H" class="sm:w-30 sm:h-30" />
     </div>
   </div>
 </template>
@@ -78,6 +78,7 @@ const router = useRouter()
 const id = computed(() => route.params.id)
 const present = computed(() => route.query.present === 'true')
 const poll = ref(null)
+const showQR = ref(false)
 const canvasEl = ref(null)
 let chartInstance = null
 

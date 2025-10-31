@@ -1,14 +1,14 @@
 <template>
-  <div class="max-w-md mx-auto card">
-    <h2 class="text-2xl mb-4">Create Poll Set</h2>
+  <div class="max-w-md mx-auto card px-4 sm:px-6">
+    <h2 class="text-xl sm:text-2xl mb-4">Create Poll Set</h2>
     <div class="flex flex-col gap-3">
       <div>
         <label class="block mb-1">Set Name</label>
         <input v-model="name" placeholder="e.g., Friday Quiz" />
       </div>
-      <button class="w-full" @click="create" :disabled="!name.trim()">Create Set</button>
+      <button class="w-full text-base sm:text-lg py-3" @click="create" :disabled="!name.trim()">Create Set</button>
       <div class="text-center mt-2">
-        <router-link class="btn" to="/sets">Back to Sets</router-link>
+        <router-link class="btn text-sm sm:text-base justify-center" to="/sets">Back to Sets</router-link>
       </div>
     </div>
   </div>

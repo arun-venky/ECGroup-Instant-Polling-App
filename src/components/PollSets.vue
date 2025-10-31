@@ -1,21 +1,21 @@
 <template>
-  <div class="max-w-4xl mx-auto card">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl">Poll Sets</h2>
-      <router-link class="btn w-auto" to="/sets/create">New Set</router-link>
+  <div class="max-w-4xl mx-auto card px-4 sm:px-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+      <h2 class="text-xl sm:text-2xl">Poll Sets</h2>
+      <router-link class="btn w-full sm:w-auto" to="/sets/create">New Set</router-link>
     </div>
-    <div v-if="!sets.length" class="text-neutral">No sets yet. Create polls and assign them to a set.</div>
+    <div v-if="!sets.length" class="text-neutral text-sm sm:text-base">No sets yet. Create polls and assign them to a set.</div>
     <div v-else class="flex flex-col gap-3">
-      <div v-for="s in sets" :key="s.id" class="card">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="font-bold text-lg">{{ s.name }}</div>
-            <div class="text-xs text-neutral">{{ formatDate(s.createdAt) }}</div>
+      <div v-for="s in sets" :key="s.id" class="card p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-base sm:text-lg break-words">{{ s.name }}</div>
+            <div class="text-xs text-neutral mt-1">{{ formatDate(s.createdAt) }}</div>
           </div>
-          <div class="flex items-center gap-2">
-            <router-link class="btn" :to="`/sets/${s.id}/start`">Start</router-link>
-            <router-link class="btn" :to="`/sets/${s.id}/polls`">View Polls</router-link>
-            <button class="btn bg-red-500 hover:bg-red-600 text-white" @click="() => deleteSet(s.id, s.name)">Delete</button>
+          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/start`">Start</router-link>
+            <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/polls`">View Polls</router-link>
+            <button class="btn bg-red-500 hover:bg-red-600 text-white text-sm flex-1 sm:flex-none min-w-[80px] justify-center" @click="() => deleteSet(s.id, s.name)">Delete</button>
           </div>
         </div>
       </div>

@@ -1,11 +1,11 @@
 <template>
-  <div class="card">
-    <h3 class="text-lg mb-2">Share this Poll</h3>
+  <div class="card px-4 sm:px-6">
+    <h3 class="text-base sm:text-lg mb-2">Share this Poll</h3>
     <div class="flex flex-col items-center">
-      <Qrcode :value="shareUrl" :size="160" level="H" />
-      <div class="mt-3 flex gap-2 items-center">
-        <button class="btn" @click="copyLink">Copy link</button>
-        <router-link class="btn" :to="`/poll/${id}`">Open</router-link>
+      <Qrcode :value="shareUrl" :size="140" level="H" class="sm:w-40 sm:h-40" />
+      <div class="mt-3 flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
+        <button class="btn text-sm sm:text-base w-full sm:w-auto min-w-[120px] justify-center" @click="copyLink">Copy link</button>
+        <router-link class="btn text-sm sm:text-base w-full sm:w-auto min-w-[120px] justify-center" :to="`/poll/${id}`">Open</router-link>
       </div>
     </div>
   </div>
