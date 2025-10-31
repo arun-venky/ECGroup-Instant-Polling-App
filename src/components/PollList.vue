@@ -278,8 +278,12 @@ function linkToPoll(p) {
 
 const showOptions = computed(() => form.value.type === 'multiple' || form.value.type === 'emoji')
 
-watch(() => form.value.type, () => {
-  form.value.answer = ''
+watch(() => form.value.type, (newType, oldType) => {
+  // Only clear answer when type changes during creation (not editing)
+  // When editing, we'll set the answer after setting the type
+  if (!editingPoll.value && oldType !== undefined) {
+    form.value.answer = ''
+  }
 })
 
 function addOption() {
@@ -303,7 +307,8 @@ function edit(poll) {
   
   // Determine answer value for the form
   let answerValue = ''
-  if (poll.answer !== null && poll.answer !== undefined && poll.answer !== '') {
+  // Check if answer exists (not null, undefined, or empty string)
+  if (poll.answer != null && poll.answer !== '') {
     if (poll.type === 'multiple' || poll.type === 'emoji') {
       // For index-based answers, convert to string for the select
       answerValue = String(poll.answer)
@@ -318,13 +323,15 @@ function edit(poll) {
       // For like/dislike, use the string value directly
       answerValue = String(poll.answer)
     } else if (poll.type === 'text') {
-      // For text, use the original text value
-      answerValue = String(poll.answer)
+      // For text, use the stored value (it's stored as lowercase, which is fine to display)
+      // Users can see what the expected answer is
+      answerValue = String(poll.answer).trim()
     }
   }
   
   // Populate form with existing poll data
-  form.value = {
+  // Set all values at once to avoid watch triggering and clearing answer
+  const formData = {
     question: poll.question || '',
     type: poll.type || 'multiple',
     options: poll.type === 'star' 
@@ -336,11 +343,14 @@ function edit(poll) {
   
   // Handle like and emoji types
   if (poll.type === 'like') {
-    form.value.options = ['Like', 'Dislike']
+    formData.options = ['Like', 'Dislike']
   }
   if (poll.type === 'emoji') {
-    form.value.options = poll.options || ['😀', '😍', '🤔', '😮']
+    formData.options = poll.options || ['😀', '😍', '🤔', '😮']
   }
+  
+  // Set form value all at once to ensure answer is preserved
+  form.value = formData
 }
 
 function closeCreate() {
