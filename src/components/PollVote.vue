@@ -11,7 +11,14 @@
       </div>
     </div>
 
-    <div v-if="!poll" class="text-neutral">Poll not found.</div>
+    <div v-if="loading" class="text-neutral text-center py-8">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+      <div>Loading poll...</div>
+    </div>
+    <div v-else-if="loadError || !poll" class="text-neutral text-center py-8">
+      <div class="mb-4">Poll not found.</div>
+      <button class="btn" @click="loadPoll">Retry</button>
+    </div>
 
     <div v-else class="flex flex-col gap-4">
       <div v-if="alreadyVoted" class="text-accent">You've already voted on this device.</div>
@@ -73,6 +80,8 @@ const alreadyVoted = ref(false)
 const textResponse = ref('')
 const showQR = ref(false)
 const hasNext = ref(false)
+const loading = ref(true)
+const loadError = ref(false)
 
 // Register the component properly for template use
 const Qrcode = QrcodeVue
@@ -105,17 +114,31 @@ async function checkHasNext() {
   hasNext.value = !!nextId
 }
 
-onMounted(async () => {
-  poll.value = await getPoll(id.value)
-  alreadyVoted.value = await hasVoted(id.value)
-  await checkHasNext()
-})
+async function loadPoll() {
+  loading.value = true
+  loadError.value = false
+  try {
+    const loadedPoll = await getPoll(id.value)
+    if (loadedPoll) {
+      poll.value = loadedPoll
+      alreadyVoted.value = await hasVoted(id.value)
+      await checkHasNext()
+      loadError.value = false
+    } else {
+      loadError.value = true
+      console.warn('Poll not found:', id.value)
+    }
+  } catch (error) {
+    console.error('Error loading poll:', error)
+    loadError.value = true
+  } finally {
+    loading.value = false
+  }
+}
 
-watch(() => route.params.id, async () => {
-  poll.value = await getPoll(route.params.id)
-  alreadyVoted.value = await hasVoted(route.params.id)
-  await checkHasNext()
-})
+onMounted(loadPoll)
+
+watch(() => route.params.id, loadPoll)
 
 async function onIndex(index) {
   if (alreadyVoted.value) return
@@ -141,9 +164,9 @@ async function onTextSubmit() {
   const result = await votePollText(id.value, textResponse.value)
   if (result) {
     alreadyVoted.value = await hasVoted(id.value)
-    playVoteSound()
-    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
-    const setId = poll.value?.setId
+  playVoteSound()
+  confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } })
+  const setId = poll.value?.setId
     // If this is the last poll in the set, show all results
     if (setId && !hasNext.value) {
       router.push(`/sets/${setId}/results`)

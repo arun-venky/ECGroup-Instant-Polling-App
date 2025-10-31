@@ -11,7 +11,14 @@
       </div>
     </div>
 
-    <div v-if="!poll" class="text-neutral">Poll not found.</div>
+    <div v-if="loading" class="text-neutral text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+      <div>Loading results...</div>
+    </div>
+    <div v-else-if="loadError || !poll" class="text-neutral text-center py-12">
+      <div class="mb-4">Poll not found.</div>
+      <button class="btn" @click="loadPoll">Retry</button>
+    </div>
 
     <div v-else class="flex flex-col gap-4">
       <!-- Text responses display with font size based on percentage -->
@@ -37,9 +44,9 @@
       
       <!-- Chart display for other poll types -->
       <template v-else>
-        <div class="chart-container h-[50vh] sm:h-[60vh]">
-          <canvas ref="canvasEl"></canvas>
-        </div>
+      <div class="chart-container h-[50vh] sm:h-[60vh]">
+        <canvas ref="canvasEl"></canvas>
+      </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
           <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
             <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
@@ -82,6 +89,8 @@ const poll = ref(null)
 const showQR = ref(false)
 const canvasEl = ref(null)
 const hasNext = ref(false)
+const loading = ref(true)
+const loadError = ref(false)
 let chartInstance = null
 
 const colors = ['#00C4CC', '#2F80ED', '#8B5CF6', '#22C55E', '#F59E0B', '#EF4444']
@@ -231,59 +240,83 @@ function draw() {
 
 let unsubscribePoll = null
 
-onMounted(async () => {
-  poll.value = await getPoll(id.value)
-  if (poll.value) {
-    // For text polls, we don't use charts or displayedVotes
-    if (poll.value.type === 'text') {
-      // Text responses will be displayed via textResponseItems computed property
-    } else {
-      // Get initial values based on poll type
-      const initialValues = displayValues.value
-      // If presentation mode, animate in from zero
-      if (present.value) {
-        const zeros = Array.from({ length: initialValues.length }, () => 0)
-        displayedVotes.value = [...zeros]
-        draw()
-        animateVotes(zeros, initialValues, 1000)
+async function loadPoll() {
+  loading.value = true
+  loadError.value = false
+  try {
+    const loadedPoll = await getPoll(id.value)
+    if (loadedPoll) {
+      poll.value = loadedPoll
+      if (poll.value) {
+        // For text polls, we don't use charts or displayedVotes
+        if (poll.value.type === 'text') {
+          // Text responses will be displayed via textResponseItems computed property
+        } else {
+          // Get initial values based on poll type
+          const initialValues = displayValues.value
+          // If presentation mode, animate in from zero
+          if (present.value) {
+            const zeros = Array.from({ length: initialValues.length }, () => 0)
+            displayedVotes.value = [...zeros]
+            draw()
+            animateVotes(zeros, initialValues, 1000)
+          } else {
+            displayedVotes.value = [...initialValues]
+            draw()
+          }
+        }
       } else {
-        displayedVotes.value = [...initialValues]
-        draw()
+        displayedVotes.value = []
+        if (canvasEl.value && poll.value?.type !== 'text') draw()
       }
+      
+      // Check if there's a next poll
+      await checkHasNext()
+      loadError.value = false
+    } else {
+      loadError.value = true
+      displayedVotes.value = []
+      console.warn('Poll not found:', id.value)
     }
-  } else {
+  } catch (error) {
+    console.error('Error loading poll:', error)
+    loadError.value = true
     displayedVotes.value = []
-    if (canvasEl.value && poll.value?.type !== 'text') draw()
+  } finally {
+    loading.value = false
   }
+}
+
+onMounted(async () => {
+  await loadPoll()
   
-  // Check if there's a next poll
-  await checkHasNext()
-  
-  // Set up real-time listener for poll updates
-  unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
-    if (updatedPoll) {
-      const prev = poll.value
-      poll.value = updatedPoll
-      
-      // For text polls, updates are handled automatically via computed properties
-      if (updatedPoll.type === 'text') {
-        return
+  // Set up real-time listener for poll updates (only if poll loaded successfully)
+  if (poll.value) {
+    unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
+      if (updatedPoll) {
+        const prev = poll.value
+        poll.value = updatedPoll
+        
+        // For text polls, updates are handled automatically via computed properties
+        if (updatedPoll.type === 'text') {
+          return
+        }
+        
+        // For other poll types, animate vote changes
+        const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
+        const newVals = updatedPoll.votes || []
+        
+        // Only animate if values actually changed
+        if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
+          // Ensure arrays are same length for animation
+          const maxLen = Math.max(oldVals.length, newVals.length)
+          while (oldVals.length < maxLen) oldVals.push(0)
+          while (newVals.length < maxLen) newVals.push(0)
+          animateVotes(oldVals, newVals, 800)
+        }
       }
-      
-      // For other poll types, animate vote changes
-      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
-      const newVals = updatedPoll.votes || []
-      
-      // Only animate if values actually changed
-      if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
-        // Ensure arrays are same length for animation
-        const maxLen = Math.max(oldVals.length, newVals.length)
-        while (oldVals.length < maxLen) oldVals.push(0)
-        while (newVals.length < maxLen) newVals.push(0)
-        animateVotes(oldVals, newVals, 800)
-      }
-    }
-  })
+    })
+  }
   
   await nextTick()
   playRevealSound()
@@ -323,48 +356,38 @@ watch(() => route.fullPath, async () => {
   }
   
   // Load new poll
-  poll.value = await getPoll(id.value)
+  await loadPoll()
+  
+  // Set up listener for new poll (only if poll loaded successfully)
   if (poll.value) {
-    if (poll.value.type === 'text') {
-      // Text polls don't use displayedVotes
-    } else {
-      displayedVotes.value = [...displayValues.value]
-    }
-  } else {
-    displayedVotes.value = []
-  }
-  
-  // Check if there's a next poll
-  await checkHasNext()
-  
-  // Set up listener for new poll
-  unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
-    if (updatedPoll) {
-      const prev = poll.value
-      poll.value = updatedPoll
-      
-      // For text polls, updates are handled automatically via computed properties
-      if (updatedPoll.type === 'text') {
-        return
+    unsubscribePoll = subscribeToPoll(id.value, (updatedPoll) => {
+      if (updatedPoll) {
+        const prev = poll.value
+        poll.value = updatedPoll
+        
+        // For text polls, updates are handled automatically via computed properties
+        if (updatedPoll.type === 'text') {
+          return
+        }
+        
+        // For other poll types, animate vote changes
+        const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
+        const newVals = updatedPoll.votes || []
+        
+        // Only animate if values actually changed
+        if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
+          // Ensure arrays are same length for animation
+          const maxLen = Math.max(oldVals.length, newVals.length)
+          while (oldVals.length < maxLen) oldVals.push(0)
+          while (newVals.length < maxLen) newVals.push(0)
+          animateVotes(oldVals, newVals, 800)
+        }
       }
-      
-      // For other poll types, animate vote changes
-      const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
-      const newVals = updatedPoll.votes || []
-      
-      // Only animate if values actually changed
-      if (JSON.stringify(oldVals) !== JSON.stringify(newVals)) {
-        // Ensure arrays are same length for animation
-        const maxLen = Math.max(oldVals.length, newVals.length)
-        while (oldVals.length < maxLen) oldVals.push(0)
-        while (newVals.length < maxLen) newVals.push(0)
-        animateVotes(oldVals, newVals, 800)
-      }
+    })
+    
+    if (poll.value?.type !== 'text') {
+      draw()
     }
-  })
-  
-  if (poll.value?.type !== 'text') {
-    draw()
   }
 })
 

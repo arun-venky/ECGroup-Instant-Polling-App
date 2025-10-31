@@ -96,28 +96,84 @@ export async function updatePoll(id, { question, type, options, setId = null, an
   }
 }
 
-export async function getPoll(id) {
-  try {
-    const pollRef = doc(db, COLLECTIONS.POLLS, id)
-    const pollSnap = await getDoc(pollRef)
-    
-    if (pollSnap.exists()) {
-      const data = pollSnap.data()
-      // Aggregate votes from votes collection
-      const { votes, textResponses } = await aggregateVotes(id, data.type, data.options || [])
-      
-      return {
-        ...data,
-        id: pollSnap.id,
-        votes: votes || [],
-        textResponses: textResponses || []
-      }
-    }
-    return null
-  } catch (error) {
-    console.error('Error getting poll:', error)
+export async function getPoll(id, retries = 2) {
+  if (!id) {
+    console.warn('getPoll called with invalid id:', id)
     return null
   }
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const pollRef = doc(db, COLLECTIONS.POLLS, id)
+      const pollSnap = await getDoc(pollRef)
+      
+      if (pollSnap.exists()) {
+        const data = pollSnap.data()
+        
+        // Validate poll data
+        if (!data || typeof data !== 'object') {
+          console.warn('Poll data is invalid for id:', id)
+          if (attempt < retries) continue
+          return null
+        }
+        
+        // Aggregate votes from votes collection
+        try {
+          const { votes, textResponses } = await aggregateVotes(id, data.type, data.options || [])
+          
+          return {
+            ...data,
+            id: pollSnap.id,
+            votes: votes || [],
+            textResponses: textResponses || []
+          }
+        } catch (aggregateError) {
+          console.warn('Error aggregating votes for poll', id, 'attempt', attempt + 1, ':', aggregateError)
+          // Return poll without votes if aggregation fails
+          if (attempt < retries) continue
+          return {
+            ...data,
+            id: pollSnap.id,
+            votes: [],
+            textResponses: []
+          }
+        }
+      }
+      
+      // Poll doesn't exist
+      if (attempt < retries) {
+        console.warn(`Poll ${id} not found, retrying... (attempt ${attempt + 1}/${retries + 1})`)
+        await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1))) // Exponential backoff
+        continue
+      }
+      
+      console.warn('Poll not found after retries:', id)
+      return null
+    } catch (error) {
+      console.error(`Error getting poll ${id} (attempt ${attempt + 1}/${retries + 1}):`, error)
+      
+      // Retry on network errors or rate limit errors
+      if (attempt < retries && (
+        error.code === 'unavailable' || 
+        error.code === 'deadline-exceeded' ||
+        error.code === 'resource-exhausted' ||
+        error.message?.includes('network') ||
+        error.message?.includes('timeout')
+      )) {
+        console.log(`Retrying poll fetch for ${id} due to ${error.code || error.message}`)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+        continue
+      }
+      
+      // For other errors, don't retry
+      if (attempt === retries) {
+        console.error('Final error getting poll:', error)
+        return null
+      }
+    }
+  }
+  
+  return null
 }
 
 // Aggregate votes from votes collection for a poll
