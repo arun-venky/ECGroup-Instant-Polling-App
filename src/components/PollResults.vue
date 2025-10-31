@@ -2,16 +2,7 @@
   <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden px-4 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
     <!-- Sticky Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
-      <h2 class="text-xl sm:text-2xl md:text-3xl break-words pr-12 sm:pr-16 flex-1">{{ poll?.question || 'Results' }}</h2>
-      <!-- QR tooltip trigger (hover/tap to show) -->
-      <div v-if="poll" class="absolute top-3 right-3 sm:relative sm:top-0 sm:right-0 group flex-shrink-0">
-        <button class="px-3 py-1 rounded-md bg-secondary text-white text-xs sm:text-sm min-h-[32px]" @click="showQR = !showQR">QR</button>
-        <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 sm:transition-opacity sm:duration-200 absolute right-0 mt-2 z-30 bg-white text-neutral rounded-lg border border-gray-200 shadow p-3" :class="{ '!visible !opacity-100': showQR }">
-          <div class="flex items-center justify-center">
-            <Qrcode :value="voteUrl" :size="270" level="H" class="sm:w-72 sm:h-72" />
-          </div>
-        </div>
-      </div>
+      <h2 class="text-xl sm:text-2xl md:text-3xl break-words flex-1">{{ poll?.question || 'Results' }}</h2>
     </div>
 
     <!-- Scrollable Content Area -->
