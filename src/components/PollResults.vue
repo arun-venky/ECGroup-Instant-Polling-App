@@ -47,28 +47,15 @@
         </div>
       </div>
       
-      <!-- Bar chart for emoji type polls -->
-      <template v-else-if="poll.type === 'emoji'">
+      <!-- Bar chart for all non-text poll types -->
+      <template v-else>
         <div class="chart-container h-[50vh] sm:h-[60vh] mb-4">
           <canvas ref="canvasEl"></canvas>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
-          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2 p-2 rounded-md transition-colors" :class="{ 'bg-green-100 border-2 border-green-500': item.isCorrect, 'bg-white border border-gray-200': !item.isCorrect }">
+          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2">
             <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-            <span class="flex-1 break-words font-medium" :class="{ 'text-green-700 font-bold': item.isCorrect }">{{ item.label }}</span>
-            <span v-if="item.isCorrect" class="text-green-600 text-xs font-semibold mr-2">✓</span>
-            <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
-            <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
-          </div>
-        </div>
-      </template>
-      <!-- List display for other poll types -->
-      <template v-else>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
-          <div v-for="(item, i) in displayItems" :key="i" class="flex items-center gap-2 p-2 rounded-md transition-colors" :class="{ 'bg-green-100 border-2 border-green-500': item.isCorrect, 'bg-white border border-gray-200': !item.isCorrect }">
-            <span class="inline-block w-3 h-3 rounded-sm flex-shrink-0" :style="{ backgroundColor: colors[i % colors.length] }"></span>
-            <span class="flex-1 break-words font-medium" :class="{ 'text-green-700 font-bold': item.isCorrect }">{{ item.label }}</span>
-            <span v-if="item.isCorrect" class="text-green-600 text-xs font-semibold mr-2">✓</span>
+            <span class="flex-1 break-words">{{ item.label }}</span>
             <span class="text-accent font-bold whitespace-nowrap">{{ item.percentage }}%</span>
             <span class="text-neutral text-xs whitespace-nowrap">({{ item.votes }})</span>
           </div>
@@ -80,7 +67,6 @@
     <!-- Sticky Footer -->
     <div v-if="!loading && !loadError && poll" class="flex flex-wrap gap-2 sm:gap-3 justify-center items-center pt-3 pb-2 sticky bottom-0 bg-white border-t border-gray-200 flex-shrink-0 -mx-4 sm:-mx-6 px-4 sm:px-6">
       <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" :to="`/poll/${id}`">Back to Vote</router-link>
-      <router-link class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[120px] justify-center py-2" :to="`/results/${id}?present=true`">Presentation</router-link>
       <router-link v-if="present" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" to="/sets">Home</router-link>
       <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(-1)">Previous</button>
       <button v-if="hasPrevious || hasNext" class="btn text-xs sm:text-sm md:text-base flex-1 sm:flex-none min-w-[100px] justify-center py-2" @click="go(1)">Next</button>
@@ -185,19 +171,19 @@ const displayValues = computed(() => {
   return poll.value?.votes || []
 })
 
-// Animated display values to show rising votes (for emoji polls with charts)
+// Animated display values to show rising votes (for polls with charts)
 const displayedVotes = ref([])
 
 // Calculate percentages directly from display values
 const total = computed(() => {
-  const values = poll.value?.type === 'emoji' && displayedVotes.value.length 
+  const values = poll.value?.type !== 'text' && displayedVotes.value.length 
     ? displayedVotes.value 
     : displayValues.value
   return values.length ? values.reduce((a, b) => a + b, 0) : 0
 })
 
 const percentages = computed(() => {
-  const values = poll.value?.type === 'emoji' && displayedVotes.value.length 
+  const values = poll.value?.type !== 'text' && displayedVotes.value.length 
     ? displayedVotes.value 
     : displayValues.value
   const t = total.value || 1
@@ -222,7 +208,7 @@ const isCorrectAnswer = (index) => {
 const displayItems = computed(() => {
   const labels = displayLabels.value
   const percents = percentages.value
-  const values = poll.value?.type === 'emoji' && displayedVotes.value.length 
+  const values = poll.value?.type !== 'text' && displayedVotes.value.length 
     ? displayedVotes.value 
     : displayValues.value
   
@@ -277,12 +263,12 @@ const textResponseItems = computed(() => {
 })
 
 function draw() {
-  if (!poll.value || !canvasEl.value || poll.value.type !== 'emoji') return
+  if (!poll.value || !canvasEl.value || poll.value.type === 'text') return
   const parent = canvasEl.value.parentElement
   if (!parent || parent.clientWidth === 0 || parent.clientHeight === 0) {
     // Retry if container not ready yet
     setTimeout(() => {
-      if (poll.value && canvasEl.value && poll.value.type === 'emoji') {
+      if (poll.value && canvasEl.value && poll.value.type !== 'text') {
         draw()
       }
     }, 100)
@@ -308,8 +294,8 @@ async function loadPoll() {
     const loadedPoll = await getPoll(id.value)
     if (loadedPoll) {
       poll.value = loadedPoll
-      // For emoji polls, set up chart animation
-      if (poll.value.type === 'emoji') {
+      // For non-text polls, set up chart animation
+      if (poll.value.type !== 'text') {
         const initialValues = displayValues.value
         if (present.value) {
           const zeros = Array.from({ length: initialValues.length }, () => 0)
@@ -352,8 +338,8 @@ onMounted(async () => {
         const prev = poll.value
         poll.value = updatedPoll
         
-        // For emoji polls, animate vote changes
-        if (updatedPoll.type === 'emoji') {
+        // For non-text polls, animate vote changes
+        if (updatedPoll.type !== 'text') {
           const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
           const newVals = updatedPoll.votes || []
           
@@ -421,8 +407,8 @@ watch(() => route.fullPath, async () => {
         const prev = poll.value
         poll.value = updatedPoll
         
-        // For emoji polls, animate vote changes
-        if (updatedPoll.type === 'emoji') {
+        // For non-text polls, animate vote changes
+        if (updatedPoll.type !== 'text') {
           const oldVals = displayedVotes.value.length ? [...displayedVotes.value] : (prev?.votes || [])
           const newVals = updatedPoll.votes || []
           
@@ -438,7 +424,7 @@ watch(() => route.fullPath, async () => {
       }
     })
     
-    if (poll.value?.type === 'emoji') {
+    if (poll.value?.type !== 'text') {
       await nextTick()
       draw()
     }
@@ -449,9 +435,9 @@ watch(present, async (isOn) => {
   if (isOn) {
     setBackgroundMusic('/assets/sounds/reveal.mp3', 0.8)
     playBackgroundMusic(0.15)
-    // Re-animate bars when entering presentation (only for emoji polls)
+    // Re-animate bars when entering presentation (for all non-text polls)
     const latest = await getPoll(id.value)
-    if (latest && latest.type === 'emoji') {
+    if (latest && latest.type !== 'text') {
       const currentValues = latest.votes || []
       const from = displayedVotes.value.length ? [...displayedVotes.value] : Array.from({ length: currentValues.length }, () => 0)
       // Ensure chart is drawn first
