@@ -47,7 +47,7 @@
             <div class="text-xs text-neutral mt-1">{{ formatDate(p.createdAt) }}</div>
             <div class="flex flex-wrap items-center gap-2 mt-3">
                 <router-link 
-                  class="!bg-transparent hover:!bg-gray-100 p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+                  class="!bg-transparent p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
                   :to="linkToPoll(p)"
                   title="Open"
                 >
@@ -57,7 +57,7 @@
                   </svg>
                 </router-link>
                 <button 
-                  class="!bg-transparent hover:!bg-gray-100 p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+                  class="!bg-transparent p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
                   @click="edit(p)"
                   title="Edit"
                 >
@@ -66,7 +66,7 @@
                   </svg>
                 </button>
                 <button 
-                  class="!bg-transparent hover:!bg-red-100 p-2 text-neutral hover:text-red-600 transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+                  class="!bg-transparent p-2 text-neutral hover:text-red-600 transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
                   @click="remove(p.id)"
                   title="Delete"
                 >

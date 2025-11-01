@@ -58,7 +58,7 @@
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <router-link 
                 v-if="editingId !== s.id"
-                class="!bg-transparent hover:!bg-gray-100 p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+                class="!bg-transparent p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
                 :to="`/sets/${s.id}/start`"
                 title="Start"
               >
@@ -80,7 +80,7 @@
               </button>
               <router-link 
                 v-if="editingId !== s.id"
-                class="!bg-transparent hover:!bg-gray-100 p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+                class="!bg-transparent p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
                 :to="`/sets/${s.id}/polls`"
                 title="View"
               >
@@ -101,7 +101,7 @@
                 </svg>
               </button>
               <button 
-                class="!bg-transparent hover:!bg-red-100 p-2 text-neutral hover:text-red-600 transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+                class="!bg-transparent p-2 text-neutral hover:text-red-600 transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
                 @click="() => deleteSet(s.id, s.name)" 
                 :disabled="editingId === s.id"
                 :class="{ 'opacity-50 cursor-not-allowed': editingId === s.id }"
