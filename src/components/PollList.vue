@@ -64,12 +64,11 @@
           <button class="btn p-2 min-w-[2.5rem] min-h-[2.5rem]" @click="closeCreate">✕</button>
         </div>
         <div class="sm:col-span-2 border-b border-gray-300 p-3 flex-shrink-0 bg-white">
-          <div>
-            <label class="block mb-1">Question</label>
-            <textarea v-model="form.question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
-          </div>
-          <div class="mt-4">
-            <label class="block mb-1">Question Image (optional)</label>
+              <div>
+                <label class="block mb-1">Question</label>
+                <textarea v-model="form.question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
+              </div>
+              <div class="mt-4">
             <div class="flex items-center gap-2">
               <div v-if="form.questionImage" class="relative inline-block">
                 <img :src="form.questionImage" alt="Question image" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
@@ -106,11 +105,11 @@
                   @click="showImageModal = false"
                   title="Close"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+                    </svg>
+                  </button>
+                </div>
               <div class="p-4">
                 <input 
                   type="file" 
@@ -124,7 +123,7 @@
             </div>
           </div>
         </div>
-        <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0">
+        <div class="border-b border-gray-300 p-3 sm:p-4 flex-shrink-0 bg-white">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block mb-1">Poll Type</label>
@@ -142,6 +141,8 @@
               <input type="number" min="3" max="10" v-model.number="form.stars" />
             </div>
           </div>
+        </div>
+        <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0">
           <div v-if="form.type === 'multiple'" class="mt-3">
             <label class="block mb-1">Options</label>
             <div class="flex flex-col gap-2">
@@ -203,7 +204,7 @@
                   ]"
                   :title="emoji"
                 >
-                  {{ emoji }}
+                {{ emoji }}
                 </button>
               </div>
             </div>
@@ -224,43 +225,43 @@
               </div>
             </div>
           </div>
-          <div class="mt-4">
-            <label class="block mb-1">
-              Correct Answer 
-              <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
-            </label>
-            <div v-if="form.type === 'multiple' || form.type === 'emoji'">
-              <select v-model="form.answer" class="w-full">
-                <option value="">No answer specified</option>
-                <option v-for="(opt, i) in form.options" :key="i" :value="i">{{ opt }}</option>
-              </select>
-            </div>
-            <div v-else-if="form.type === 'star'">
-              <select v-model="form.answer" class="w-full">
-                <option value="">No answer specified</option>
-                <option v-for="n in form.stars" :key="n" :value="n">{{ '⭐'.repeat(n) }}</option>
-              </select>
-            </div>
-            <div v-else-if="form.type === 'like'">
-              <select v-model="form.answer" class="w-full">
-                <option value="">No answer specified</option>
-                <option value="Like">👍 Like</option>
-                <option value="Dislike">👎 Dislike</option>
-              </select>
-            </div>
-            <div v-else-if="form.type === 'image'">
-              <select v-model="form.answer" class="w-full">
-                <option value="">No answer specified</option>
-                <template v-for="(opt, i) in form.options" :key="i">
-                  <option v-if="opt && opt.startsWith('data:image')" :value="i">
-                    Image {{ i + 1 }}
-                  </option>
-                </template>
-              </select>
-            </div>
-            <div v-else-if="form.type === 'text'">
-              <input v-model="form.answer" placeholder="Expected answer text (case-insensitive)" class="w-full" />
-            </div>
+        </div>
+        <div class="border-b border-gray-300 p-3 sm:p-4 flex-shrink-0 bg-white">
+          <label class="block mb-1">
+            Correct Answer 
+            <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
+          </label>
+          <div v-if="form.type === 'multiple' || form.type === 'emoji'">
+            <select v-model="form.answer" class="w-full">
+              <option value="">No answer specified</option>
+              <option v-for="(opt, i) in form.options" :key="i" :value="i">{{ opt }}</option>
+            </select>
+          </div>
+          <div v-else-if="form.type === 'star'">
+            <select v-model="form.answer" class="w-full">
+              <option value="">No answer specified</option>
+              <option v-for="n in form.stars" :key="n" :value="n">{{ '⭐'.repeat(n) }}</option>
+            </select>
+          </div>
+          <div v-else-if="form.type === 'like'">
+            <select v-model="form.answer" class="w-full">
+              <option value="">No answer specified</option>
+              <option value="Like">👍 Like</option>
+              <option value="Dislike">👎 Dislike</option>
+            </select>
+          </div>
+          <div v-else-if="form.type === 'image'">
+            <select v-model="form.answer" class="w-full">
+              <option value="">No answer specified</option>
+              <template v-for="(opt, i) in form.options" :key="i">
+                <option v-if="opt && opt.startsWith('data:image')" :value="i">
+                  Image {{ i + 1 }}
+                </option>
+              </template>
+            </select>
+          </div>
+          <div v-else-if="form.type === 'text'">
+            <input v-model="form.answer" placeholder="Expected answer text (case-insensitive)" class="w-full" />
           </div>
         </div>
         <div class="p-3 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 items-center flex-shrink-0 bg-white">

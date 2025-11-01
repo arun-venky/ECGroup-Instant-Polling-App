@@ -9,7 +9,6 @@
         </div>
 
         <div class="mb-3 mt-4">
-          <label class="block mb-1">Question Image (optional)</label>
           <div class="flex items-center gap-2">
             <div v-if="questionImage" class="relative inline-block">
               <img :src="questionImage" alt="Question image" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
