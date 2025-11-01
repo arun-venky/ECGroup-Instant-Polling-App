@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col gap-2 h-full">
+  <div class="flex flex-col h-full">
     <!-- Sticky Question Section -->
-    <div class="sticky top-0 z-10 bg-white pb-2 flex-shrink-0">
+    <div class="sticky top-0 z-10 bg-white flex-shrink-0">
       <label class="block mb-1">Question</label>
       <textarea 
         v-model="localForm.question" 
@@ -125,8 +125,17 @@
 
       <!-- Image Selection Options -->
       <div v-if="localForm.type === 'image'" class="mt-2">
-        <label class="block mb-1">Upload Images</label>
-        <div class="border border-gray-300 rounded-md p-2 max-h-64 overflow-y-auto">
+        <div class="flex items-center justify-between mb-1">
+          <label class="block">Upload Images</label>
+          <button 
+            class="text-primary hover:text-accent text-sm underline !bg-transparent hover:!bg-transparent min-h-0 min-w-0 px-2 py-1" 
+            @click="addImageOption"
+            title="Add Image"
+          >
+            + Add Image
+          </button>
+        </div>
+        <div class="border border-gray-300 rounded-md p-2 max-h-32 overflow-y-auto">
           <div class="flex flex-col gap-3">
             <div v-for="(opt, i) in localForm.options" :key="i" class="border border-gray-300 rounded-md p-3 flex-shrink-0">
               <div v-if="opt && opt.startsWith('data:image')" class="flex items-center gap-3">
@@ -157,7 +166,6 @@
             </div>
           </div>
         </div>
-        <button class="btn mt-2" @click="addImageOption">Add Image</button>
       </div>
 
       <!-- Emoji Selection -->
@@ -207,7 +215,7 @@
         </div>
         <!-- <div class="text-xs text-neutral mt-1">Click emojis to select/deselect</div> -->
         <div v-if="localForm.options.length > 0" class="mt-2">
-          <label class="block mb-1 text-sm">Selected Emojis ({{ localForm.options.length }}):</label>
+          <!-- <label class="block mb-1 text-sm">Selected Emojis ({{ localForm.options.length }}):</label> -->
           <div class="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-md">
             <span 
               v-for="(opt, i) in localForm.options" 
