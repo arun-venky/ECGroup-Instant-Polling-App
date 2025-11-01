@@ -58,38 +58,38 @@
     
     <!-- Create/Edit Poll Modal -->
     <div v-if="showCreate || showEdit" class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-2 sm:p-4 overflow-y-auto">
-      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl border border-gray-200 my-auto max-h-[95vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl border border-gray-200 my-auto max-h-[95vh] flex flex-col">
+        <div class="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
           <h3 class="text-lg sm:text-xl font-bold">{{ editingPoll ? 'Edit Poll' : 'Create Poll' }}</h3>
           <button class="btn p-2 min-w-[2.5rem] min-h-[2.5rem]" @click="closeCreate">✕</button>
         </div>
-        <div class="p-3 sm:p-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="sm:col-span-2 border border-gray-300 rounded-md p-3 max-h-96 overflow-y-auto">
-              <div>
-                <label class="block mb-1">Question</label>
-                <textarea v-model="form.question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
-              </div>
-              <div class="mt-4">
-                <label class="block mb-1">Question Image (optional)</label>
-                <div v-if="form.questionImage" class="mb-2">
-                  <img :src="form.questionImage" alt="Question image" class="max-w-full h-48 object-contain rounded-md border border-gray-200" />
-                  <button class="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="form.questionImage = ''" title="Remove image">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-                <input 
-                  v-else
-                  type="file" 
-                  accept="image/*" 
-                  class="text-sm"
-                  @change="handleQuestionImageUpload"
-                />
-                <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
-              </div>
+        <div class="sm:col-span-2 border-b border-gray-300 p-3 flex-shrink-0 bg-white">
+          <div>
+            <label class="block mb-1">Question</label>
+            <textarea v-model="form.question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
+          </div>
+          <div class="mt-4">
+            <label class="block mb-1">Question Image (optional)</label>
+            <div v-if="form.questionImage" class="mb-2">
+              <img :src="form.questionImage" alt="Question image" class="max-w-full h-48 object-contain rounded-md border border-gray-200" />
+              <button class="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="form.questionImage = ''" title="Remove image">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
+            <input 
+              v-else
+              type="file" 
+              accept="image/*" 
+              class="text-sm"
+              @change="handleQuestionImageUpload"
+            />
+            <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
+          </div>
+        </div>
+        <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block mb-1">Poll Type</label>
               <select v-model="form.type">
@@ -218,7 +218,7 @@
             </div>
           </div>
         </div>
-        <div class="p-3 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 items-center">
+        <div class="p-3 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 items-center flex-shrink-0 bg-white">
           <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="closeCreate" :disabled="savingPoll">Cancel</button>
           <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="savePoll" :disabled="!canCreate || savingPoll">
             <span v-if="savingPoll" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
