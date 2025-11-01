@@ -102,8 +102,17 @@
         </div>
       </div>
 
-      <div v-if="type === 'multiple'" class="mt-2">
-        <label class="block mb-1">Options</label>
+      <div v-if="type === 'multiple'" class="mt-2 relative">
+        <div class="flex items-center justify-between mb-1">
+          <label class="block">Options</label>
+          <button 
+            class="text-primary hover:text-accent text-sm underline !bg-transparent hover:!bg-transparent min-h-0 min-w-0 px-2 py-1" 
+            @click="addOption"
+            title="Add Option"
+          >
+            + Add Option
+          </button>
+        </div>
         <div class="flex flex-col gap-2">
           <div v-for="(opt, i) in options" :key="i" class="flex gap-2 items-center">
             <input v-model="options[i]" placeholder="Option" class="flex-1" />
@@ -113,7 +122,6 @@
               </svg>
             </button>
           </div>
-          <button class="btn mt-1" @click="addOption">Add Option</button>
         </div>
       </div>
       <div v-if="type === 'image'" class="mt-2">

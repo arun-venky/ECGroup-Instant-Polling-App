@@ -143,8 +143,17 @@
           </div>
         </div>
         <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0">
-          <div v-if="form.type === 'multiple'" class="mt-3">
-            <label class="block mb-1">Options</label>
+          <div v-if="form.type === 'multiple'" class="mt-3 relative">
+            <div class="flex items-center justify-between mb-1">
+              <label class="block">Options</label>
+              <button 
+                class="text-primary hover:text-accent text-sm underline !bg-transparent hover:!bg-transparent min-h-0 min-w-0 px-2 py-1" 
+                @click="addOption"
+                title="Add Option"
+              >
+                + Add Option
+              </button>
+            </div>
             <div class="flex flex-col gap-2">
               <div v-for="(opt, i) in form.options" :key="i" class="flex gap-2 items-center">
                 <input v-model="form.options[i]" placeholder="Option" class="flex-1" />
@@ -154,7 +163,6 @@
                   </svg>
                 </button>
               </div>
-              <button class="btn" @click="addOption">Add Option</button>
             </div>
           </div>
           <div v-if="form.type === 'image'" class="mt-3">
