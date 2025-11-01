@@ -63,215 +63,13 @@
           <h3 class="text-lg sm:text-xl font-bold">{{ editingPoll ? 'Edit Poll' : 'Create Poll' }}</h3>
           <button class="btn p-2 min-w-[2.5rem] min-h-[2.5rem]" @click="closeCreate">✕</button>
         </div>
-        <div class="sm:col-span-2 border-b border-gray-300 p-3 flex-shrink-0 bg-white">
-              <div>
-                <label class="block mb-1">Question</label>
-            <div class="relative">
-              <textarea v-model="form.question" placeholder="What's your question?" class="w-full p-3 pr-12 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
-              <div class="absolute bottom-2 right-2 flex items-center gap-2">
-                <div v-if="form.questionImage" class="relative">
-                  <img :src="form.questionImage" alt="Question image" class="w-12 h-12 object-cover rounded-md border border-gray-200" />
-                  <button 
-                    class="absolute -top-1 -right-1 p-0.5 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent min-h-0 min-w-0 rounded-full transition-colors" 
-                    @click="form.questionImage = ''" 
-                    title="Remove image"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  @click="showImageModal = true"
-                  class="p-1.5 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0 border border-gray-300 rounded-md hover:border-primary transition-colors bg-white shadow-sm"
-                  title="Add question image"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Image Upload Modal -->
-          <div v-if="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showImageModal = false">
-            <div class="bg-white rounded-xl shadow-xl w-full max-w-md border border-gray-200">
-              <div class="flex items-center justify-between p-4 border-b border-gray-200">
-                <h3 class="text-lg font-bold">Upload Question Image</h3>
-                <button 
-                  class="p-2 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0" 
-                  @click="showImageModal = false"
-                  title="Close"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              <div class="p-4">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  class="w-full text-sm mb-2"
-                  @change="handleQuestionImageUpload"
-                  ref="imageFileInput"
-                />
-                <div class="text-xs text-neutral">Max file size: 1 MB</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="border-b border-gray-300 p-3 sm:p-4 flex-shrink-0 bg-white">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block mb-1">Poll Type</label>
-              <select v-model="form.type">
-                <option value="multiple">Multiple Choice</option>
-                <option value="star">Star Rating</option>
-                <option value="like">Like / Dislike</option>
-                <option value="emoji">Emoji Reactions</option>
-                <option value="image">Image Selection</option>
-                <option value="text">Text Response</option>
-              </select>
-            </div>
-            <div v-if="form.type==='star'">
-              <label class="block mb-1">Stars</label>
-              <input type="number" min="3" max="10" v-model.number="form.stars" />
-            </div>
-          </div>
-        </div>
         <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0">
-          <div v-if="form.type === 'multiple'" class="mt-3 relative">
-            <div class="flex items-center justify-between mb-1">
-              <label class="block">Options</label>
-              <button 
-                class="text-primary hover:text-accent text-sm underline !bg-transparent hover:!bg-transparent min-h-0 min-w-0 px-2 py-1" 
-                @click="addOption"
-                title="Add Option"
-              >
-                + Add Option
-              </button>
-            </div>
-            <div class="flex flex-col gap-2">
-              <div v-for="(opt, i) in form.options" :key="i" class="flex gap-2 items-center">
-                <input v-model="form.options[i]" placeholder="Option" class="flex-1" />
-                <button class="p-2 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent rounded transition-colors flex-shrink-0 min-h-0 min-w-0" @click="removeOption(i)" title="Remove option">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-          <div v-if="form.type === 'image'" class="mt-3">
-            <label class="block mb-1">Upload Images</label>
-            <div class="border border-gray-300 rounded-md p-2 max-h-64 overflow-y-auto">
-              <div class="flex flex-col gap-3">
-                <div v-for="(opt, i) in form.options" :key="i" class="border border-gray-300 rounded-md p-3 flex-shrink-0">
-                  <div v-if="opt && opt.startsWith('data:image')" class="flex items-center gap-3">
-                    <img :src="opt" alt="Option" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
-                    <div class="flex-1">
-                      <div class="text-sm text-neutral mb-1">Image {{ i + 1 }}</div>
-                      <button class="p-2 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent rounded transition-colors min-h-0 min-w-0" @click="removeOption(i)" title="Remove image">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div v-else>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      class="text-sm"
-                      @change="(e) => handleImageUpload(e, i)"
-                    />
-                    <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <button class="btn mt-2" @click="addImageOption">Add Image</button>
-          </div>
-          <div v-if="form.type === 'emoji'" class="mt-3">
-            <label class="block mb-1">Select Emojis</label>
-            <div class="border border-gray-300 rounded-md p-3 max-h-64 overflow-y-auto bg-white">
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="emoji in availableEmojis"
-                  :key="emoji"
-                  type="button"
-                  @click="toggleEmoji(emoji)"
-                  :class="[
-                    'text-2xl p-2 rounded-md transition-all border-2 min-h-0 min-w-0 px-2 py-2',
-                    form.options.includes(emoji)
-                      ? '!bg-transparent border-primary scale-110'
-                      : '!bg-transparent border-transparent hover:!bg-transparent hover:border-gray-300'
-                  ]"
-                  :title="emoji"
-                >
-                {{ emoji }}
-                </button>
-              </div>
-            </div>
-            <div class="text-xs text-neutral mt-1">Click emojis to select/deselect</div>
-            <div v-if="form.options.length > 0" class="mt-2">
-              <label class="block mb-1 text-sm">Selected Emojis ({{ form.options.length }}):</label>
-              <div class="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-md">
-                <span 
-                  v-for="(opt, i) in form.options" 
-                  :key="i" 
-                  class="text-2xl relative inline-flex items-center justify-center cursor-pointer !bg-transparent hover:!bg-transparent rounded p-1 transition-colors group"
-                  @click="removeEmoji(i)"
-                  title="Click to remove"
-                >
-                  {{ opt }}
-                  <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</span>
-                </span>
-              </div>
-            </div>
-          </div>
+          <PollForm
+            v-model="form"
+            :show-set-assignment="false"
+            ref="pollFormRef"
+          />
         </div>
-        <div class="border-b border-gray-300 p-3 sm:p-4 flex-shrink-0 bg-white">
-            <label class="block mb-1">
-              Correct Answer 
-              <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
-            </label>
-            <div v-if="form.type === 'multiple' || form.type === 'emoji'">
-              <select v-model="form.answer" class="w-full">
-                <option value="">No answer specified</option>
-                <option v-for="(opt, i) in form.options" :key="i" :value="i">{{ opt }}</option>
-              </select>
-            </div>
-            <div v-else-if="form.type === 'star'">
-              <select v-model="form.answer" class="w-full">
-                <option value="">No answer specified</option>
-                <option v-for="n in form.stars" :key="n" :value="n">{{ '⭐'.repeat(n) }}</option>
-              </select>
-            </div>
-            <div v-else-if="form.type === 'like'">
-              <select v-model="form.answer" class="w-full">
-                <option value="">No answer specified</option>
-                <option value="Like">👍 Like</option>
-                <option value="Dislike">👎 Dislike</option>
-              </select>
-            </div>
-            <div v-else-if="form.type === 'image'">
-              <select v-model="form.answer" class="w-full">
-                <option value="">No answer specified</option>
-                <template v-for="(opt, i) in form.options" :key="i">
-                  <option v-if="opt && opt.startsWith('data:image')" :value="i">
-                    Image {{ i + 1 }}
-                  </option>
-                </template>
-              </select>
-            </div>
-            <div v-else-if="form.type === 'text'">
-              <input v-model="form.answer" placeholder="Expected answer text (case-insensitive)" class="w-full" />
-            </div>
-          </div>
         <div class="p-3 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 items-center flex-shrink-0 bg-white">
           <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="closeCreate" :disabled="savingPoll">Cancel</button>
           <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="savePoll" :disabled="!canCreate || savingPoll">
@@ -291,6 +89,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPoll, listPollIdsSorted, deletePoll, clearAllPolls, listPollSets, listPollIdsBySetSorted, createPoll, updatePoll } from '../utils/storage.js'
 import { useDialog } from '../composables/useDialog.js'
+import PollForm from './PollForm.vue'
 import QrcodeVue from 'qrcode.vue'
 
 const BASE = 'https://ecgroupinstantpolling.netlify.app/index.html'
@@ -311,9 +110,17 @@ const startingPoll = ref(false)
 
 const showCreate = ref(false)
 const showEdit = ref(false)
-const showImageModal = ref(false)
 const editingPoll = ref(null)
-const form = ref({ question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' })
+const pollFormRef = ref(null)
+const form = ref({ 
+  question: '', 
+  questionImage: '',
+  type: 'multiple', 
+  options: ['Option A', 'Option B'], 
+  stars: 5, 
+  answer: '',
+  selectedSetId: ''
+})
 
 async function load() {
   loading.value = true
@@ -431,166 +238,19 @@ function linkToPoll(p) {
   return setId ? `/sets/${setId}/polls/${p.id}` : `/poll/${p.id}`
 }
 
-const showOptions = computed(() => form.value.type === 'multiple' || form.value.type === 'emoji')
-
-// Available emojis for selection
-const availableEmojis = [
-  '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃',
-  '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙',
-  '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔',
-  '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥',
-  '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮',
-  '🤧', '🥵', '🥶', '😶‍🌫️', '😵', '😵‍💫', '🤯', '🤠', '🥳', '😎',
-  '🤓', '🧐', '👍', '👎', '👊', '✊', '🤛', '🤜', '🤞', '✌️',
-  '🤟', '🤘', '🤙', '👌', '🤌', '🤏', '👈', '👉', '👆', '👇',
-  '☝️', '👋', '🤚', '🖐️', '✋', '🖖', '👏', '🙌', '🤲', '🤝',
-  '🙏', '✍️', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃',
-  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔',
-  '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️',
-  '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐',
-  '🔥', '✨', '⭐', '🌟', '💫', '💥', '💢', '💯', '💨', '💦',
-  '💤', '🕳️', '💣', '💬', '🗨️', '🗯️', '💭', '🎉', '🎊', '🎈',
-  '🎁', '🎂', '🎀', '🎁', '🏆', '🥇', '🥈', '🥉', '⚽', '🏀',
-  '🏈', '⚾', '🎾', '🏐', '🏉', '🎱', '🏓', '🏸', '🥅', '🏒',
-  '🏑', '🏏', '⛳', '🏹', '🎣', '🥊', '🥋', '🎽', '🏋️‍♂️', '🤼‍♂️',
-  '🤸‍♂️', '🤸‍♀️', '⛹️‍♂️', '🤺', '🤾‍♂️', '🏌️‍♂️', '🏇', '🧘‍♂️', '🏄‍♂️', '🏊‍♂️',
-  '🚣‍♂️', '🧗‍♂️', '🚵‍♂️', '🚴‍♂️', '🏆', '🎖️', '🏅', '🎗️', '🎫', '🎟️',
-  '🎪', '🤹‍♂️', '🎭', '🩰', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹',
-  '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🎲', '♟️', '🎯', '🎳',
-  '🎮', '🎰', '🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑',
-  '🚒', '🚐', '🚚', '🚛', '🚜', '🛴', '🚲', '🛵', '🏍️', '🛺',
-  '🚨', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋',
-  '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉',
-  '✈️', '🛫', '🛬', '🛩️', '💺', '🚁', '🚟', '🚀', '🛸', '🚤',
-  '🛥️', '🛳️', '⛴️', '🚢', '⚓', '⛵', '🛶', '🚤', '🛟', '🛝',
-  '🎡', '🎢', '🎠', '⛲', '⛱️', '🏖️', '🏝️', '🏜️', '🌋', '⛰️',
-  '🏔️', '🗻', '🏕️', '⛺', '🏠', '🏡', '🏘️', '🏚️', '🏗️', '🏭',
-  '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩',
-  '💒', '🏛️', '⛪', '🕌', '🛕', '🕍', '⛩️', '🕋', '⛲', '⛺',
-  '🌁', '🌃', '🏙️', '🌄', '🌅', '🌆', '🌇', '🌉', '♨️', '🎠',
-  '🎡', '🎢', '💈', '🎪', '🚂', '🌌', '🎆', '🎇', '✨', '🌟',
-  '💫', '⭐', '🌠', '☄️', '💥', '🔥', '🌈', '☀️', '⛅', '☁️',
-  '🌤️', '⛈️', '🌩️', '⛈️', '🌨️', '❄️', '☃️', '⛄', '🌬️', '💨',
-  '💧', '💦', '☔', '☂️', '🌊', '🌫️', '🌪️', '🌀', '🌙', '⭐',
-  '🌟', '💫', '✨', '🔥', '💥', '⚡', '☄️', '💫', '🌠', '⭐'
-]
-
-watch(() => form.value.type, (newType, oldType) => {
-  // Only clear answer and update options when type changes during creation (not editing)
-  // When editing, we'll set the answer after setting the type
-  if (!editingPoll.value && oldType !== undefined) {
-    form.value.answer = ''
-    
-    // Update options based on poll type
-    if (newType === 'emoji') {
-      // Initialize with empty array for dropdown selection
-      form.value.options = []
-    } else if (newType === 'image') {
-      // Initialize with empty string for image upload
-      form.value.options = ['']
-    } else if (newType === 'like') {
-      form.value.options = ['Like', 'Dislike']
-    } else if (newType === 'star') {
-      form.value.options = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
-    } else if (newType === 'multiple') {
-      // Only reset to default if switching from a type that had different options
-      if (oldType === 'emoji' || oldType === 'like' || oldType === 'star') {
-        form.value.options = ['Option A', 'Option B']
-      }
-    }
-  }
-})
-
-function addOption() {
-  form.value.options.push('New option')
-}
-function removeOption(index) {
-  form.value.options.splice(index, 1)
-}
-function toggleEmoji(emoji) {
-  if (form.value.type === 'emoji') {
-    const index = form.value.options.indexOf(emoji)
-    if (index === -1) {
-      // Add emoji if not selected
-      form.value.options.push(emoji)
-    } else {
-      // Remove emoji if already selected
-      form.value.options.splice(index, 1)
-    }
-  }
-}
-
-function removeEmoji(index) {
-  if (form.value.type === 'emoji') {
-    form.value.options.splice(index, 1)
-  }
-}
-function addImageOption() {
-  form.value.options.push('')
-}
-function handleQuestionImageUpload(event) {
-  showImageModal.value = false
-  const file = event.target.files[0]
-  if (!file) return
-  
-  // Check file size (1 MB = 1048576 bytes)
-  if (file.size > 1048576) {
-    alert('File size exceeds 1 MB limit. Please choose a smaller image.')
-    event.target.value = ''
-    return
-  }
-  
-  // Check if file is an image
-  if (!file.type.startsWith('image/')) {
-    alert('Please select an image file.')
-    event.target.value = ''
-    return
-  }
-  
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    form.value.questionImage = e.target.result // Store as base64 data URL
-  }
-  reader.onerror = () => {
-    alert('Error reading image file. Please try again.')
-    event.target.value = ''
-  }
-  reader.readAsDataURL(file)
-}
-function handleImageUpload(event, index) {
-  const file = event.target.files[0]
-  if (!file) return
-  
-  // Check file size (1 MB = 1048576 bytes)
-  if (file.size > 1048576) {
-    alert('File size exceeds 1 MB limit. Please choose a smaller image.')
-    event.target.value = ''
-    return
-  }
-  
-  // Check if file is an image
-  if (!file.type.startsWith('image/')) {
-    alert('Please select an image file.')
-    event.target.value = ''
-    return
-  }
-  
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    form.value.options[index] = e.target.result // Store as base64 data URL
-  }
-  reader.onerror = () => {
-    alert('Error reading image file. Please try again.')
-    event.target.value = ''
-  }
-  reader.readAsDataURL(file)
-}
-
 function openCreate() {
   editingPoll.value = null
   showCreate.value = true
   showEdit.value = false
-  form.value = { question: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
+  form.value = { 
+    question: '', 
+    questionImage: '',
+    type: 'multiple', 
+    options: ['Option A', 'Option B'], 
+    stars: 5, 
+    answer: '',
+    selectedSetId: ''
+  }
 }
 
 function edit(poll) {
@@ -619,6 +279,25 @@ function edit(poll) {
       // For text, use the stored value (it's stored as lowercase, which is fine to display)
       // Users can see what the expected answer is
       answerValue = String(poll.answer).trim()
+    } else if (poll.type === 'image') {
+      // For image polls, the answer is stored as a filtered index
+      // We need to map it back to the original options array
+      const filteredIndex = typeof poll.answer === 'number' ? poll.answer : parseInt(poll.answer)
+      if (!isNaN(filteredIndex) && poll.options) {
+        // Find the original index in the options array
+        let originalIndex = 0
+        let count = 0
+        for (let i = 0; i < poll.options.length; i++) {
+          if (poll.options[i] && poll.options[i].startsWith('data:image')) {
+            if (count === filteredIndex) {
+              originalIndex = i
+              break
+            }
+            count++
+          }
+        }
+        answerValue = String(originalIndex)
+      }
     }
   }
   
@@ -632,7 +311,8 @@ function edit(poll) {
       ? poll.options || [] 
       : (poll.options && poll.options.length > 0 ? [...poll.options] : ['Option A', 'Option B']),
     stars: poll.type === 'star' ? (poll.options?.length || 5) : 5,
-    answer: answerValue
+    answer: answerValue,
+    selectedSetId: poll.setId || ''
   }
   
   // Handle like, emoji, and image types
@@ -640,7 +320,8 @@ function edit(poll) {
     formData.options = ['Like', 'Dislike']
   }
   if (poll.type === 'emoji') {
-    formData.options = poll.options || ['😀', '😍', '🤔', '😮', '😂', '😊', '👍', '❤️', '🔥', '✨', '👏', '🎉']
+    // Use existing options or empty array (will be populated by PollForm)
+    formData.options = poll.options || []
   }
   if (poll.type === 'image') {
     formData.options = poll.options || ['']
@@ -654,7 +335,15 @@ function closeCreate() {
   showCreate.value = false
   showEdit.value = false
   editingPoll.value = null
-  form.value = { question: '', questionImage: '', type: 'multiple', options: ['Option A', 'Option B'], stars: 5, answer: '' }
+  form.value = { 
+    question: '', 
+    questionImage: '', 
+    type: 'multiple', 
+    options: ['Option A', 'Option B'], 
+    stars: 5, 
+    answer: '',
+    selectedSetId: ''
+  }
 }
 
 const canCreate = computed(() => !!form.value.question.trim())
@@ -663,93 +352,28 @@ async function savePoll() {
   if (!canCreate.value || savingPoll.value) return
   savingPoll.value = true
   try {
-    let finalOptions = form.value.options
-    if (form.value.type === 'like') finalOptions = ['Like', 'Dislike']
-    if (form.value.type === 'emoji') {
-      // Use the selected options from the dropdown, or default if empty
-      finalOptions = form.value.options && form.value.options.length > 0 
-        ? form.value.options 
-        : ['😀', '😍', '🤔', '😮', '😂', '😊', '👍', '❤️', '🔥', '✨', '👏', '🎉']
-    }
-    if (form.value.type === 'image') {
-      // Filter out empty image slots and keep only valid base64 images
-      finalOptions = form.value.options.filter(opt => opt && opt.startsWith('data:image'))
-    }
-    if (form.value.type === 'star') finalOptions = Array.from({ length: form.value.stars }, (_, i) => `${i + 1} ⭐`)
-    if (form.value.type === 'text') finalOptions = [] // Text polls don't need predefined options
-    
-    // Normalize answer based on type
-    let normalizedAnswer = null
-    const answer = form.value.answer
-    
-    // Check if answer has a meaningful value
-    if (answer !== '' && answer !== null && answer !== undefined) {
-      if (form.value.type === 'image') {
-        // For image polls, the answer index is from the original form.options array
-        // We need to map it to the filtered options array (which only contains valid images)
-        const originalIndex = typeof answer === 'number' ? answer : parseInt(answer)
-        if (!isNaN(originalIndex) && originalIndex >= 0 && originalIndex < form.value.options.length) {
-          // Count how many valid images are before this index
-          let filteredIndex = 0
-          for (let i = 0; i < originalIndex; i++) {
-            if (form.value.options[i] && form.value.options[i].startsWith('data:image')) {
-              filteredIndex++
-            }
-          }
-          // Check if the selected index itself is a valid image
-          if (form.value.options[originalIndex] && form.value.options[originalIndex].startsWith('data:image')) {
-            normalizedAnswer = filteredIndex
-          }
-        }
-      } else if (form.value.type === 'multiple' || form.value.type === 'emoji') {
-        // For index-based answers, ensure we have a valid number
-        const num = typeof answer === 'number' ? answer : parseInt(answer)
-        if (!isNaN(num) && num >= 0) {
-          normalizedAnswer = num
-        }
-      } else if (form.value.type === 'star') {
-        // For star polls, convert star number (1-5) to index (0-4)
-        // The select uses star numbers (1, 2, 3, 4, 5) but votes use indices (0, 1, 2, 3, 4)
-        const starNum = typeof answer === 'number' ? answer : parseInt(answer)
-        if (!isNaN(starNum) && starNum >= 1) {
-          normalizedAnswer = starNum - 1 // Convert to 0-based index
-        }
-      } else if (form.value.type === 'like') {
-        // For like/dislike, store as string
-        const trimmed = String(answer).trim()
-        if (trimmed) {
-          normalizedAnswer = trimmed
-        }
-      } else if (form.value.type === 'text') {
-        // For text, store as lowercase trimmed string
-        const trimmed = String(answer).trim()
-        if (trimmed) {
-          normalizedAnswer = trimmed.toLowerCase()
-        }
-      }
+    const pollData = pollFormRef.value?.normalizeFormData() || {
+      question: form.value.question.trim(),
+      questionImage: form.value.questionImage || null,
+      type: form.value.type,
+      options: form.value.options,
+      setId: form.value.selectedSetId || null,
+      answer: form.value.answer
     }
     
     if (editingPoll.value) {
       // Update existing poll
       await updatePoll(editingPoll.value.id, {
-        question: form.value.question.trim(),
-        questionImage: form.value.questionImage || null,
-        type: form.value.type,
-        options: finalOptions,
-        setId: editingPoll.value.setId, // Preserve existing setId
-        answer: normalizedAnswer
+        ...pollData,
+        setId: editingPoll.value.setId // Preserve existing setId
       })
       closeCreate()
       await load()
     } else {
       // Create new poll
       const poll = await createPoll({ 
-        question: form.value.question.trim(),
-        questionImage: form.value.questionImage || null,
-        type: form.value.type, 
-        options: finalOptions, 
-        setId: activeSet.value || null,
-        answer: normalizedAnswer
+        ...pollData,
+        setId: activeSet.value || pollData.setId || null
       })
       closeCreate()
       await load()
