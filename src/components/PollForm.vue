@@ -199,7 +199,7 @@
               @click="toggleEmoji(emoji)"
               :class="[
                 'text-2xl p-2 rounded-md border-2 min-h-0 min-w-0 px-2 py-2',
-                localForm.options.includes(emoji)
+                isEmojiSelected(emoji)
                   ? '!bg-transparent border-primary'
                   : '!bg-transparent border-transparent'
               ]"
@@ -347,9 +347,14 @@ const selectedCategory = ref(null)
 const filteredEmojis = computed(() => {
   let emojis = []
   
-  // If category is selected, use category emojis
+  // If category is selected, use category emojis but limit to 30 for performance
   if (selectedCategory.value) {
     emojis = getEmojisByCategory(selectedCategory.value)
+    // Limit category results to 30 initially to prevent performance issues
+    // Users can search within the category if they need more
+    if (!emojiSearch.value.trim()) {
+      return emojis.slice(0, 30)
+    }
   } else if (!emojiSearch.value.trim()) {
     // Show only first 10 emojis by default to improve performance
     return availableEmojis.slice(0, 10)
@@ -364,14 +369,24 @@ const filteredEmojis = computed(() => {
     emojis = emojis.filter(emoji => emoji.includes(search) || emoji.toLowerCase().includes(search))
   }
   
-  // Limit results to 200 for performance
-  return emojis.slice(0, 200)
+  // Limit results to 50 for performance (reduced to prevent freezing)
+  return emojis.slice(0, 50)
 })
 
 // Select category and clear search
 function selectCategory(categoryKey) {
   selectedCategory.value = selectedCategory.value === categoryKey ? null : categoryKey
   emojiSearch.value = ''
+}
+
+// Use Set for O(1) lookup instead of includes() which is O(n)
+const selectedEmojisSet = computed(() => {
+  return new Set(localForm.value.options)
+})
+
+// Optimized emoji check function
+function isEmojiSelected(emoji) {
+  return selectedEmojisSet.value.has(emoji)
 }
 
 // Watch for prop changes and sync local form
