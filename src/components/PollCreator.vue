@@ -10,12 +10,12 @@
       ref="pollFormRef"
     />
     <button class="mt-4 w-full text-base sm:text-lg py-3" @click="create" :disabled="creatingPoll || !form.question.trim()">
-      <span v-if="creatingPoll" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
-      <span>{{ creatingPoll ? 'Creating...' : 'Create Poll' }}</span>
-    </button>
-    <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 mt-2">
-      <router-link class="btn text-sm sm:text-base justify-center" to="/polls">Manage Polls</router-link>
-      <router-link class="btn text-sm sm:text-base justify-center" to="/sets">Poll Sets</router-link>
+        <span v-if="creatingPoll" class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></span>
+        <span>{{ creatingPoll ? 'Creating...' : 'Create Poll' }}</span>
+      </button>
+      <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 mt-2">
+        <router-link class="btn text-sm sm:text-base justify-center" to="/polls">Manage Polls</router-link>
+        <router-link class="btn text-sm sm:text-base justify-center" to="/sets">Poll Sets</router-link>
     </div>
   </div>
 

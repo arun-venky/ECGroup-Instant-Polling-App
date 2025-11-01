@@ -163,7 +163,7 @@
       <!-- Emoji Selection -->
       <div v-if="localForm.type === 'emoji'" class="mt-2 relative">
         <div class="flex items-center gap-2 mb-1">
-          <label class="block flex-shrink-0">Select Emojis</label>
+          <label class="flex-shrink-0 whitespace-nowrap">Select Emojis</label>
           <input
             v-model="emojiSearch"
             type="text"
@@ -195,10 +195,10 @@
               type="button"
               @click="toggleEmoji(emoji)"
               :class="[
-                'text-2xl p-2 rounded-md border-2 min-h-0 min-w-0 px-2 py-2',
+                'text-2xl p-2 rounded-md border-2 min-h-0 min-w-0 transition-colors',
                 isEmojiSelected(emoji)
                   ? '!bg-transparent border-primary'
-                  : '!bg-transparent border-transparent'
+                  : '!bg-transparent border-transparent hover:border-gray-200'
               ]"
               :title="emoji"
             >
@@ -206,7 +206,7 @@
             </button>
           </div>
         </div>
-        <div class="text-xs text-neutral mt-1">Click emojis to select/deselect</div>
+        <!-- <div class="text-xs text-neutral mt-1">Click emojis to select/deselect</div> -->
         <div v-if="localForm.options.length > 0" class="mt-2">
           <label class="block mb-1 text-sm">Selected Emojis ({{ localForm.options.length }}):</label>
           <div class="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-md">
