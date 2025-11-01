@@ -107,7 +107,7 @@
         <div class="flex flex-col gap-2">
           <div v-for="(opt, i) in options" :key="i" class="flex gap-2 items-center">
             <input v-model="options[i]" placeholder="Option" class="flex-1" />
-            <button class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0" @click="removeOption(i)" title="Remove option">
+            <button class="p-2 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent rounded transition-colors flex-shrink-0 min-h-0 min-w-0" @click="removeOption(i)" title="Remove option">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
@@ -125,7 +125,7 @@
                 <img :src="opt" alt="Option" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
                 <div class="flex-1">
                   <div class="text-sm text-neutral mb-1">Image {{ i + 1 }}</div>
-                  <button class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="removeOption(i)" title="Remove image">
+                  <button class="p-2 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent rounded transition-colors min-h-0 min-w-0" @click="removeOption(i)" title="Remove image">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -158,8 +158,8 @@
               :class="[
                 'text-2xl p-2 rounded-md transition-all border-2 min-h-0 min-w-0 px-2 py-2',
                 options.includes(emoji)
-                  ? '!bg-primary/20 border-primary scale-110'
-                  : '!bg-gray-50 border-transparent hover:!bg-gray-100 hover:border-gray-300'
+                  ? '!bg-transparent border-primary scale-110'
+                  : '!bg-transparent border-transparent hover:!bg-transparent hover:border-gray-300'
               ]"
               :title="emoji"
             >
@@ -174,7 +174,7 @@
             <span 
               v-for="(opt, i) in options" 
               :key="i" 
-              class="text-2xl relative inline-flex items-center justify-center cursor-pointer hover:bg-red-100 rounded p-1 transition-colors group"
+              class="text-2xl relative inline-flex items-center justify-center cursor-pointer !bg-transparent hover:!bg-transparent rounded p-1 transition-colors group"
               @click="removeEmoji(i)"
               title="Click to remove"
             >
