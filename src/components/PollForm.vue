@@ -164,24 +164,21 @@
       <div v-if="localForm.type === 'emoji'" class="mt-2 relative">
         <div class="flex items-center justify-between mb-1">
           <label class="block">Select Emojis</label>
-          <!-- Floating Category Panel -->
-          <div class="flex gap-1 flex-wrap justify-end">
-            <button
-              v-for="(category, key) in emojiCategories"
-              :key="key"
-              type="button"
-              @click="selectCategory(key)"
-              :class="[
-                'text-xl p-1.5 rounded-md border-2 min-h-0 min-w-0 transition-colors',
-                selectedCategory === key
-                  ? '!bg-transparent border-primary'
-                  : '!bg-transparent border-transparent hover:border-gray-300'
-              ]"
-              :title="category.name"
+          <!-- Category Dropdown -->
+          <select 
+            :value="selectedCategory || ''" 
+            @change="handleCategoryChange"
+            class="border border-gray-300 rounded-md px-2 py-1 text-sm"
+          >
+            <option value="">All Categories</option>
+            <option 
+              v-for="(category, key) in emojiCategories" 
+              :key="key" 
+              :value="key"
             >
-              {{ category.emoji }}
-            </button>
-          </div>
+              {{ category.emoji }} {{ category.name }}
+            </option>
+          </select>
         </div>
         <input
           v-model="emojiSearch"
@@ -304,7 +301,7 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
-import { availableEmojis, emojiCategories, getEmojisByCategory } from '../utils/emojis.js'
+import { availableEmojis, emojiCategories, getEmojisByCategory, getCategoryKeys } from '../utils/emojis.js'
 
 const props = defineProps({
   modelValue: {
@@ -347,35 +344,43 @@ const selectedCategory = ref(null)
 const filteredEmojis = computed(() => {
   let emojis = []
   
-  // If category is selected, use category emojis but limit to 30 for performance
+  // If category is selected, use ALL category emojis
   if (selectedCategory.value) {
     emojis = getEmojisByCategory(selectedCategory.value)
-    // Limit category results to 30 initially to prevent performance issues
-    // Users can search within the category if they need more
-    if (!emojiSearch.value.trim()) {
-      return emojis.slice(0, 30)
+    // Apply search filter if there's a search term within the category
+    if (emojiSearch.value.trim()) {
+      const search = emojiSearch.value.toLowerCase()
+      emojis = emojis.filter(emoji => emoji.includes(search) || emoji.toLowerCase().includes(search))
     }
+    // Return all category emojis (or filtered if search is active)
+    return emojis
   } else if (!emojiSearch.value.trim()) {
-    // Show only first 10 emojis by default to improve performance
-    return availableEmojis.slice(0, 10)
+    // Default view: show one emoji from each category (max 10)
+    // Use the category's representative emoji (shown in the category button)
+    const defaultEmojis = []
+    const categoryKeys = getCategoryKeys()
+    for (let i = 0; i < Math.min(categoryKeys.length, 10); i++) {
+      const categoryKey = categoryKeys[i]
+      const category = emojiCategories[categoryKey]
+      if (category && category.emoji) {
+        defaultEmojis.push(category.emoji)
+      }
+    }
+    return defaultEmojis
   } else {
     // Use all available emojis for search
     emojis = availableEmojis
-  }
-  
-  // Apply search filter if there's a search term
-  if (emojiSearch.value.trim()) {
     const search = emojiSearch.value.toLowerCase()
     emojis = emojis.filter(emoji => emoji.includes(search) || emoji.toLowerCase().includes(search))
+    // Limit search results to 50 for performance
+    return emojis.slice(0, 50)
   }
-  
-  // Limit results to 50 for performance (reduced to prevent freezing)
-  return emojis.slice(0, 50)
 })
 
-// Select category and clear search
-function selectCategory(categoryKey) {
-  selectedCategory.value = selectedCategory.value === categoryKey ? null : categoryKey
+// Handle category dropdown change
+function handleCategoryChange(event) {
+  const value = event.target.value
+  selectedCategory.value = value === '' ? null : value
   emojiSearch.value = ''
 }
 
