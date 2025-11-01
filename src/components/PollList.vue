@@ -66,32 +66,32 @@
         <div class="sm:col-span-2 border-b border-gray-300 p-3 flex-shrink-0 bg-white">
               <div>
                 <label class="block mb-1">Question</label>
-                <textarea v-model="form.question" placeholder="What's your question?" class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
-              </div>
-              <div class="mt-4">
-            <div class="flex items-center gap-2">
-              <div v-if="form.questionImage" class="relative inline-block">
-                <img :src="form.questionImage" alt="Question image" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
-                <button 
-                  class="absolute -top-2 -right-2 p-1 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent min-h-0 min-w-0 rounded-full transition-colors" 
-                  @click="form.questionImage = ''" 
-                  title="Remove image"
+            <div class="relative">
+              <textarea v-model="form.question" placeholder="What's your question?" class="w-full p-3 pr-12 border border-gray-300 rounded-md resize-y min-h-[80px]"></textarea>
+              <div class="absolute bottom-2 right-2 flex items-center gap-2">
+                <div v-if="form.questionImage" class="relative">
+                  <img :src="form.questionImage" alt="Question image" class="w-12 h-12 object-cover rounded-md border border-gray-200" />
+                  <button 
+                    class="absolute -top-1 -right-1 p-0.5 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent min-h-0 min-w-0 rounded-full transition-colors" 
+                    @click="form.questionImage = ''" 
+                    title="Remove image"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  @click="showImageModal = true"
+                  class="p-1.5 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0 border border-gray-300 rounded-md hover:border-primary transition-colors bg-white shadow-sm"
+                  title="Add question image"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </button>
               </div>
-              <button
-                type="button"
-                @click="showImageModal = true"
-                class="p-2 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0 border border-gray-300 rounded-md hover:border-primary transition-colors"
-                title="Add question image"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </button>
             </div>
           </div>
           
@@ -227,43 +227,43 @@
           </div>
         </div>
         <div class="border-b border-gray-300 p-3 sm:p-4 flex-shrink-0 bg-white">
-          <label class="block mb-1">
-            Correct Answer 
-            <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
-          </label>
-          <div v-if="form.type === 'multiple' || form.type === 'emoji'">
-            <select v-model="form.answer" class="w-full">
-              <option value="">No answer specified</option>
-              <option v-for="(opt, i) in form.options" :key="i" :value="i">{{ opt }}</option>
-            </select>
+            <label class="block mb-1">
+              Correct Answer 
+              <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
+            </label>
+            <div v-if="form.type === 'multiple' || form.type === 'emoji'">
+              <select v-model="form.answer" class="w-full">
+                <option value="">No answer specified</option>
+                <option v-for="(opt, i) in form.options" :key="i" :value="i">{{ opt }}</option>
+              </select>
+            </div>
+            <div v-else-if="form.type === 'star'">
+              <select v-model="form.answer" class="w-full">
+                <option value="">No answer specified</option>
+                <option v-for="n in form.stars" :key="n" :value="n">{{ '⭐'.repeat(n) }}</option>
+              </select>
+            </div>
+            <div v-else-if="form.type === 'like'">
+              <select v-model="form.answer" class="w-full">
+                <option value="">No answer specified</option>
+                <option value="Like">👍 Like</option>
+                <option value="Dislike">👎 Dislike</option>
+              </select>
+            </div>
+            <div v-else-if="form.type === 'image'">
+              <select v-model="form.answer" class="w-full">
+                <option value="">No answer specified</option>
+                <template v-for="(opt, i) in form.options" :key="i">
+                  <option v-if="opt && opt.startsWith('data:image')" :value="i">
+                    Image {{ i + 1 }}
+                  </option>
+                </template>
+              </select>
+            </div>
+            <div v-else-if="form.type === 'text'">
+              <input v-model="form.answer" placeholder="Expected answer text (case-insensitive)" class="w-full" />
+            </div>
           </div>
-          <div v-else-if="form.type === 'star'">
-            <select v-model="form.answer" class="w-full">
-              <option value="">No answer specified</option>
-              <option v-for="n in form.stars" :key="n" :value="n">{{ '⭐'.repeat(n) }}</option>
-            </select>
-          </div>
-          <div v-else-if="form.type === 'like'">
-            <select v-model="form.answer" class="w-full">
-              <option value="">No answer specified</option>
-              <option value="Like">👍 Like</option>
-              <option value="Dislike">👎 Dislike</option>
-            </select>
-          </div>
-          <div v-else-if="form.type === 'image'">
-            <select v-model="form.answer" class="w-full">
-              <option value="">No answer specified</option>
-              <template v-for="(opt, i) in form.options" :key="i">
-                <option v-if="opt && opt.startsWith('data:image')" :value="i">
-                  Image {{ i + 1 }}
-                </option>
-              </template>
-            </select>
-          </div>
-          <div v-else-if="form.type === 'text'">
-            <input v-model="form.answer" placeholder="Expected answer text (case-insensitive)" class="w-full" />
-          </div>
-        </div>
         <div class="p-3 sm:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-2 items-center flex-shrink-0 bg-white">
           <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="closeCreate" :disabled="savingPoll">Cancel</button>
           <button class="btn text-sm sm:text-base w-full sm:w-auto justify-center" @click="savePoll" :disabled="!canCreate || savingPoll">
