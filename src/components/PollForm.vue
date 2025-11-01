@@ -175,7 +175,7 @@
           <select 
             :value="selectedCategory || ''" 
             @change="handleCategoryChange"
-            class="border border-gray-300 rounded-md px-2 py-1 text-sm flex-shrink-0"
+            class="border border-gray-300 rounded-md px-2 py-1 text-sm flex-shrink-0 w-auto min-w-[140px]"
           >
             <option value="">All Categories</option>
             <option 
