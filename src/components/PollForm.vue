@@ -161,20 +161,47 @@
       </div>
 
       <!-- Emoji Selection -->
-      <div v-if="localForm.type === 'emoji'" class="mt-2">
-        <label class="block mb-1">Select Emojis</label>
+      <div v-if="localForm.type === 'emoji'" class="mt-2 relative">
+        <div class="flex items-center justify-between mb-1">
+          <label class="block">Select Emojis</label>
+          <!-- Floating Category Panel -->
+          <div class="flex gap-1 flex-wrap justify-end">
+            <button
+              v-for="(category, key) in emojiCategories"
+              :key="key"
+              type="button"
+              @click="selectCategory(key)"
+              :class="[
+                'text-xl p-1.5 rounded-md border-2 min-h-0 min-w-0 transition-colors',
+                selectedCategory === key
+                  ? '!bg-transparent border-primary'
+                  : '!bg-transparent border-transparent hover:border-gray-300'
+              ]"
+              :title="category.name"
+            >
+              {{ category.emoji }}
+            </button>
+          </div>
+        </div>
+        <input
+          v-model="emojiSearch"
+          type="text"
+          placeholder="Search emojis..."
+          class="w-full p-2 border border-gray-300 rounded-md text-sm mb-2"
+          @input="selectedCategory = null"
+        />
         <div class="border border-gray-300 rounded-md p-3 max-h-40 overflow-y-auto bg-white">
           <div class="flex flex-wrap gap-2">
             <button
-              v-for="emoji in availableEmojis"
+              v-for="emoji in filteredEmojis"
               :key="emoji"
               type="button"
               @click="toggleEmoji(emoji)"
               :class="[
-                'text-2xl p-2 rounded-md transition-all border-2 min-h-0 min-w-0 px-2 py-2',
+                'text-2xl p-2 rounded-md border-2 min-h-0 min-w-0 px-2 py-2',
                 localForm.options.includes(emoji)
-                  ? '!bg-transparent border-primary scale-110'
-                  : '!bg-transparent border-transparent hover:!bg-transparent hover:border-gray-300'
+                  ? '!bg-transparent border-primary'
+                  : '!bg-transparent border-transparent'
               ]"
               :title="emoji"
             >
@@ -276,8 +303,8 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { availableEmojis } from '../utils/emojis.js'
+import { ref, watch, computed } from 'vue'
+import { availableEmojis, emojiCategories, getEmojisByCategory } from '../utils/emojis.js'
 
 const props = defineProps({
   modelValue: {
@@ -313,6 +340,39 @@ const showImageModal = ref(false)
 const imageFileInput = ref(null)
 const newSetName = ref('')
 const creatingSet = ref(false)
+const emojiSearch = ref('')
+const selectedCategory = ref(null)
+
+// Filter emojis based on category or search (limit to reduce rendering cost)
+const filteredEmojis = computed(() => {
+  let emojis = []
+  
+  // If category is selected, use category emojis
+  if (selectedCategory.value) {
+    emojis = getEmojisByCategory(selectedCategory.value)
+  } else if (!emojiSearch.value.trim()) {
+    // Show only first 10 emojis by default to improve performance
+    return availableEmojis.slice(0, 10)
+  } else {
+    // Use all available emojis for search
+    emojis = availableEmojis
+  }
+  
+  // Apply search filter if there's a search term
+  if (emojiSearch.value.trim()) {
+    const search = emojiSearch.value.toLowerCase()
+    emojis = emojis.filter(emoji => emoji.includes(search) || emoji.toLowerCase().includes(search))
+  }
+  
+  // Limit results to 200 for performance
+  return emojis.slice(0, 200)
+})
+
+// Select category and clear search
+function selectCategory(categoryKey) {
+  selectedCategory.value = selectedCategory.value === categoryKey ? null : categoryKey
+  emojiSearch.value = ''
+}
 
 // Watch for prop changes and sync local form
 watch(() => props.modelValue, (newVal) => {
@@ -332,6 +392,8 @@ watch(() => localForm.value.type, (newType, oldType) => {
       localForm.value.options = ['Like', 'Dislike']
     } else if (newType === 'emoji') {
       localForm.value.options = []
+      emojiSearch.value = '' // Reset search when switching to emoji type
+      selectedCategory.value = null // Reset category when switching to emoji type
     } else if (newType === 'image') {
       localForm.value.options = ['']
     } else if (newType === 'text') {
