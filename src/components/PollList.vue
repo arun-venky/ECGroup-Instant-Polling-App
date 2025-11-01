@@ -152,17 +152,26 @@
           </div>
           <div v-if="form.type === 'emoji'" class="mt-3">
             <label class="block mb-1">Select Emojis</label>
-            <select 
-              v-model="form.options" 
-              multiple 
-              class="w-full border border-gray-300 rounded-md p-2 min-h-[150px]"
-              size="6"
-            >
-              <option v-for="emoji in availableEmojis" :key="emoji" :value="emoji">
-                {{ emoji }}
-              </option>
-            </select>
-            <div class="text-xs text-neutral mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple emojis</div>
+            <div class="border border-gray-300 rounded-md p-3 max-h-64 overflow-y-auto bg-white">
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="emoji in availableEmojis"
+                  :key="emoji"
+                  type="button"
+                  @click="toggleEmoji(emoji)"
+                  :class="[
+                    'text-2xl p-2 rounded-md transition-all border-2 min-h-0 min-w-0 px-2 py-2',
+                    form.options.includes(emoji)
+                      ? '!bg-primary/20 border-primary scale-110'
+                      : '!bg-gray-50 border-transparent hover:!bg-gray-100 hover:border-gray-300'
+                  ]"
+                  :title="emoji"
+                >
+                  {{ emoji }}
+                </button>
+              </div>
+            </div>
+            <div class="text-xs text-neutral mt-1">Click emojis to select/deselect</div>
             <div v-if="form.options.length > 0" class="mt-2">
               <label class="block mb-1 text-sm">Selected Emojis ({{ form.options.length }}):</label>
               <div class="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-md">
@@ -452,6 +461,19 @@ function addOption() {
 function removeOption(index) {
   form.value.options.splice(index, 1)
 }
+function toggleEmoji(emoji) {
+  if (form.value.type === 'emoji') {
+    const index = form.value.options.indexOf(emoji)
+    if (index === -1) {
+      // Add emoji if not selected
+      form.value.options.push(emoji)
+    } else {
+      // Remove emoji if already selected
+      form.value.options.splice(index, 1)
+    }
+  }
+}
+
 function removeEmoji(index) {
   if (form.value.type === 'emoji') {
     form.value.options.splice(index, 1)

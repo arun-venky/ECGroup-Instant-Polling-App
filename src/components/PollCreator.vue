@@ -114,17 +114,26 @@
       </div>
       <div v-if="type === 'emoji'" class="mt-2">
         <label class="block mb-1">Select Emojis</label>
-        <select 
-          v-model="options" 
-          multiple 
-          class="w-full border border-gray-300 rounded-md p-2 min-h-[150px]"
-          size="6"
-        >
-          <option v-for="emoji in availableEmojis" :key="emoji" :value="emoji">
-            {{ emoji }}
-          </option>
-        </select>
-        <div class="text-xs text-neutral mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple emojis</div>
+        <div class="border border-gray-300 rounded-md p-3 max-h-64 overflow-y-auto bg-white">
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="emoji in availableEmojis"
+              :key="emoji"
+              type="button"
+              @click="toggleEmoji(emoji)"
+              :class="[
+                'text-2xl p-2 rounded-md transition-all border-2 min-h-0 min-w-0 px-2 py-2',
+                options.includes(emoji)
+                  ? '!bg-primary/20 border-primary scale-110'
+                  : '!bg-gray-50 border-transparent hover:!bg-gray-100 hover:border-gray-300'
+              ]"
+              :title="emoji"
+            >
+              {{ emoji }}
+            </button>
+          </div>
+        </div>
+        <div class="text-xs text-neutral mt-1">Click emojis to select/deselect</div>
         <div v-if="options.length > 0" class="mt-2">
           <label class="block mb-1 text-sm">Selected Emojis ({{ options.length }}):</label>
           <div class="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-md">
@@ -367,6 +376,19 @@ function handleImageUpload(event, index) {
   }
   reader.readAsDataURL(file)
 }
+function toggleEmoji(emoji) {
+  if (type.value === 'emoji') {
+    const index = options.value.indexOf(emoji)
+    if (index === -1) {
+      // Add emoji if not selected
+      options.value.push(emoji)
+    } else {
+      // Remove emoji if already selected
+      options.value.splice(index, 1)
+    }
+  }
+}
+
 function removeEmoji(index) {
   if (type.value === 'emoji') {
     options.value.splice(index, 1)
