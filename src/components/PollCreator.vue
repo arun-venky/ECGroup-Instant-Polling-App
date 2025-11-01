@@ -10,22 +10,58 @@
 
         <div class="mb-3 mt-4">
           <label class="block mb-1">Question Image (optional)</label>
-          <div v-if="questionImage" class="mb-2">
-            <img :src="questionImage" alt="Question image" class="max-w-full h-48 object-contain rounded-md border border-gray-200" />
-            <button class="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors" @click="questionImage = ''" title="Remove image">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          <div class="flex items-center gap-2">
+            <div v-if="questionImage" class="relative inline-block">
+              <img :src="questionImage" alt="Question image" class="w-20 h-20 object-cover rounded-md border border-gray-200" />
+              <button 
+                class="absolute -top-2 -right-2 p-1 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent min-h-0 min-w-0 rounded-full transition-colors" 
+                @click="questionImage = ''" 
+                title="Remove image"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <button
+              type="button"
+              @click="showImageModal = true"
+              class="p-2 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0 border border-gray-300 rounded-md hover:border-primary transition-colors"
+              title="Add question image"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
           </div>
-          <input 
-            v-else
-            type="file" 
-            accept="image/*" 
-            class="text-sm"
-            @change="handleQuestionImageUpload"
-          />
-          <div class="text-xs text-neutral mt-1">Max file size: 1 MB</div>
+        </div>
+        
+        <!-- Image Upload Modal -->
+        <div v-if="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showImageModal = false">
+          <div class="bg-white rounded-xl shadow-xl w-full max-w-md border border-gray-200">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 class="text-lg font-bold">Upload Question Image</h3>
+              <button 
+                class="p-2 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0" 
+                @click="showImageModal = false"
+                title="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="p-4">
+              <input 
+                type="file" 
+                accept="image/*" 
+                class="w-full text-sm mb-2"
+                @change="handleQuestionImageUpload"
+                ref="imageFileInput"
+              />
+              <div class="text-xs text-neutral">Max file size: 1 MB</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -216,6 +252,7 @@ const router = useRouter()
 const route = useRoute()
 const question = ref('')
 const questionImage = ref('')
+const showImageModal = ref(false)
 const type = ref('multiple')
 const options = ref(['Option A', 'Option B'])
 const stars = ref(5)
@@ -320,6 +357,7 @@ function removeOption(index) {
   options.value.splice(index, 1)
 }
 function handleQuestionImageUpload(event) {
+  showImageModal.value = false
   const file = event.target.files[0]
   if (!file) return
   
