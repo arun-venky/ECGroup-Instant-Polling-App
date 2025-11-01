@@ -14,13 +14,78 @@
         <div v-for="s in sets" :key="s.id" class="card p-4 sm:p-6">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex-1 min-w-0">
-              <div class="font-bold text-base sm:text-lg break-words">{{ s.name }}</div>
+              <div v-if="editingId !== s.id" class="flex items-center gap-2">
+                <div class="font-bold text-base sm:text-lg break-words">{{ s.name }}</div>
+                <button 
+                  class="p-1 text-neutral hover:text-primary transition-colors flex-shrink-0" 
+                  @click="() => startEdit(s.id, s.name)"
+                  title="Edit name"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+              </div>
+              <div v-else class="flex items-center gap-2">
+                <input 
+                  v-model="editingName" 
+                  @keyup.enter="saveEdit(s.id)"
+                  @keyup.esc="cancelEdit"
+                  class="flex-1 font-bold text-base sm:text-lg border border-gray-300 rounded px-2 py-1"
+                  placeholder="Set name"
+                />
+                <button 
+                  class="p-1 text-green-600 hover:text-green-700 transition-colors flex-shrink-0" 
+                  @click="saveEdit(s.id)"
+                  title="Save"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+                <button 
+                  class="p-1 text-red-600 hover:text-red-700 transition-colors flex-shrink-0" 
+                  @click="cancelEdit"
+                  title="Cancel"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
               <div class="text-xs text-neutral mt-1">{{ formatDate(s.createdAt) }}</div>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/start`">Start</router-link>
-              <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/polls`">View</router-link>
-              <button class="btn bg-red-500 hover:bg-red-600 text-white text-sm flex-1 sm:flex-none min-w-[80px] justify-center" @click="() => deleteSet(s.id, s.name)">Delete</button>
+              <router-link 
+                class="p-2 text-primary hover:bg-primary/10 rounded transition-colors flex-shrink-0" 
+                :to="`/sets/${s.id}/start`"
+                title="Start"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </router-link>
+              <router-link 
+                class="p-2 text-primary hover:bg-primary/10 rounded transition-colors flex-shrink-0" 
+                :to="`/sets/${s.id}/polls`"
+                title="View"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </router-link>
+              <button 
+                class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent" 
+                @click="() => deleteSet(s.id, s.name)" 
+                :disabled="editingId === s.id"
+                title="Delete"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -30,12 +95,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { listPollSets, deletePollSet, deletePollSetAndPolls } from '../utils/storage.js'
+import { ref, onMounted, nextTick } from 'vue'
+import { listPollSets, deletePollSet, deletePollSetAndPolls, updatePollSet } from '../utils/storage.js'
 import { useDialog } from '../composables/useDialog.js'
 
 const sets = ref([])
 const loading = ref(true)
+const editingId = ref(null)
+const editingName = ref('')
 const { confirm, alert, danger, success } = useDialog()
 
 async function load() {
@@ -55,7 +122,46 @@ function formatDate(ts) {
   try { return new Date(ts).toLocaleString() } catch { return '' }
 }
 
+function startEdit(setId, currentName) {
+  editingId.value = setId
+  editingName.value = currentName
+  nextTick(() => {
+    // Find the input element in the DOM
+    const input = document.querySelector(`input[placeholder="Set name"]`)
+    if (input) {
+      input.focus()
+      input.select()
+    }
+  })
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editingName.value = ''
+}
+
+async function saveEdit(setId) {
+  const newName = editingName.value.trim()
+  if (!newName) {
+    await alert('Set name cannot be empty.', 'Invalid Name')
+    return
+  }
+  
+  try {
+    await updatePollSet(setId, newName)
+    await load() // Reload sets list
+    cancelEdit()
+  } catch (error) {
+    console.error('Error updating poll set:', error)
+    await alert('Failed to update poll set name. Please try again.', 'Error')
+  }
+}
+
 async function deleteSet(setId, setName) {
+  if (editingId.value === setId) {
+    return // Prevent deletion while editing
+  }
+  
   try {
     const confirmed = await confirm(`Delete poll set "${setName}"?`, 'Delete Poll Set')
     if (!confirmed) {

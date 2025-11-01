@@ -602,6 +602,29 @@ export async function listPollSets() {
   }
 }
 
+export async function updatePollSet(setId, name) {
+  try {
+    const setRef = doc(db, COLLECTIONS.POLL_SETS, setId)
+    const setSnap = await getDoc(setRef)
+    if (!setSnap.exists()) {
+      throw new Error('Poll set does not exist')
+    }
+    
+    // Get existing data to preserve createdAt
+    const existingData = setSnap.data()
+    
+    // Update set name (preserve createdAt, id)
+    await updateDoc(setRef, {
+      name: name.trim()
+    })
+    
+    return { ...existingData, name: name.trim(), id: setId }
+  } catch (error) {
+    console.error('Error updating poll set:', error)
+    throw error
+  }
+}
+
 export async function deletePollSet(setId) {
   try {
     const setRef = doc(db, COLLECTIONS.POLL_SETS, setId)
