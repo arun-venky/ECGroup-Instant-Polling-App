@@ -389,23 +389,22 @@ function isEmojiSelected(emoji) {
   return selectedEmojisSet.value.has(emoji)
 }
 
+// Flag to prevent circular updates
+const isInternalUpdate = ref(false)
+
 // Watch for prop changes and sync local form
 watch(() => props.modelValue, (newVal) => {
-  localForm.value = { ...newVal }
+  if (!isInternalUpdate.value) {
+    localForm.value = { ...newVal }
+  }
+  isInternalUpdate.value = false
 }, { deep: true })
 
-// Emit updates when local form changes (shallow watch for performance)
-watch(() => ({
-  question: localForm.value.question,
-  questionImage: localForm.value.questionImage,
-  type: localForm.value.type,
-  options: [...localForm.value.options], // Create new array reference
-  stars: localForm.value.stars,
-  answer: localForm.value.answer,
-  selectedSetId: localForm.value.selectedSetId
-}), (newVal) => {
+// Emit updates when local form changes
+watch(localForm, (newVal) => {
+  isInternalUpdate.value = true
   emit('update:modelValue', { ...newVal })
-}, { deep: false })
+}, { deep: true })
 
 watch(() => localForm.value.type, (newType, oldType) => {
   if (oldType !== undefined) {
