@@ -1,7 +1,8 @@
 <template>
   <div class="flex flex-col gap-4">
-    <!-- Question Section -->
-    <div class="border border-gray-300 rounded-md p-3">
+    <!-- Sticky Header Section -->
+    <div class="sticky top-0 z-10 bg-white pb-4 space-y-4">
+      <!-- Question Section -->
       <div>
         <label class="block mb-1">Question</label>
         <textarea 
@@ -10,38 +11,9 @@
           class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"
         ></textarea>
       </div>
-      
-      <!-- Image Upload Modal -->
-      <div v-if="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showImageModal = false">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md border border-gray-200">
-          <div class="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 class="text-lg font-bold">Upload Question Image</h3>
-            <button 
-              class="p-2 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0" 
-              @click="showImageModal = false"
-              title="Close"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div class="p-4">
-            <input 
-              type="file" 
-              accept="image/*" 
-              class="w-full text-sm mb-2"
-              @change="handleQuestionImageUpload"
-              ref="imageFileInput"
-            />
-            <div class="text-xs text-neutral">Max file size: 1 MB</div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Poll Type Section -->
-    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+      <!-- Poll Type Section -->
+      <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
       <div class="flex-1 sm:flex-none sm:w-auto min-w-0">
         <label class="block mb-1">Poll Type</label>
         <select v-model="localForm.type" class="w-full sm:w-auto">
@@ -84,6 +56,35 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         </button>
+      </div>
+    </div>
+    </div>
+
+    <!-- Image Upload Modal -->
+    <div v-if="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showImageModal = false">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-md border border-gray-200">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 class="text-lg font-bold">Upload Question Image</h3>
+          <button 
+            class="p-2 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0" 
+            @click="showImageModal = false"
+            title="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <input 
+            type="file" 
+            accept="image/*" 
+            class="w-full text-sm mb-2"
+            @change="handleQuestionImageUpload"
+            ref="imageFileInput"
+          />
+          <div class="text-xs text-neutral">Max file size: 1 MB</div>
+        </div>
       </div>
     </div>
 
@@ -229,8 +230,8 @@
       </div>
     </div>
 
-    <!-- Correct Answer Section -->
-    <div class="mt-4">
+    <!-- Correct Answer Section (Sticky) -->
+    <div class="sticky top-0 z-10 bg-white pb-4 pt-4 border-t border-gray-200">
       <label class="block mb-1">
         Correct Answer 
         <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
