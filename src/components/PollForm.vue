@@ -231,10 +231,9 @@
     </div>
 
     <!-- Correct Answer Section (Sticky Bottom) -->
-    <div class="sticky bottom-0 z-10 bg-white pb-4 pt-4 border-t border-gray-200 shadow-lg">
+    <div class="sticky bottom-0 z-10 bg-white pb-4 pt-4 border-t border-gray-200">
       <label class="block mb-1">
-        Correct Answer 
-        <span class="text-sm text-neutral font-normal">(optional, for validation)</span>
+        Answer
       </label>
       <div v-if="localForm.type === 'multiple' || localForm.type === 'emoji'">
         <select v-model="localForm.answer" class="w-full">
