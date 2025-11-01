@@ -215,13 +215,13 @@
           <div class="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-md">
             <span 
               v-for="(opt, i) in localForm.options" 
-              :key="i" 
+              :key="`${opt}-${i}`"
               class="text-2xl relative inline-flex items-center justify-center cursor-pointer !bg-transparent hover:!bg-transparent rounded p-1 transition-colors group"
-              @click="removeEmoji(i)"
+              @click.stop="removeEmoji(i)"
               title="Click to remove"
             >
               {{ opt }}
-              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</span>
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">×</span>
             </span>
           </div>
         </div>
@@ -394,10 +394,18 @@ watch(() => props.modelValue, (newVal) => {
   localForm.value = { ...newVal }
 }, { deep: true })
 
-// Emit updates when local form changes
-watch(localForm, (newVal) => {
+// Emit updates when local form changes (shallow watch for performance)
+watch(() => ({
+  question: localForm.value.question,
+  questionImage: localForm.value.questionImage,
+  type: localForm.value.type,
+  options: [...localForm.value.options], // Create new array reference
+  stars: localForm.value.stars,
+  answer: localForm.value.answer,
+  selectedSetId: localForm.value.selectedSetId
+}), (newVal) => {
   emit('update:modelValue', { ...newVal })
-}, { deep: true })
+}, { deep: false })
 
 watch(() => localForm.value.type, (newType, oldType) => {
   if (oldType !== undefined) {
@@ -526,8 +534,9 @@ function toggleEmoji(emoji) {
 }
 
 function removeEmoji(index) {
-  if (localForm.value.type === 'emoji') {
-    localForm.value.options.splice(index, 1)
+  if (localForm.value.type === 'emoji' && index >= 0 && index < localForm.value.options.length) {
+    // Create new array to trigger reactivity efficiently
+    localForm.value.options = localForm.value.options.filter((_, i) => i !== index)
   }
 }
 
