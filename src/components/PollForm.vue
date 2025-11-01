@@ -162,13 +162,20 @@
 
       <!-- Emoji Selection -->
       <div v-if="localForm.type === 'emoji'" class="mt-2 relative">
-        <div class="flex items-center justify-between mb-1">
-          <label class="block">Select Emojis</label>
+        <div class="flex items-center gap-2 mb-1">
+          <label class="block flex-shrink-0">Select Emojis</label>
+          <input
+            v-model="emojiSearch"
+            type="text"
+            placeholder="Search emojis..."
+            class="flex-1 p-2 border border-gray-300 rounded-md text-sm"
+            @input="selectedCategory = null"
+          />
           <!-- Category Dropdown -->
           <select 
             :value="selectedCategory || ''" 
             @change="handleCategoryChange"
-            class="border border-gray-300 rounded-md px-2 py-1 text-sm"
+            class="border border-gray-300 rounded-md px-2 py-1 text-sm flex-shrink-0"
           >
             <option value="">All Categories</option>
             <option 
@@ -180,14 +187,7 @@
             </option>
           </select>
         </div>
-        <input
-          v-model="emojiSearch"
-          type="text"
-          placeholder="Search emojis..."
-          class="w-full p-2 border border-gray-300 rounded-md text-sm mb-2"
-          @input="selectedCategory = null"
-        />
-        <div class="border border-gray-300 rounded-md p-3 max-h-40 overflow-y-auto bg-white">
+        <div class="border border-gray-300 rounded-md p-3 max-h-28 overflow-y-auto bg-white">
           <div class="flex flex-wrap gap-2">
             <button
               v-for="emoji in filteredEmojis"
