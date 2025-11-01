@@ -176,12 +176,13 @@ const resultsLink = computed(() => {
 })
 
 const canViewResults = computed(() => {
-  if (!poll.value) return true
-  // For text polls, require text to be entered
+  if (!poll.value) return false
+  // For text polls, require text to be entered and submitted
   if (poll.value.type === 'text') {
-    return textResponse.value.trim().length > 0
+    return textResponse.value.trim().length > 0 && (alreadyVoted.value || voteSubmitted.value)
   }
-  return true
+  // For other poll types, require a vote to be submitted
+  return alreadyVoted.value || voteSubmitted.value
 })
 
 async function copyLink() {
