@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col gap-4 h-full">
+  <div class="flex flex-col gap-2 h-full">
     <!-- Sticky Question Section -->
-    <div class="sticky top-0 z-10 bg-white pb-4 flex-shrink-0">
+    <div class="sticky top-0 z-10 bg-white pb-2 flex-shrink-0">
       <label class="block mb-1">Question</label>
       <textarea 
         v-model="localForm.question" 
@@ -163,7 +163,6 @@
       <!-- Emoji Selection -->
       <div v-if="localForm.type === 'emoji'" class="mt-2 relative">
         <div class="flex items-center gap-2 mb-1">
-          <label class="flex-shrink-0 whitespace-nowrap">Select Emojis</label>
           <input
             v-model="emojiSearch"
             type="text"
