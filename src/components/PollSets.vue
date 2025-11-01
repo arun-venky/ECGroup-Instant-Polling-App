@@ -17,7 +17,7 @@
               <div v-if="editingId !== s.id" class="flex items-center gap-2">
                 <div class="font-bold text-base sm:text-lg break-words">{{ s.name }}</div>
                 <button 
-                  class="p-1 text-neutral hover:text-primary transition-colors flex-shrink-0" 
+                  class="p-1 text-neutral hover:text-primary transition-colors flex-shrink-0 bg-transparent hover:bg-transparent" 
                   @click="() => startEdit(s.id, s.name)"
                   title="Edit name"
                 >
