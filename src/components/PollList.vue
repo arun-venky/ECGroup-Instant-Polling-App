@@ -4,19 +4,53 @@
       <h2 class="text-xl sm:text-2xl">All Polls</h2>
       <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <router-link v-if="activeSet || route.params.setId" class="btn text-sm w-full sm:w-auto sm:min-w-[120px] justify-center" to="/sets">Back to Sets</router-link>
+          <router-link 
+            v-if="activeSet || route.params.setId" 
+            class="!bg-transparent p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+            to="/sets"
+            title="Back to Sets"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </router-link>
           <select v-model="activeSet" class="px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base w-full sm:w-auto sm:min-w-[120px]">
             <option value="">All Sets</option>
             <option v-for="s in sets" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
         </div>
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-          <button v-if="activeSet" class="btn text-sm w-full sm:w-auto sm:min-w-[100px] justify-center" @click="openCreate()">Add Poll</button>
-          <button class="btn text-sm w-full sm:w-auto sm:min-w-[100px] justify-center" :disabled="!activeSet || startingPoll" @click="startActive">
-            <span v-if="startingPoll" class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-            <span>{{ startingPoll ? 'Starting...' : 'Start' }}</span>
+          <button 
+            v-if="activeSet" 
+            class="!bg-transparent p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+            @click="openCreate()"
+            title="Add Poll"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
           </button>
-          <button class="btn text-sm w-full sm:w-auto sm:min-w-[100px] justify-center" @click="clearAll">Clear All</button>
+          <button 
+            class="!bg-transparent p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0 disabled:opacity-50 disabled:cursor-not-allowed" 
+            :disabled="!activeSet || startingPoll" 
+            @click="startActive"
+            title="Start"
+          >
+            <svg v-if="!startingPoll" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span v-else class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-current"></span>
+          </button>
+          <button 
+            class="!bg-transparent p-2 text-neutral hover:text-red-600 transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+            @click="clearAll"
+            title="Clear All"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
