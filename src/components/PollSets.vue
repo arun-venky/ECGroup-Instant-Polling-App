@@ -35,7 +35,7 @@
                   placeholder="Set name"
                 />
                 <button 
-                  class="p-1 text-green-600 hover:text-green-700 transition-colors flex-shrink-0" 
+                  class="p-1 text-green-600 hover:text-green-700 transition-colors flex-shrink-0 bg-transparent hover:bg-transparent" 
                   @click="saveEdit(s.id)"
                   title="Save"
                 >
@@ -44,7 +44,7 @@
                   </svg>
                 </button>
                 <button 
-                  class="p-1 text-red-600 hover:text-red-700 transition-colors flex-shrink-0" 
+                  class="p-1 text-red-600 hover:text-red-700 transition-colors flex-shrink-0 bg-transparent hover:bg-transparent" 
                   @click="cancelEdit"
                   title="Cancel"
                 >
