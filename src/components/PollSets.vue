@@ -2,7 +2,15 @@
   <div class="max-w-4xl mx-auto card flex flex-col overflow-hidden px-4 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-4 sm:-mx-6 px-4 sm:px-6 border-b border-gray-200 flex-shrink-0">
       <h2 class="text-xl sm:text-2xl">Poll Sets</h2>
-      <router-link class="btn w-full sm:w-auto" to="/sets/create">New Set</router-link>
+      <router-link 
+        class="!bg-transparent p-2 text-neutral hover:text-primary transition-colors rounded-md flex-shrink-0 min-h-0 min-w-0" 
+        to="/sets/create"
+        title="New Set"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+      </router-link>
     </div>
     <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
       <div v-if="loading" class="text-neutral text-center py-12">

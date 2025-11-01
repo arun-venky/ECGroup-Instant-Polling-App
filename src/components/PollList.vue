@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-6xl mx-auto card flex flex-col overflow-hidden px-2 sm:px-6" style="max-height: calc(100vh - 100px); height: calc(100vh - 100px);">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sticky top-0 bg-white z-10 pt-1 pb-3 -mx-2 sm:-mx-6 px-2 sm:px-6 border-b border-gray-200 flex-shrink-0">
-      <h2 class="text-xl sm:text-2xl">All Polls</h2>
+      <h2 class="text-xl sm:text-2xl">Polls</h2>
       <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <router-link 
