@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-4">
     <!-- Question Section -->
-    <div class="border border-gray-300 rounded-md p-3 max-h-96 overflow-y-auto">
+    <div class="border border-gray-300 rounded-md p-3">
       <div>
         <label class="block mb-1">Question</label>
         <textarea 
@@ -41,51 +41,49 @@
     </div>
 
     <!-- Poll Type Section -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div class="flex gap-4 items-end">
-        <div class="flex-1">
-          <label class="block mb-1">Poll Type</label>
-          <select v-model="localForm.type">
-            <option value="multiple">Multiple Choice</option>
-            <option value="star">Star Rating</option>
-            <option value="like">Like / Dislike</option>
-            <option value="emoji">Emoji Reactions</option>
-            <option value="image">Image Selection</option>
-            <option value="text">Text Response</option>
-          </select>
-        </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <div v-if="localForm.questionImage" class="relative">
-            <img 
-              :src="localForm.questionImage" 
-              alt="Question image" 
-              class="w-16 h-16 object-cover rounded-md border border-gray-200" 
-            />
-            <button 
-              class="absolute -top-1 -right-1 p-0.5 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent min-h-0 min-w-0 rounded-full transition-colors bg-white" 
-              @click="localForm.questionImage = ''" 
-              title="Remove image"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <button
-            type="button"
-            @click="showImageModal = true"
-            class="p-1.5 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0 border border-gray-300 rounded-md hover:border-primary transition-colors bg-white shadow-sm"
-            title="Add question image"
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+      <div class="flex-1 sm:flex-none sm:w-auto min-w-0">
+        <label class="block mb-1">Poll Type</label>
+        <select v-model="localForm.type" class="w-full sm:w-auto">
+          <option value="multiple">Multiple Choice</option>
+          <option value="star">Star Rating</option>
+          <option value="like">Like / Dislike</option>
+          <option value="emoji">Emoji Reactions</option>
+          <option value="image">Image Selection</option>
+          <option value="text">Text Response</option>
+        </select>
+      </div>
+      <div v-if="localForm.type==='star'" class="flex-1 sm:flex-none sm:w-auto min-w-0">
+        <label class="block mb-1">Stars</label>
+        <input type="number" min="3" max="10" v-model.number="localForm.stars" class="w-full sm:w-auto" />
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
+        <div v-if="localForm.questionImage" class="relative">
+          <img 
+            :src="localForm.questionImage" 
+            alt="Question image" 
+            class="w-16 h-16 object-cover rounded-md border border-gray-200" 
+          />
+          <button 
+            class="absolute -top-1 -right-1 p-0.5 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent min-h-0 min-w-0 rounded-full transition-colors bg-white" 
+            @click="localForm.questionImage = ''" 
+            title="Remove image"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-      </div>
-      <div v-if="localForm.type==='star'">
-        <label class="block mb-1">Stars</label>
-        <input type="number" min="3" max="10" v-model.number="localForm.stars" />
+        <button
+          type="button"
+          @click="showImageModal = true"
+          class="p-1.5 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0 border border-gray-300 rounded-md hover:border-primary transition-colors bg-white shadow-sm"
+          title="Add question image"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -193,7 +191,7 @@
       <!-- Emoji Selection -->
       <div v-if="localForm.type === 'emoji'" class="mt-2">
         <label class="block mb-1">Select Emojis</label>
-        <div class="border border-gray-300 rounded-md p-3 max-h-64 overflow-y-auto bg-white">
+        <div class="border border-gray-300 rounded-md p-3 max-h-40 overflow-y-auto bg-white">
           <div class="flex flex-wrap gap-2">
             <button
               v-for="emoji in availableEmojis"
