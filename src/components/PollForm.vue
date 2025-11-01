@@ -1,95 +1,66 @@
 <template>
-  <div class="flex flex-col gap-4">
-    <!-- Sticky Header Section -->
-    <div class="sticky top-0 z-10 bg-white pb-4 space-y-4">
-      <!-- Question Section -->
-      <div>
-        <label class="block mb-1">Question</label>
-        <textarea 
-          v-model="localForm.question" 
-          placeholder="What's your question?" 
-          class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"
-        ></textarea>
-      </div>
+  <div class="flex flex-col gap-4 h-full">
+    <!-- Sticky Question Section -->
+    <div class="sticky top-0 z-10 bg-white pb-4 flex-shrink-0">
+      <label class="block mb-1">Question</label>
+      <textarea 
+        v-model="localForm.question" 
+        placeholder="What's your question?" 
+        class="w-full p-3 border border-gray-300 rounded-md resize-y min-h-[80px]"
+      ></textarea>
+    </div>
 
+    <!-- Scrollable Content Container -->
+    <div class="flex-1 overflow-y-auto min-h-0 space-y-4">
       <!-- Poll Type Section -->
       <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-      <div class="flex-1 sm:flex-none sm:w-auto min-w-0">
-        <label class="block mb-1">Poll Type</label>
-        <select v-model="localForm.type" class="w-full sm:w-auto">
-          <option value="multiple">Multiple Choice</option>
-          <option value="star">Star Rating</option>
-          <option value="like">Like / Dislike</option>
-          <option value="emoji">Emoji Reactions</option>
-          <option value="image">Image Selection</option>
-          <option value="text">Text Response</option>
-        </select>
-      </div>
-      <div v-if="localForm.type==='star'" class="flex-1 sm:flex-none sm:w-auto min-w-0">
-        <label class="block mb-1">Stars</label>
-        <input type="number" min="3" max="10" v-model.number="localForm.stars" class="w-full sm:w-auto" />
-      </div>
-      <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
-        <div v-if="localForm.questionImage" class="relative">
-          <img 
-            :src="localForm.questionImage" 
-            alt="Question image" 
-            class="w-16 h-16 object-cover rounded-md border border-gray-200" 
-          />
-          <button 
-            class="absolute -top-1 -right-1 p-0.5 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent min-h-0 min-w-0 rounded-full transition-colors bg-white" 
-            @click="localForm.questionImage = ''" 
-            title="Remove image"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        <div class="flex-1 sm:flex-none sm:w-auto min-w-0">
+          <label class="block mb-1">Poll Type</label>
+          <select v-model="localForm.type" class="w-full sm:w-auto">
+            <option value="multiple">Multiple Choice</option>
+            <option value="star">Star Rating</option>
+            <option value="like">Like / Dislike</option>
+            <option value="emoji">Emoji Reactions</option>
+            <option value="image">Image Selection</option>
+            <option value="text">Text Response</option>
+          </select>
         </div>
-        <button
-          type="button"
-          @click="showImageModal = true"
-          class="p-1.5 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0 border border-gray-300 rounded-md hover:border-primary transition-colors bg-white shadow-sm"
-          title="Add question image"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </button>
-      </div>
-    </div>
-    </div>
-
-    <!-- Image Upload Modal -->
-    <div v-if="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showImageModal = false">
-      <div class="bg-white rounded-xl shadow-xl w-full max-w-md border border-gray-200">
-        <div class="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 class="text-lg font-bold">Upload Question Image</h3>
-          <button 
-            class="p-2 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0" 
-            @click="showImageModal = false"
-            title="Close"
+        <div v-if="localForm.type==='star'" class="flex-1 sm:flex-none sm:w-auto min-w-0">
+          <label class="block mb-1">Stars</label>
+          <input type="number" min="3" max="10" v-model.number="localForm.stars" class="w-full sm:w-auto" />
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
+          <div v-if="localForm.questionImage" class="relative">
+            <img 
+              :src="localForm.questionImage" 
+              alt="Question image" 
+              class="w-16 h-16 object-cover rounded-md border border-gray-200" 
+            />
+            <button 
+              class="absolute -top-1 -right-1 p-0.5 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent min-h-0 min-w-0 rounded-full transition-colors bg-white" 
+              @click="localForm.questionImage = ''" 
+              title="Remove image"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <button
+            type="button"
+            @click="showImageModal = true"
+            class="p-1.5 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0 border border-gray-300 rounded-md hover:border-primary transition-colors bg-white shadow-sm"
+            title="Add question image"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </button>
         </div>
-        <div class="p-4">
-          <input 
-            type="file" 
-            accept="image/*" 
-            class="w-full text-sm mb-2"
-            @change="handleQuestionImageUpload"
-            ref="imageFileInput"
-          />
-          <div class="text-xs text-neutral">Max file size: 1 MB</div>
-        </div>
       </div>
-    </div>
 
-    <!-- Set Assignment Section (optional) -->
-    <div v-if="showSetAssignment" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Set Assignment Section (optional) -->
+      <div v-if="showSetAssignment" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
         <label class="block mb-1">Assign to Set</label>
         <select v-model="localForm.selectedSetId" :disabled="loadingSets">
@@ -117,10 +88,9 @@
           </button>
         </div>
       </div>
-    </div>
+      </div>
 
-    <!-- Options Section -->
-    <div class="overflow-y-auto flex-1 min-h-0">
+      <!-- Options Section -->
       <!-- Multiple Choice Options -->
       <div v-if="localForm.type === 'multiple'" class="relative">
         <div class="flex items-center justify-between mb-1">
@@ -167,6 +137,7 @@
                     class="p-2 text-red-600 hover:text-red-700 !bg-transparent hover:!bg-transparent rounded transition-colors min-h-0 min-w-0" 
                     @click="removeOption(i)" 
                     title="Remove image"
+                    type="button"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -228,10 +199,9 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Correct Answer Section (Sticky Bottom) -->
-    <div class="sticky bottom-0 z-10 bg-white pb-4 pt-4 border-t border-gray-200">
+      <!-- Correct Answer Section -->
+      <div class="pt-4 border-t border-gray-200">
       <label class="block mb-1">
         Answer
       </label>
@@ -270,6 +240,36 @@
           placeholder="Expected answer text (case-insensitive)" 
           class="w-full" 
         />
+      </div>
+      </div>
+    </div>
+
+    <!-- Image Upload Modal -->
+    <div v-if="showImageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showImageModal = false">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-md border border-gray-200">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 class="text-lg font-bold">Upload Question Image</h3>
+          <button 
+            class="p-2 text-neutral hover:text-primary !bg-transparent hover:!bg-transparent min-h-0 min-w-0" 
+            @click="showImageModal = false"
+            title="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="p-4">
+          <input 
+            type="file" 
+            accept="image/*" 
+            class="w-full text-sm mb-2"
+            @change="handleQuestionImageUpload"
+            ref="imageFileInput"
+            :key="showImageModal ? 'open' : 'closed'"
+          />
+          <div class="text-xs text-neutral">Max file size: 1 MB</div>
+        </div>
       </div>
     </div>
   </div>
@@ -310,6 +310,7 @@ const emit = defineEmits(['update:modelValue', 'create-set'])
 
 const localForm = ref({ ...props.modelValue })
 const showImageModal = ref(false)
+const imageFileInput = ref(null)
 const newSetName = ref('')
 const creatingSet = ref(false)
 
@@ -358,56 +359,80 @@ function removeOption(index) {
 }
 
 function handleQuestionImageUpload(event) {
-  showImageModal.value = false
   const file = event.target.files[0]
-  if (!file) return
+  if (!file) {
+    showImageModal.value = false
+    return
+  }
   
   if (file.size > 1048576) {
     alert('File size exceeds 1 MB limit. Please choose a smaller image.')
     event.target.value = ''
+    showImageModal.value = false
     return
   }
   
   if (!file.type.startsWith('image/')) {
     alert('Please select an image file.')
     event.target.value = ''
+    showImageModal.value = false
     return
   }
   
   const reader = new FileReader()
   reader.onload = (e) => {
     localForm.value.questionImage = e.target.result
+    // Reset input after successful upload
+    if (event.target) {
+      event.target.value = ''
+    }
+    showImageModal.value = false
   }
   reader.onerror = () => {
     alert('Error reading image file. Please try again.')
-    event.target.value = ''
+    if (event.target) {
+      event.target.value = ''
+    }
+    showImageModal.value = false
   }
   reader.readAsDataURL(file)
 }
 
 function handleImageUpload(event, index) {
   const file = event.target.files[0]
-  if (!file) return
+  if (!file) {
+    return
+  }
   
   if (file.size > 1048576) {
     alert('File size exceeds 1 MB limit. Please choose a smaller image.')
-    event.target.value = ''
+    if (event.target) {
+      event.target.value = ''
+    }
     return
   }
   
   if (!file.type.startsWith('image/')) {
     alert('Please select an image file.')
-    event.target.value = ''
+    if (event.target) {
+      event.target.value = ''
+    }
     return
   }
   
   const reader = new FileReader()
   reader.onload = (e) => {
     localForm.value.options[index] = e.target.result
+    // Reset input after successful upload to allow re-uploading the same file
+    if (event.target) {
+      event.target.value = ''
+    }
   }
   reader.onerror = () => {
     alert('Error reading image file. Please try again.')
-    event.target.value = ''
+    if (event.target) {
+      event.target.value = ''
+    }
   }
   reader.readAsDataURL(file)
 }
