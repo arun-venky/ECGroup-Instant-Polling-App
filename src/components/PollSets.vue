@@ -17,7 +17,7 @@
               <div v-if="editingId !== s.id" class="flex items-center gap-2">
                 <div class="font-bold text-base sm:text-lg break-words">{{ s.name }}</div>
                 <button 
-                  class="p-1 text-neutral hover:text-primary transition-colors flex-shrink-0 bg-transparent hover:bg-transparent" 
+                  class="!bg-transparent !hover:bg-transparent p-1 text-neutral hover:text-primary transition-colors flex-shrink-0 min-h-0 min-w-0 px-1 py-1" 
                   @click="() => startEdit(s.id, s.name)"
                   title="Edit name"
                 >
@@ -35,7 +35,7 @@
                   placeholder="Set name"
                 />
                 <button 
-                  class="p-1 text-green-600 hover:text-green-700 transition-colors flex-shrink-0 bg-transparent hover:bg-transparent" 
+                  class="!bg-transparent !hover:bg-transparent p-1 text-green-600 hover:text-green-700 transition-colors flex-shrink-0 min-h-0 min-w-0 px-1 py-1" 
                   @click="saveEdit(s.id)"
                   title="Save"
                 >
@@ -44,7 +44,7 @@
                   </svg>
                 </button>
                 <button 
-                  class="p-1 text-red-600 hover:text-red-700 transition-colors flex-shrink-0 bg-transparent hover:bg-transparent" 
+                  class="!bg-transparent !hover:bg-transparent p-1 text-red-600 hover:text-red-700 transition-colors flex-shrink-0 min-h-0 min-w-0 px-1 py-1" 
                   @click="cancelEdit"
                   title="Cancel"
                 >
@@ -56,8 +56,26 @@
               <div class="text-xs text-neutral mt-1">{{ formatDate(s.createdAt) }}</div>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/start`">Start</router-link>
-              <router-link class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" :to="`/sets/${s.id}/polls`">View</router-link>
+              <router-link 
+                v-if="editingId !== s.id"
+                class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" 
+                :to="`/sets/${s.id}/start`"
+              >Start</router-link>
+              <button 
+                v-else
+                class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center opacity-50 cursor-not-allowed" 
+                disabled
+              >Start</button>
+              <router-link 
+                v-if="editingId !== s.id"
+                class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center" 
+                :to="`/sets/${s.id}/polls`"
+              >View</router-link>
+              <button 
+                v-else
+                class="btn text-sm flex-1 sm:flex-none min-w-[80px] justify-center opacity-50 cursor-not-allowed" 
+                disabled
+              >View</button>
               <button class="btn bg-red-500 hover:bg-red-600 text-white text-sm flex-1 sm:flex-none min-w-[80px] justify-center" @click="() => deleteSet(s.id, s.name)" :disabled="editingId === s.id">Delete</button>
             </div>
           </div>
